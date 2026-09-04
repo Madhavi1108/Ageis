@@ -16,3 +16,6 @@ dist/
 dist-ssr/
 .mypy_cache/
 .ruff_cache/
+
+# Phase 3
+/backend/artifacts/

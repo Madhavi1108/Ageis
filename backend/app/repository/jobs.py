@@ -8,6 +8,8 @@ phase's orchestration layer, not here.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -38,3 +40,36 @@ class JobRepository:
     def list(self, *, limit: int = 100) -> list[Job]:
         stmt = select(Job).order_by(Job.id.desc()).limit(limit)
         return list(self._session.execute(stmt).scalars().all())
+
+    # Thin state + timestamp transitions -- still no business logic (no retry/backoff/
+    # dedupe decisions here, that's a later orchestration-layer concern).
+
+    def mark_running(self, job_id: str) -> Job:
+        job = self._session.get(Job, job_id)
+        assert job is not None
+        job.state = JobState.RUNNING.value
+        job.attempts += 1
+        job.started_at = datetime.now(timezone.utc)
+        self._session.commit()
+        self._session.refresh(job)
+        return job
+
+    def mark_succeeded(self, job_id: str) -> Job:
+        job = self._session.get(Job, job_id)
+        assert job is not None
+        job.state = JobState.SUCCEEDED.value
+        job.progress = 1.0
+        job.finished_at = datetime.now(timezone.utc)
+        self._session.commit()
+        self._session.refresh(job)
+        return job
+
+    def mark_failed(self, job_id: str, *, error: dict) -> Job:
+        job = self._session.get(Job, job_id)
+        assert job is not None
+        job.state = JobState.FAILED.value
+        job.error = error
+        job.finished_at = datetime.now(timezone.utc)
+        self._session.commit()
+        self._session.refresh(job)
+        return job

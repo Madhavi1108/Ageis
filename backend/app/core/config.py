@@ -9,6 +9,7 @@ lazily on first request.
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,6 +41,28 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite:///./aegis.db")
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
     request_max_body_bytes: int = Field(default=1_000_000, gt=0)
+
+    # Ingestion (Phase 3, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 11 / ADR-0012).
+    ingestion_local_roots: list[str] = Field(
+        default_factory=lambda: ["../test-repositories"]
+    )
+    ingestion_allowed_remote_hosts: list[str] = Field(
+        default_factory=lambda: ["github.com"]
+    )
+    ingestion_max_repo_bytes: int = Field(default=500 * 1024 * 1024, gt=0)
+    ingestion_max_files: int = Field(default=25_000, gt=0)
+    ingestion_max_file_bytes: int = Field(default=2 * 1024 * 1024, gt=0)
+    ingestion_max_history_depth: int = Field(default=500, gt=0)
+    ingestion_default_clone_depth: int = Field(default=50, gt=0)
+    ingestion_clone_timeout_s: int = Field(default=120, gt=0)
+    artifacts_root: str = Field(default="./artifacts")
+
+    @field_validator("ingestion_local_roots")
+    @classmethod
+    def _resolve_local_roots(cls, v: list[str]) -> list[str]:
+        # Resolved once here so url_validator.validate_local_path can do a plain
+        # containment check against already-absolute paths on both sides.
+        return [str(Path(root).resolve()) for root in v]
 
     @field_validator("environment")
     @classmethod

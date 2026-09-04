@@ -15,6 +15,7 @@ dependencies = [
     "uvicorn[standard]>=0.30,<0.31",
     "sqlalchemy>=2.0,<2.1",
     "alembic>=1.13,<2",
+    "GitPython>=3.1,<4",
 ]
 
 [project.optional-dependencies]

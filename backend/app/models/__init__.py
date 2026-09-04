@@ -3,8 +3,20 @@ every table (Alembic autogenerate and create_all both rely on this)."""
 
 from __future__ import annotations
 
+from app.models.artifact import Artifact
 from app.models.audit_log import AuditLog
 from app.models.base import Base
 from app.models.job import Job
+from app.models.repository import Repository
+from app.models.repository_file import RepositoryFile
+from app.models.snapshot import RepositorySnapshot
 
-__all__ = ["Base", "Job", "AuditLog"]
+__all__ = [
+    "Base",
+    "Job",
+    "AuditLog",
+    "Repository",
+    "RepositorySnapshot",
+    "RepositoryFile",
+    "Artifact",
+]

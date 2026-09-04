@@ -41,15 +41,29 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
 
     engine = create_engine(f"sqlite:///{db_path}")
     tables = set(inspect(engine).get_table_names())
-    assert {"job", "audit_log"}.issubset(tables)
+    assert {
+        "job",
+        "audit_log",
+        "repository",
+        "repository_snapshot",
+        "repository_file",
+        "artifact",
+    }.issubset(tables)
     engine.dispose()
 
     command.downgrade(config, "base")
 
     engine = create_engine(f"sqlite:///{db_path}")
     tables = set(inspect(engine).get_table_names())
-    assert "job" not in tables
-    assert "audit_log" not in tables
+    for table in (
+        "job",
+        "audit_log",
+        "repository",
+        "repository_snapshot",
+        "repository_file",
+        "artifact",
+    ):
+        assert table not in tables
     engine.dispose()
 
     get_settings.cache_clear()
