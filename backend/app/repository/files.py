@@ -51,3 +51,14 @@ class FileRepository:
             .limit(limit)
         )
         return list(self._session.execute(stmt).scalars().all())
+
+    def update_parse_status(self, updates: list[tuple[str, str, str | None]]) -> None:
+        """Bulk per-row update of (file_id, parse_status, parse_error) -- used by the
+        Phase 4 analysis pass, the first thing to ever set parse_status=SYNTAX_ERROR."""
+        for file_id, parse_status, parse_error in updates:
+            row = self._session.get(RepositoryFile, file_id)
+            if row is not None:
+                row.parse_status = parse_status
+                row.parse_error = parse_error
+        if updates:
+            self._session.commit()

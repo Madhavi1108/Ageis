@@ -48,6 +48,9 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "repository_snapshot",
         "repository_file",
         "artifact",
+        "repository_symbol",
+        "dependency",
+        "repository_analysis",
     }.issubset(tables)
     engine.dispose()
 
@@ -62,6 +65,9 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "repository_snapshot",
         "repository_file",
         "artifact",
+        "repository_symbol",
+        "dependency",
+        "repository_analysis",
     ):
         assert table not in tables
     engine.dispose()

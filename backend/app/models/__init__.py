@@ -6,9 +6,12 @@ from __future__ import annotations
 from app.models.artifact import Artifact
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.dependency import Dependency
 from app.models.job import Job
 from app.models.repository import Repository
+from app.models.repository_analysis import RepositoryAnalysis
 from app.models.repository_file import RepositoryFile
+from app.models.repository_symbol import RepositorySymbol
 from app.models.snapshot import RepositorySnapshot
 
 __all__ = [
@@ -19,4 +22,7 @@ __all__ = [
     "RepositorySnapshot",
     "RepositoryFile",
     "Artifact",
+    "RepositorySymbol",
+    "Dependency",
+    "RepositoryAnalysis",
 ]

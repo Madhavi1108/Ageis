@@ -20,6 +20,7 @@ from app.models.base import Base, TimestampMixin
 
 class JobType(str, enum.Enum):
     INGEST = "INGEST"
+    ANALYZE = "ANALYZE"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"
