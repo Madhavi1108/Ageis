@@ -8,11 +8,15 @@ optionally open a PR.
 
 Working name; see `docs/POSITIONING.md` for the strategic thesis and wedge.
 
-**Status: Phase 0 (Greenfield Architecture & Planning) and Phase 1 (Walking Skeleton) — COMPLETE.**
-The CLI runs a real task end-to-end to a **VERIFIED** diff (`--sandbox fake`); with the real Docker
-sandbox (the default), it correctly reports `PARTIALLY_SUPPORTED` in this Docker-less environment
-rather than falling back to host execution. Next: Phase 2 (Project Foundation — the real FastAPI
-app, DB, and CI). See `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full phase-by-phase plan.
+**Status: Phase 0 (Greenfield Architecture & Planning), Phase 1 (Walking Skeleton), and Phase 2
+(Project Foundation) — COMPLETE.** The CLI runs a real task end-to-end to a **VERIFIED** diff
+(`--sandbox fake`); with the real Docker sandbox (the default), it correctly reports
+`PARTIALLY_SUPPORTED` in this Docker-less environment rather than falling back to host execution.
+A real FastAPI app (`backend/app/`) now runs alongside the walking skeleton with `/healthz` and
+`/version`, a SQLAlchemy + Alembic database layer, typed error handling, JSON logging with secret
+redaction, a Vite/React/TS frontend scaffold, a Docker Compose dev stack, and CI. See
+`CONTRIBUTING.md` for local dev setup and `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full
+phase-by-phase plan.
 
 ---
 
@@ -52,15 +56,23 @@ docs/                    architecture, strategic, and decision documents (Phase 
 scripts/
   build_plan_pdf.py       renders the implementation plan to PDF
   capability_spike/       throwaway harness for the Stage A capability gate (see its README)
-backend/                  the Phase 1 Walking Skeleton (real code) -- see backend/aegis/
-  aegis/                  ingest -> analyze -> map -> plan -> implement -> test -> repair -> verify
-  tests/unit/, tests/e2e/ 47 tests, 1 Docker-gated (auto-skips without a daemon)
+backend/
+  aegis/                  Phase 1 Walking Skeleton: ingest -> analyze -> map -> plan -> implement
+                          -> test -> repair -> verify
+  app/                    Phase 2 service foundation: FastAPI app, config, logging, DB (SQLAlchemy
+                          + Alembic), typed errors, /healthz + /version
+  tests/unit/, tests/integration/, tests/e2e/   covers both aegis/ and app/
 docker/
   sandbox.Dockerfile      the walking skeleton's sandbox image (build before using --sandbox docker)
+  api.Dockerfile          the FastAPI app image
+  frontend.Dockerfile     the frontend dev image
+docker-compose.yml        full dev stack: api, worker (placeholder), frontend, optional postgres
+frontend/                 Vite + React + TS scaffold: router, TanStack Query, typed API client
 test-repositories/
   aegis-acceptance/       the seeded acceptance task (Specification §39's worked example)
   fixtures/unfixable/     exercises the bounded repair loop's clean-stop path
-frontend/                 not yet created -- later phases
+.github/workflows/ci.yml  backend (ruff/black/mypy/pytest/coverage/migrations) + frontend (eslint/
+                          tsc/build) CI
 ```
 
 ## Quickstart
@@ -77,6 +89,22 @@ hardened sandbox.
 
 ```
 pytest backend/tests -q
+```
+
+## Local development (Phase 2)
+
+Full setup, migrations, Docker Compose, and lint/type/test commands are in `CONTRIBUTING.md`.
+Quick start for the API + frontend:
+
+```
+cd backend && pip install -e .[dev] && alembic upgrade head && uvicorn app.main:app --reload
+```
+```
+cd frontend && npm install && cp .env.example .env && npm run dev
+```
+or the whole stack at once:
+```
+cp .env.example .env && docker compose up
 ```
 
 ## Regenerating the plan PDF

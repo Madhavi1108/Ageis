@@ -1,0 +1,13 @@
+# AEGIS frontend dev image. Build context is the repo root:
+#   docker build -f docker/frontend.Dockerfile -t aegis-frontend .
+FROM node:20-slim
+
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+COPY frontend/ ./
+
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

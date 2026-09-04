@@ -6,6 +6,7 @@ Every candidate carries at least one concrete Evidence item -- the "no
 evidence-free candidate" rule (docs/REPOSITORY_ANALYSIS.md Section 5) is
 enforced structurally here, not just documented.
 """
+
 from __future__ import annotations
 
 import re
@@ -17,9 +18,36 @@ from aegis.schemas.common import Evidence
 
 _TOKEN_RE = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*")
 _STOPWORDS = {
-    "the", "a", "an", "is", "are", "to", "of", "and", "or", "in", "on", "for",
-    "should", "it", "instead", "that", "this", "so", "be", "as", "when",
-    "with", "than", "but", "not", "does", "do", "currently", "still", "this",
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "to",
+    "of",
+    "and",
+    "or",
+    "in",
+    "on",
+    "for",
+    "should",
+    "it",
+    "instead",
+    "that",
+    "this",
+    "so",
+    "be",
+    "as",
+    "when",
+    "with",
+    "than",
+    "but",
+    "not",
+    "does",
+    "do",
+    "currently",
+    "still",
+    "this",
 }
 
 

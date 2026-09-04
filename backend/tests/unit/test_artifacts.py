@@ -18,7 +18,9 @@ def test_record_run_writes_a_readable_row(tmp_path):
     import sqlite3
 
     conn = sqlite3.connect(db_path)
-    row = conn.execute("SELECT id, repo, outcome, trust_report_json FROM runs WHERE id = ?", (run_id,)).fetchone()
+    row = conn.execute(
+        "SELECT id, repo, outcome, trust_report_json FROM runs WHERE id = ?", (run_id,)
+    ).fetchone()
     conn.close()
 
     assert row is not None

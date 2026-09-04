@@ -4,6 +4,7 @@ system). A task is never VERIFIED merely because code was generated
 (Specification Rule: "never mark a task complete merely because code was
 generated") -- every criterion here is independently, mechanically checked.
 """
+
 from __future__ import annotations
 
 from aegis.implementation.patcher import check_reapplies
@@ -35,7 +36,11 @@ def verify(
                 verdict="PASS",
                 detail=f"all {len(exec_result.results)} executed tests passed",
                 evidence=[
-                    Evidence(kind="execution", ref=exec_result.command, detail="sandbox test run")
+                    Evidence(
+                        kind="execution",
+                        ref=exec_result.command,
+                        detail="sandbox test run",
+                    )
                 ],
             )
         )
@@ -54,7 +59,9 @@ def verify(
         Criterion(
             name="no_unplanned_files",
             verdict="PASS" if not unplanned else "FAIL",
-            detail=f"unplanned files: {sorted(unplanned)}" if unplanned else "scope clean",
+            detail=(
+                f"unplanned files: {sorted(unplanned)}" if unplanned else "scope clean"
+            ),
         )
     )
 
@@ -64,9 +71,11 @@ def verify(
         Criterion(
             name="patch_reapplies",
             verdict="PASS" if reapplies else "FAIL",
-            detail="recorded edit-ops reproduce the final workspace from the original snapshot"
-            if reapplies
-            else "recorded edit-ops did not reproduce the final workspace",
+            detail=(
+                "recorded edit-ops reproduce the final workspace from the original snapshot"
+                if reapplies
+                else "recorded edit-ops did not reproduce the final workspace"
+            ),
         )
     )
 

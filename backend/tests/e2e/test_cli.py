@@ -1,5 +1,6 @@
 """The CLI is the walking skeleton's front door -- exercised end-to-end here
 so `python -m aegis.skeleton run ...` is proven, not just the library API."""
+
 from pathlib import Path
 
 from aegis.skeleton import main
@@ -16,9 +17,12 @@ def test_cli_run_verified_via_fake_sandbox(tmp_path, capsys):
             "run",
             str(ACCEPTANCE_REPO),
             str(ACCEPTANCE_TASK),
-            "--provider", "mock",
-            "--sandbox", "fake",
-            "--json-out", str(json_out),
+            "--provider",
+            "mock",
+            "--sandbox",
+            "fake",
+            "--json-out",
+            str(json_out),
             "--no-artifact",
         ]
     )
@@ -35,8 +39,10 @@ def test_cli_run_docker_absent_exits_nonzero(tmp_path, capsys):
             "run",
             str(ACCEPTANCE_REPO),
             str(ACCEPTANCE_TASK),
-            "--provider", "mock",
-            "--sandbox", "docker",
+            "--provider",
+            "mock",
+            "--sandbox",
+            "docker",
             "--no-artifact",
         ]
     )

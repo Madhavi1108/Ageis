@@ -1,6 +1,7 @@
 """Unified diff generation and the patch-reapplies verification check. See
 docs/DECISIONS/ADR-0008.
 """
+
 from __future__ import annotations
 
 import difflib
@@ -13,7 +14,14 @@ from aegis.schemas.implementation import EditOp
 # Artifacts a local test run (FakeSandboxRunner, or pytest's own cache) can
 # leave behind in the workspace that are not part of the actual change and
 # must never be mistaken for a touched/unplanned file.
-_IGNORED_DIR_NAMES = {".git", "__pycache__", ".pytest_cache", ".venv", "venv", "node_modules"}
+_IGNORED_DIR_NAMES = {
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "node_modules",
+}
 _IGNORED_FILE_NAMES = {".aegis_report.xml"}
 
 
@@ -38,10 +46,14 @@ def unified_diff(snapshot: Snapshot, ws: RWWorkspace) -> str:
     )
 
     for rel in ws_paths:
-        new_text = (ws.root / rel).read_text(encoding="utf-8", errors="replace").splitlines()
+        new_text = (
+            (ws.root / rel).read_text(encoding="utf-8", errors="replace").splitlines()
+        )
         orig_file = original_by_path.get(rel)
         old_text = (
-            orig_file.abs_path.read_text(encoding="utf-8", errors="replace").splitlines()
+            orig_file.abs_path.read_text(
+                encoding="utf-8", errors="replace"
+            ).splitlines()
             if orig_file
             else []
         )

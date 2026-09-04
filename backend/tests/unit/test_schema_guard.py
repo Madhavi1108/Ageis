@@ -16,7 +16,9 @@ def test_valid_raw_passes_immediately():
 
 def test_invalid_raw_without_repair_fn_raises():
     with pytest.raises(AIOutputInvalid):
-        validate_with_repair({"name": "x", "count": "not-a-number"}, _Small, repair_fn=None)
+        validate_with_repair(
+            {"name": "x", "count": "not-a-number"}, _Small, repair_fn=None
+        )
 
 
 def test_invalid_raw_repaired_successfully():
@@ -26,7 +28,9 @@ def test_invalid_raw_repaired_successfully():
         calls.append((raw, error))
         return {**raw, "count": 7}
 
-    result = validate_with_repair({"name": "x", "count": "bad"}, _Small, repair_fn=repair_fn)
+    result = validate_with_repair(
+        {"name": "x", "count": "bad"}, _Small, repair_fn=repair_fn
+    )
     assert result.count == 7
     assert len(calls) == 1
 

@@ -49,7 +49,9 @@ def test_repair_loop_never_exceeds_the_bound(tmp_path):
     ws = _workspace(tmp_path)
     try:
         initial = TestExecutionResult(
-            command="pytest", exit_code=1, outcome="FAIL",
+            command="pytest",
+            exit_code=1,
+            outcome="FAIL",
             results=[TestOutcome(test_id="t::test_x", outcome="FAIL")],
         )
         provider = _AlwaysFailProvider()
@@ -78,14 +80,20 @@ class _EventuallyPassSandbox:
     def run_tests(self, ws, test_command):
         self.calls += 1
         if self.calls >= 1:  # the single repair attempt "fixes" it
-            return TestExecutionResult(command="pytest", exit_code=0, outcome="PASS", results=[])
-        return TestExecutionResult(command="pytest", exit_code=1, outcome="FAIL", results=[])
+            return TestExecutionResult(
+                command="pytest", exit_code=0, outcome="PASS", results=[]
+            )
+        return TestExecutionResult(
+            command="pytest", exit_code=1, outcome="FAIL", results=[]
+        )
 
 
 def test_repair_loop_stops_early_once_green(tmp_path):
     ws = _workspace(tmp_path)
     try:
-        initial = TestExecutionResult(command="pytest", exit_code=1, outcome="FAIL", results=[])
+        initial = TestExecutionResult(
+            command="pytest", exit_code=1, outcome="FAIL", results=[]
+        )
         provider = _AlwaysFailProvider()
         sandbox = _EventuallyPassSandbox()
         result = run_repair_loop(
@@ -109,7 +117,9 @@ def test_repair_loop_stops_early_once_green(tmp_path):
 def test_repair_loop_no_attempts_when_already_passing(tmp_path):
     ws = _workspace(tmp_path)
     try:
-        initial = TestExecutionResult(command="pytest", exit_code=0, outcome="PASS", results=[])
+        initial = TestExecutionResult(
+            command="pytest", exit_code=0, outcome="PASS", results=[]
+        )
         provider = _AlwaysFailProvider()
         result = run_repair_loop(
             ws=ws,

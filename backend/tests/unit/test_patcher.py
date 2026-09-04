@@ -47,7 +47,14 @@ def test_check_reapplies_true_for_a_reproducible_op(tmp_path):
     snapshot = _make_repo(tmp_path)
     ws = clone_rw(snapshot)
     try:
-        op = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
+        op = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
         from aegis.implementation.editor import apply_edit_op
 
         apply_edit_op(ws, op)
@@ -65,7 +72,14 @@ def test_check_reapplies_false_when_ops_dont_match_final_state(tmp_path):
     try:
         # Apply a DIFFERENT change than the one we'll claim was applied.
         (ws.root / "a.py").write_text("x = 999\n", encoding="utf-8")
-        op = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
+        op = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
         assert check_reapplies(snapshot, [op], ws) is False
     finally:
         ws.cleanup()

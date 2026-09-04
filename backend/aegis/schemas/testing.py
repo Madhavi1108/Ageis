@@ -1,6 +1,7 @@
 """TestExecutionResult. See docs/AI_AGENT_DESIGN.md Section 7 and
 docs/EXECUTION_MODEL.md Section 4 (sandbox execution flow).
 """
+
 from __future__ import annotations
 
 from typing import Literal

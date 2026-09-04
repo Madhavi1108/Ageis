@@ -8,7 +8,10 @@ def test_trust_report_v0_serializes_with_required_fields():
         task_title="title",
         outcome="VERIFIED",
         evidence_trace=EvidenceTrace(
-            why_file=["a.py"], why_change="fix bug", why_tests=["t::x: PASS"], why_safe="all good"
+            why_file=["a.py"],
+            why_change="fix bug",
+            why_tests=["t::x: PASS"],
+            why_safe="all good",
         ),
     )
     data = report.model_dump()
@@ -25,5 +28,7 @@ def test_build_trust_report_populates_limitations_when_not_verified():
 
 
 def test_build_trust_report_verified_has_no_forced_limitation():
-    report = build_trust_report(task_repo="repo", task_title="title", outcome="VERIFIED")
+    report = build_trust_report(
+        task_repo="repo", task_title="title", outcome="VERIFIED"
+    )
     assert report.limitations == []

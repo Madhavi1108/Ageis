@@ -6,13 +6,21 @@ local paths only (no GitHub URLs, no SSRF surface to guard), no Git history,
 no size/history limits -- those are Phase 3's job. What is real here: path
 containment, a manifest with hashes, and language/test detection.
 """
+
 from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-_IGNORED_DIR_NAMES = {".git", "__pycache__", ".pytest_cache", ".venv", "venv", "node_modules"}
+_IGNORED_DIR_NAMES = {
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    "node_modules",
+}
 
 
 @dataclass(frozen=True)

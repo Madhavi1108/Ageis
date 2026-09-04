@@ -1,6 +1,7 @@
 """EditOp and ImplementationResult. See docs/AI_AGENT_DESIGN.md Section 7 and
 docs/DECISIONS/ADR-0008-patch-representation.md.
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -16,7 +17,8 @@ class EditOp(BaseModel):
     path: str
     op: Literal["create", "replace", "insert", "delete"]
     anchor: str | None = Field(
-        default=None, description="exact text the edit targets; required for replace/insert/delete"
+        default=None,
+        description="exact text the edit targets; required for replace/insert/delete",
     )
     old: str | None = None
     new: str | None = None

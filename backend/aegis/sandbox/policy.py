@@ -4,9 +4,10 @@ matrix) and docs/DECISIONS/ADR-0010. Fully unit-testable without a running
 Docker daemon -- this module only builds the keyword arguments passed to the
 `docker` SDK's `containers.run(...)`.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 # Env allowlist (docs/SECURITY_MODEL.md Section 2 "credential/env-var theft"):

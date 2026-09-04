@@ -2,6 +2,7 @@
 Section 3: "one repair round on invalid output then clean failure -- no
 silent best-effort."
 """
+
 from __future__ import annotations
 
 from typing import Any, Callable

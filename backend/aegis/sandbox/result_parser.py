@@ -1,6 +1,7 @@
 """Parse a pytest JUnit-XML report into TestOutcome objects. See
 docs/EXECUTION_MODEL.md Section 4 step 7 ("parse -> per-test results").
 """
+
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET

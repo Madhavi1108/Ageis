@@ -4,6 +4,7 @@ These are the actual contracts the full system uses -- Phase 1 implements
 reduced logic behind them, not reduced schemas. Later phases extend behavior
 without changing these shapes.
 """
+
 from aegis.schemas.common import AgentError, Confidence, Evidence
 from aegis.schemas.implementation import EditOp, ImplementationResult
 from aegis.schemas.plan import EngineeringPlan, PlanStep, PlanValidation

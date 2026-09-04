@@ -4,7 +4,9 @@ from aegis.analysis.mapping import rank_files
 from aegis.analysis.python_ast import analyze
 from aegis.repository.ingest import ingest_local
 
-ACCEPTANCE_REPO = Path(__file__).resolve().parents[3] / "test-repositories" / "aegis-acceptance"
+ACCEPTANCE_REPO = (
+    Path(__file__).resolve().parents[3] / "test-repositories" / "aegis-acceptance"
+)
 
 
 def test_buggy_file_ranks_above_distractor():

@@ -1,0 +1,53 @@
+# AEGIS dev stack. Default profile uses SQLite (zero extra infra); pass
+# `--profile postgres` and set AEGIS_DATABASE_URL to use the postgres service.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    env_file:
+      - .env
+    environment:
+      AEGIS_CORS_ORIGINS: '["http://localhost:5173"]'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app/backend
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    command: ["python", "-m", "app.worker_placeholder"]
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app/backend
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8000"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_PASSWORD: aegis
+      POSTGRES_DB: aegis
+    ports:
+      - "5432:5432"
+    volumes:
+      - aegis-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  aegis-postgres-data:

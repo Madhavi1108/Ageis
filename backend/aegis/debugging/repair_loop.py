@@ -3,6 +3,7 @@ docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 14 (full system, 4-iteration budget)
 and Phase 1's reduced version. Never exceeds its bound; never crashes on a
 bad edit-op or an invalid AI response -- both simply end the loop early.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -84,7 +85,10 @@ def run_repair_loop(
         except EditorError:
             attempts.append(
                 RepairAttempt(
-                    iteration=i, edit_ops=ops_this_attempt, exec_result=exec_result, outcome="NO_CHANGE"
+                    iteration=i,
+                    edit_ops=ops_this_attempt,
+                    exec_result=exec_result,
+                    outcome="NO_CHANGE",
                 )
             )
             break  # the proposal could not even be applied -- stop
@@ -103,9 +107,16 @@ def run_repair_loop(
             outcome = "NO_CHANGE"
 
         attempts.append(
-            RepairAttempt(iteration=i, edit_ops=ops_this_attempt, exec_result=new_result, outcome=outcome)
+            RepairAttempt(
+                iteration=i,
+                edit_ops=ops_this_attempt,
+                exec_result=new_result,
+                outcome=outcome,
+            )
         )
         exec_result = new_result
         prev_failed = new_failed
 
-    return RepairLoopResult(final_exec_result=exec_result, attempts=attempts, applied_ops=applied_ops)
+    return RepairLoopResult(
+        final_exec_result=exec_result, attempts=attempts, applied_ops=applied_ops
+    )

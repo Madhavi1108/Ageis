@@ -8,6 +8,7 @@ task_key) but a real provider (ClaudeProvider/OpenAIProvider) would send the
 rendered prompt -- rendering it here now means the contract is real from day
 one, even though Phase 1 does not exercise a live model by default.
 """
+
 from __future__ import annotations
 
 PLANNING_SCHEMA_HINT = """{
@@ -24,7 +25,7 @@ PLANNING_SCHEMA_HINT = """{
 def render_planning_prompt(*, task_text: str, candidates: list[str]) -> str:
     return (
         "You are the AEGIS Planning Agent. Produce a structured engineering plan.\n"
-        "If you cannot determine something, use an empty list or \"UNKNOWN\" -- do not guess.\n\n"
+        'If you cannot determine something, use an empty list or "UNKNOWN" -- do not guess.\n\n'
         "<issue>\n" + task_text + "\n</issue>\n\n"
         "<candidate_files>\n" + "\n".join(candidates) + "\n</candidate_files>\n\n"
         "Return ONLY JSON matching this schema:\n" + PLANNING_SCHEMA_HINT

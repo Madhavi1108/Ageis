@@ -9,6 +9,7 @@ Deliberately absent: any registration for the "unfixable" fixture
 MockProvider's generic rule-based fallback (see provider.py:_fallback_response),
 not a scripted answer.
 """
+
 from __future__ import annotations
 
 from aegis.ai.provider import MockProvider

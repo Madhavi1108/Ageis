@@ -12,6 +12,7 @@ Three tests always run (no Docker required):
 A fourth test proves the real happy path through actual Docker; it is marked
 `docker` and auto-skips when the daemon is unavailable (it will here).
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -63,7 +64,9 @@ def test_a_fake_sandbox_reaches_verified(tmp_path):
     assert "min(discount, 0.5)" in report.diff_text
 
 
-def test_b_real_docker_runner_with_docker_absent_is_partially_supported(monkeypatch, tmp_path):
+def test_b_real_docker_runner_with_docker_absent_is_partially_supported(
+    monkeypatch, tmp_path
+):
     """Proves the honest degraded path through the REAL sandbox integration
     code (not a test double), and that no host execution of the target
     repo's tests is ever attempted as a fallback."""
@@ -74,7 +77,9 @@ def test_b_real_docker_runner_with_docker_absent_is_partially_supported(monkeypa
         # Record any subprocess invocation that runs pytest against the
         # target repo's own test file -- this must never happen when the
         # real DockerSandboxRunner is used.
-        if isinstance(cmd, list) and any("test_invoice.py" in str(part) for part in cmd):
+        if isinstance(cmd, list) and any(
+            "test_invoice.py" in str(part) for part in cmd
+        ):
             host_pytest_calls.append(cmd)
         return real_run(cmd, *args, **kwargs)
 

@@ -2,6 +2,7 @@
 See docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 18 (full system) and Phase 1's
 reduced three-criteria version.
 """
+
 from __future__ import annotations
 
 from typing import Literal

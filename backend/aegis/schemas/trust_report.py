@@ -2,6 +2,7 @@
 docs/GOVERNANCE.md Section 6 for the full design; v0 here carries raw signals
 rather than the calibrated PCS/CRS scores (Phase 17's job).
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -29,7 +30,9 @@ class TrustReportV0(BaseModel):
         default_factory=lambda: {"note": "static checks only; AI review is Phase 16"}
     )
     scores: dict = Field(
-        default_factory=lambda: {"note": "raw signals only; calibrated PCS/CRS is Phase 17"}
+        default_factory=lambda: {
+            "note": "raw signals only; calibrated PCS/CRS is Phase 17"
+        }
     )
     replay: dict = Field(default_factory=dict)
     limitations: list[str] = Field(default_factory=list)

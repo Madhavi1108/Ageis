@@ -1,5 +1,6 @@
 """Policy/flag assertions -- no Docker daemon required, this only inspects
 the dict passed to the docker SDK."""
+
 from aegis.sandbox.policy import ResourceLimits, build_run_kwargs
 
 
@@ -56,7 +57,9 @@ def test_only_workspace_is_mounted_readwrite():
 
 
 def test_env_allowlist_drops_unlisted_keys():
-    kwargs = _kwargs(extra_env={"PATH": "/usr/bin", "AWS_SECRET_ACCESS_KEY": "shh", "LANG": "C"})
+    kwargs = _kwargs(
+        extra_env={"PATH": "/usr/bin", "AWS_SECRET_ACCESS_KEY": "shh", "LANG": "C"}
+    )
     assert "AWS_SECRET_ACCESS_KEY" not in kwargs["environment"]
     assert "PATH" not in kwargs["environment"]  # not in the allowlist either
     assert kwargs["environment"]["LANG"] == "C"

@@ -8,6 +8,7 @@ network, no spend). ClaudeProvider is real but gated behind RUN_LIVE_AI=1 and
 an API key -- it is not exercised by this session (no key configured) but the
 interface is genuine, not a stub with a different shape.
 """
+
 from __future__ import annotations
 
 import os
@@ -156,7 +157,9 @@ class ClaudeProvider:
         from aegis.ai.prompts import render_planning_prompt
 
         if template != "planning":
-            raise NotImplementedError(f"ClaudeProvider: template {template!r} not wired yet")
+            raise NotImplementedError(
+                f"ClaudeProvider: template {template!r} not wired yet"
+            )
         prompt = render_planning_prompt(
             task_text=variables.get("task_text", ""),
             candidates=variables.get("candidate_files", []),

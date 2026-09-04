@@ -28,14 +28,27 @@ def test_all_three_criteria_pass_yields_verified(tmp_path):
     snapshot = _repo(tmp_path)
     ws = clone_rw(snapshot)
     try:
-        op = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
+        op = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
         apply_edit_op(ws, op)
         exec_result = TestExecutionResult(
-            command="pytest", exit_code=0, outcome="PASS",
+            command="pytest",
+            exit_code=0,
+            outcome="PASS",
             results=[TestOutcome(test_id="t::test_a", outcome="PASS")],
         )
         result = verify(
-            plan=_plan(["a.py"]), snapshot=snapshot, ws=ws, exec_result=exec_result, all_edit_ops=[op]
+            plan=_plan(["a.py"]),
+            snapshot=snapshot,
+            ws=ws,
+            exec_result=exec_result,
+            all_edit_ops=[op],
         )
         assert result.verdict == "VERIFIED"
         assert result.all_pass()
@@ -47,14 +60,27 @@ def test_failing_tests_yields_not_verified(tmp_path):
     snapshot = _repo(tmp_path)
     ws = clone_rw(snapshot)
     try:
-        op = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
+        op = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
         apply_edit_op(ws, op)
         exec_result = TestExecutionResult(
-            command="pytest", exit_code=1, outcome="FAIL",
+            command="pytest",
+            exit_code=1,
+            outcome="FAIL",
             results=[TestOutcome(test_id="t::test_a", outcome="FAIL")],
         )
         result = verify(
-            plan=_plan(["a.py"]), snapshot=snapshot, ws=ws, exec_result=exec_result, all_edit_ops=[op]
+            plan=_plan(["a.py"]),
+            snapshot=snapshot,
+            ws=ws,
+            exec_result=exec_result,
+            all_edit_ops=[op],
         )
         assert result.verdict == "NOT_VERIFIED"
         names = {c.name: c.verdict for c in result.criteria}
@@ -71,13 +97,32 @@ def test_unplanned_file_touched_yields_not_verified(tmp_path):
     snapshot = ingest_local(tmp_path)
     ws = clone_rw(snapshot)
     try:
-        op_a = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
-        op_b = EditOp(path="b.py", op="replace", anchor="y = 1", new="y = 2", plan_step_id="s1", rationale="r")
+        op_a = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
+        op_b = EditOp(
+            path="b.py",
+            op="replace",
+            anchor="y = 1",
+            new="y = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
         apply_edit_op(ws, op_a)
         apply_edit_op(ws, op_b)  # out of scope: plan only allows a.py
-        exec_result = TestExecutionResult(command="pytest", exit_code=0, outcome="PASS", results=[])
+        exec_result = TestExecutionResult(
+            command="pytest", exit_code=0, outcome="PASS", results=[]
+        )
         result = verify(
-            plan=_plan(["a.py"]), snapshot=snapshot, ws=ws, exec_result=exec_result,
+            plan=_plan(["a.py"]),
+            snapshot=snapshot,
+            ws=ws,
+            exec_result=exec_result,
             all_edit_ops=[op_a, op_b],
         )
         assert result.verdict == "NOT_VERIFIED"
@@ -93,10 +138,23 @@ def test_unreproducible_change_fails_patch_reapplies(tmp_path):
     try:
         # Mutate the workspace directly, without a corresponding recorded op.
         (ws.root / "a.py").write_text("x = 999\n", encoding="utf-8")
-        fake_op = EditOp(path="a.py", op="replace", anchor="x = 1", new="x = 2", plan_step_id="s1", rationale="r")
-        exec_result = TestExecutionResult(command="pytest", exit_code=0, outcome="PASS", results=[])
+        fake_op = EditOp(
+            path="a.py",
+            op="replace",
+            anchor="x = 1",
+            new="x = 2",
+            plan_step_id="s1",
+            rationale="r",
+        )
+        exec_result = TestExecutionResult(
+            command="pytest", exit_code=0, outcome="PASS", results=[]
+        )
         result = verify(
-            plan=_plan(["a.py"]), snapshot=snapshot, ws=ws, exec_result=exec_result, all_edit_ops=[fake_op]
+            plan=_plan(["a.py"]),
+            snapshot=snapshot,
+            ws=ws,
+            exec_result=exec_result,
+            all_edit_ops=[fake_op],
         )
         assert result.verdict == "NOT_VERIFIED"
         names = {c.name: c.verdict for c in result.criteria}

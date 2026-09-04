@@ -3,6 +3,7 @@ docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 9 (Engineering Planning + Plan
 Validation). Phase 1 makes exactly one planning call -- no repair-round
 re-planning beyond schema_guard's single repair round.
 """
+
 from __future__ import annotations
 
 from aegis.ai.provider import AIProvider
@@ -18,7 +19,9 @@ def propose_plan(
         "task_text": task_text,
         "candidate_files": candidate_files,
     }
-    result = provider.complete(template="planning", variables=variables, schema=EngineeringPlan)
+    result = provider.complete(
+        template="planning", variables=variables, schema=EngineeringPlan
+    )
     assert isinstance(result, EngineeringPlan)  # provider.complete is schema-typed
     return result
 

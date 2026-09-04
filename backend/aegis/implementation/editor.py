@@ -2,6 +2,7 @@
 structured edit operations, never a whole-file rewrite; an ambiguous or
 missing anchor stops loudly rather than guessing.
 """
+
 from __future__ import annotations
 
 from aegis.repository.workspace import RWWorkspace

@@ -17,6 +17,7 @@ Two implementations:
   edit really fix the bug?) can be exercised honestly in this environment,
   without Docker.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -32,17 +33,23 @@ from aegis.schemas.testing import TestExecutionResult
 
 
 class SandboxRunner(Protocol):
-    def run_tests(self, ws: RWWorkspace, test_command: list[str]) -> TestExecutionResult: ...
+    def run_tests(
+        self, ws: RWWorkspace, test_command: list[str]
+    ) -> TestExecutionResult: ...
 
 
 class DockerSandboxRunner:
     """The real, hardened sandbox. See module docstring."""
 
-    def __init__(self, image: str = DEFAULT_IMAGE, limits: ResourceLimits | None = None) -> None:
+    def __init__(
+        self, image: str = DEFAULT_IMAGE, limits: ResourceLimits | None = None
+    ) -> None:
         self.image = image
         self.limits = limits or ResourceLimits()
 
-    def run_tests(self, ws: RWWorkspace, test_command: list[str]) -> TestExecutionResult:
+    def run_tests(
+        self, ws: RWWorkspace, test_command: list[str]
+    ) -> TestExecutionResult:
         """`test_command` is the pytest *arguments* (e.g. ["test_invoice.py"]),
         not including the `pytest` invocation itself -- the sandbox image
         (docker/sandbox.Dockerfile) provides `pytest` on PATH."""
@@ -80,10 +87,15 @@ class DockerSandboxRunner:
             except Exception:
                 exit_code = -1
                 timed_out = True
-            logs = container.logs().decode("utf-8", errors="replace") if container else ""
+            logs = (
+                container.logs().decode("utf-8", errors="replace") if container else ""
+            )
         except Exception as exc:  # noqa: BLE001 -- infra failure, not a test failure
             return TestExecutionResult(
-                command=command_str, exit_code=-1, outcome="INFRA_ERROR", reason=str(exc)
+                command=command_str,
+                exit_code=-1,
+                outcome="INFRA_ERROR",
+                reason=str(exc),
             )
         finally:
             if container is not None:
@@ -112,7 +124,11 @@ class DockerSandboxRunner:
             )
         overall = "PASS" if all(o.outcome == "PASS" for o in outcomes) else "FAIL"
         return TestExecutionResult(
-            command=command_str, exit_code=exit_code, outcome=overall, results=outcomes, stdout=logs
+            command=command_str,
+            exit_code=exit_code,
+            outcome=overall,
+            results=outcomes,
+            stdout=logs,
         )
 
 
@@ -123,13 +139,21 @@ class FakeSandboxRunner:
     def __init__(self, timeout_s: float = 60.0) -> None:
         self.timeout_s = timeout_s
 
-    def run_tests(self, ws: RWWorkspace, test_command: list[str]) -> TestExecutionResult:
+    def run_tests(
+        self, ws: RWWorkspace, test_command: list[str]
+    ) -> TestExecutionResult:
         """`test_command` is the pytest arguments, same convention as
         DockerSandboxRunner.run_tests (see its docstring)."""
         command_str = "pytest " + " ".join(test_command)
         with tempfile.TemporaryDirectory(prefix="aegis-fake-sandbox-") as tmp:
             report_path = Path(tmp) / "report.xml"
-            full_command = [sys.executable, "-m", "pytest", *test_command, f"--junitxml={report_path}"]
+            full_command = [
+                sys.executable,
+                "-m",
+                "pytest",
+                *test_command,
+                f"--junitxml={report_path}",
+            ]
             try:
                 proc = subprocess.run(
                     full_command,
@@ -140,7 +164,9 @@ class FakeSandboxRunner:
                 )
             except subprocess.TimeoutExpired:
                 return TestExecutionResult(
-                    command=command_str, exit_code=-1, outcome="TIMEOUT",
+                    command=command_str,
+                    exit_code=-1,
+                    outcome="TIMEOUT",
                     reason=f"exceeded {self.timeout_s}s (fake sandbox)",
                 )
             outcomes = parse_junit_xml(report_path)

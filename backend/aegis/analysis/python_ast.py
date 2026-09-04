@@ -6,6 +6,7 @@ Section 21, "never trust repository files"). A parse failure on one file is
 recorded and does not stop analysis of the rest (docs/REPOSITORY_ANALYSIS.md
 Section 2, "nothing is guessed").
 """
+
 from __future__ import annotations
 
 import ast
@@ -14,7 +15,9 @@ from dataclasses import dataclass, field
 
 from aegis.repository.ingest import RepositoryFile, Snapshot
 
-_STDLIB_MODULES = set(sys.stdlib_module_names) if hasattr(sys, "stdlib_module_names") else set()
+_STDLIB_MODULES = (
+    set(sys.stdlib_module_names) if hasattr(sys, "stdlib_module_names") else set()
+)
 
 
 @dataclass(frozen=True)
@@ -111,7 +114,9 @@ def analyze_file(f: RepositoryFile) -> FileAnalysis:
         return FileAnalysis(file_path=f.path, parse_error=str(exc))
     visitor = _Visitor(f.path)
     visitor.visit(tree)
-    return FileAnalysis(file_path=f.path, symbols=visitor.symbols, imports=visitor.imports)
+    return FileAnalysis(
+        file_path=f.path, symbols=visitor.symbols, imports=visitor.imports
+    )
 
 
 def analyze(snapshot: Snapshot) -> RepositoryAnalysis:

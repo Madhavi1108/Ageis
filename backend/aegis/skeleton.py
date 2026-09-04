@@ -18,7 +18,6 @@ repository (see aegis/sandbox/runner.py).
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 
 from aegis.ai.provider import MockProvider, get_provider
@@ -48,8 +47,12 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("task_path")
     run_p.add_argument("--provider", default="mock", choices=["mock", "claude"])
     run_p.add_argument("--sandbox", default="docker", choices=["docker", "fake"])
-    run_p.add_argument("--json-out", default=None, help="write the Trust Report JSON here")
-    run_p.add_argument("--no-artifact", action="store_true", help="skip the scratch SQLite log")
+    run_p.add_argument(
+        "--json-out", default=None, help="write the Trust Report JSON here"
+    )
+    run_p.add_argument(
+        "--no-artifact", action="store_true", help="skip the scratch SQLite log"
+    )
 
     args = parser.parse_args(argv)
 
@@ -83,8 +86,10 @@ def main(argv: list[str] | None = None) -> int:
         print("Why change:", report.evidence_trace.why_change)
         if report.tests:
             print()
-            print(f"Tests: {report.tests.get('outcome')}  "
-                  f"passed={report.tests.get('passed')}  failed={report.tests.get('failed')}")
+            print(
+                f"Tests: {report.tests.get('outcome')}  "
+                f"passed={report.tests.get('passed')}  failed={report.tests.get('failed')}"
+            )
         if report.limitations:
             print()
             print("Limitations:")

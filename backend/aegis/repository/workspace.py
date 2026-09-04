@@ -2,6 +2,7 @@
 and docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 10 (Real Patch Generation): the
 Implementation agent edits a throwaway copy, never the original snapshot.
 """
+
 from __future__ import annotations
 
 import shutil

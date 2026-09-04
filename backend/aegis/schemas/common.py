@@ -4,6 +4,7 @@ Every AI-influenced output in AEGIS carries evidence and a confidence label so
 conclusions can be independently re-checked and hallucination is structurally
 discouraged (docs/AI_AGENT_DESIGN.md Section 5, Specification Section 21).
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -14,14 +15,18 @@ EvidenceKind = Literal[
     "file", "symbol", "line_range", "test", "commit", "dependency", "execution"
 ]
 
-ConfidenceBasis = Literal["FACT", "INFERENCE", "HYPOTHESIS", "RECOMMENDATION", "UNKNOWN"]
+ConfidenceBasis = Literal[
+    "FACT", "INFERENCE", "HYPOTHESIS", "RECOMMENDATION", "UNKNOWN"
+]
 
 
 class Evidence(BaseModel):
     """One concrete, re-checkable fact backing a conclusion."""
 
     kind: EvidenceKind
-    ref: str = Field(..., description="path, symbol_id, 'path:start-end', test id, etc.")
+    ref: str = Field(
+        ..., description="path, symbol_id, 'path:start-end', test id, etc."
+    )
     detail: str = Field(..., description="one line: what this evidence shows")
 
 

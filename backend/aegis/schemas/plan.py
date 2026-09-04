@@ -2,6 +2,7 @@
 and docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 9 (Engineering Planning + Plan
 Validation).
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -14,7 +15,9 @@ from aegis.schemas.common import Confidence, Evidence
 class PlanStep(BaseModel):
     id: str
     description: str
-    test_intent: str = Field(..., description="what behaviour this step's test should cover")
+    test_intent: str = Field(
+        ..., description="what behaviour this step's test should cover"
+    )
     evidence_refs: list[str] = Field(default_factory=list)
 
 

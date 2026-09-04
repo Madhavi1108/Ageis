@@ -8,6 +8,7 @@ function running the pipeline top to bottom, exactly as the walking skeleton
 is meant to be (Section 7.2, "the narrowest possible end-to-end vertical
 slice").
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -61,12 +62,16 @@ def run_pipeline(
     target_file = candidate_paths[0] if candidate_paths else None
     target_file_head = ""
     if target_file:
-        target_head_line = snapshot.file_by_path(target_file).abs_path.read_text(  # type: ignore[union-attr]
-            encoding="utf-8"
-        ).splitlines(keepends=True)
+        target_head_line = (
+            snapshot.file_by_path(target_file)
+            .abs_path.read_text(encoding="utf-8")  # type: ignore[union-attr]
+            .splitlines(keepends=True)
+        )
         target_file_head = target_head_line[0] if target_head_line else ""
 
-    def _report(outcome: str, *, diff_text: str = "", **kwargs: object) -> TrustReportV0:
+    def _report(
+        outcome: str, *, diff_text: str = "", **kwargs: object
+    ) -> TrustReportV0:
         report = build_trust_report(
             task_repo=repo_path,
             task_title=task_title,
@@ -82,17 +87,24 @@ def run_pipeline(
     # 4. Plan (reduced Phase 9, single call) + validate
     try:
         plan = propose_plan(
-            task_key=task_key, task_text=task_text, candidate_files=candidate_paths, provider=provider
+            task_key=task_key,
+            task_text=task_text,
+            candidate_files=candidate_paths,
+            provider=provider,
         )
     except AIOutputInvalid as exc:
-        return _report("NOT_VERIFIED", limitations=[f"planning failed schema validation: {exc}"])
+        return _report(
+            "NOT_VERIFIED", limitations=[f"planning failed schema validation: {exc}"]
+        )
 
     validation = validate_plan(plan, snapshot)
     if validation.verdict != "APPROVED":
         return _report(
             "NOT_VERIFIED",
             plan=plan,
-            limitations=[f"plan not approved ({validation.verdict}): {'; '.join(validation.reasons)}"],
+            limitations=[
+                f"plan not approved ({validation.verdict}): {'; '.join(validation.reasons)}"
+            ],
         )
 
     # 5. Implement (reduced Phase 10) on a copy-on-write workspace
@@ -100,18 +112,24 @@ def run_pipeline(
     try:
         impl_variables = {
             "task_key": task_key,
-            "target_file": plan.files_to_modify[0] if plan.files_to_modify else target_file,
+            "target_file": (
+                plan.files_to_modify[0] if plan.files_to_modify else target_file
+            ),
             "target_file_head": target_file_head,
             "plan_step_id": plan.steps[0].id if plan.steps else "s1",
         }
         try:
             impl = provider.complete(
-                template="implementation", variables=impl_variables, schema=ImplementationResult
+                template="implementation",
+                variables=impl_variables,
+                schema=ImplementationResult,
             )
             assert isinstance(impl, ImplementationResult)
         except AIOutputInvalid as exc:
             return _report(
-                "NOT_VERIFIED", plan=plan, limitations=[f"implementation failed schema validation: {exc}"]
+                "NOT_VERIFIED",
+                plan=plan,
+                limitations=[f"implementation failed schema validation: {exc}"],
             )
 
         all_ops = []
@@ -130,7 +148,9 @@ def run_pipeline(
         test_command = sorted(f.path for f in snapshot.files if f.is_test)
         if not test_command:
             return _report(
-                "NOT_VERIFIED", plan=plan, limitations=["repository has no test files to run"]
+                "NOT_VERIFIED",
+                plan=plan,
+                limitations=["repository has no test files to run"],
             )
 
         exec_result = sandbox.run_tests(ws, test_command)
@@ -163,7 +183,11 @@ def run_pipeline(
 
         # 8. Verify (reduced Phase 18: three mandatory criteria)
         verification = verify(
-            plan=plan, snapshot=snapshot, ws=ws, exec_result=exec_result, all_edit_ops=all_ops
+            plan=plan,
+            snapshot=snapshot,
+            ws=ws,
+            exec_result=exec_result,
+            all_edit_ops=all_ops,
         )
 
         outcome = verification.verdict  # "VERIFIED" | "NOT_VERIFIED"
@@ -172,7 +196,9 @@ def run_pipeline(
             failing = [c.name for c in verification.criteria if c.verdict == "FAIL"]
             limitations.append(f"failed criteria: {failing}")
             if repair_result is not None and len(repair_result.attempts) >= 2:
-                limitations.append("repair loop exhausted its 2-attempt budget without success")
+                limitations.append(
+                    "repair loop exhausted its 2-attempt budget without success"
+                )
                 outcome = "SAFE_STOP"
 
         return _report(

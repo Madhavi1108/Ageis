@@ -3,6 +3,7 @@ docs/AEGIS_IMPLEMENTATION_PLAN.md Phase 1 deliverables: "no job queue, no
 worker, no DB beyond a scratch SQLite for artifacts." The real Artifact
 model (docs/DATA_MODEL.md Section 2.5) arrives with Phase 21.
 """
+
 from __future__ import annotations
 
 import sqlite3
