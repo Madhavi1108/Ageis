@@ -844,6 +844,16 @@ bounded redesign then honest re-scope rather than proceeding on a weak core.
 
 ## 9. Phase 1 — Walking Skeleton
 
+**Status: COMPLETE — 2026-09-04.** `backend/aegis/` implements the full reduced pipeline; 47 tests
+pass (1 Docker-gated test auto-skips — no Docker daemon in this environment). The CLI reaches
+**VERIFIED** end-to-end on the seeded acceptance task via `--sandbox fake` (proving the pipeline
+logic); with the real `DockerSandboxRunner` (the default), it correctly and cleanly returns
+`PARTIALLY_SUPPORTED{reason: docker unavailable}` — the honest, designed behaviour in an
+environment without Docker, never a host-execution fallback. The unfixable fixture
+(`test-repositories/fixtures/unfixable`) ends `SAFE_STOP` cleanly after exactly its 2-attempt
+repair budget. **Open item:** the real Docker happy path (gate: `test_d_real_docker_...` in
+`backend/tests/e2e/test_skeleton_pipeline.py`) has not been run anywhere Docker is installed.
+
 **Goal.** Get **one real engineering task** from requirement to a verified printed diff through a
 single connected pipeline, headless, as fast as possible — proving the integration end-to-end
 before any breadth is built. This is Stage B of the delivery strategy (Section 7.2).

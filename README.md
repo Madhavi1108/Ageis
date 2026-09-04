@@ -8,8 +8,11 @@ optionally open a PR.
 
 Working name; see `docs/POSITIONING.md` for the strategic thesis and wedge.
 
-**Status: Phase 0 (Greenfield Architecture & Planning) — COMPLETE.** Next: Phase 1 (Walking
-Skeleton). See `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full phase-by-phase plan.
+**Status: Phase 0 (Greenfield Architecture & Planning) and Phase 1 (Walking Skeleton) — COMPLETE.**
+The CLI runs a real task end-to-end to a **VERIFIED** diff (`--sandbox fake`); with the real Docker
+sandbox (the default), it correctly reports `PARTIALLY_SUPPORTED` in this Docker-less environment
+rather than falling back to host execution. Next: Phase 2 (Project Foundation — the real FastAPI
+app, DB, and CI). See `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full phase-by-phase plan.
 
 ---
 
@@ -45,17 +48,36 @@ Skeleton). See `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full phase-by-phase p
 ## Repository layout
 
 ```
-docs/                 architecture, strategic, and decision documents (this Phase 0's output)
+docs/                    architecture, strategic, and decision documents (Phase 0's output)
 scripts/
   build_plan_pdf.py       renders the implementation plan to PDF
   capability_spike/       throwaway harness for the Stage A capability gate (see its README)
-backend/, frontend/       not yet created — begin in Phase 1 / Phase 2
+backend/                  the Phase 1 Walking Skeleton (real code) -- see backend/aegis/
+  aegis/                  ingest -> analyze -> map -> plan -> implement -> test -> repair -> verify
+  tests/unit/, tests/e2e/ 47 tests, 1 Docker-gated (auto-skips without a daemon)
+docker/
+  sandbox.Dockerfile      the walking skeleton's sandbox image (build before using --sandbox docker)
+test-repositories/
+  aegis-acceptance/       the seeded acceptance task (Specification §39's worked example)
+  fixtures/unfixable/     exercises the bounded repair loop's clean-stop path
+frontend/                 not yet created -- later phases
 ```
 
 ## Quickstart
 
-Not yet available — the runnable system begins with Phase 1 (walking skeleton). Once it lands,
-this section will show `docker compose up` and a first task run.
+```
+cd backend && pip install -e .[dev]
+python -m aegis.skeleton run ../test-repositories/aegis-acceptance ../test-repositories/aegis-acceptance/task.md --sandbox fake
+```
+
+`--sandbox fake` runs tests as a local subprocess so the full pipeline is demonstrable without
+Docker (only ever use it against trusted fixtures, never a real repository). Build
+`docker/sandbox.Dockerfile` and drop `--sandbox fake` (the default is `docker`) to use the real,
+hardened sandbox.
+
+```
+pytest backend/tests -q
+```
 
 ## Regenerating the plan PDF
 

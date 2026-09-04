@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegis"
+version = "0.1.0"
+description = "AEGIS -- Autonomous Engineering, Generation, Intelligence & Self-Repair System (Phase 1: Walking Skeleton)"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.9,<3",
+    "docker>=7,<8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "pytest-cov>=5,<6",
+]
+live-ai = [
+    "anthropic>=0.4,<1",
+]
+
+[tool.setuptools.packages.find]
+include = ["aegis*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "docker: requires a running Docker daemon (skipped automatically when absent)",
+]
+# All tests here are plain functions; disable class-based collection so
+# pytest doesn't warn about domain schemas named Test* (TestOutcome,
+# TestExecutionResult -- real names from docs/AI_AGENT_DESIGN.md, not renamed
+# just to satisfy a collection heuristic).
+python_classes = "NoClassBasedTestsHere"
