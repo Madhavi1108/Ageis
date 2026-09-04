@@ -1,0 +1,52 @@
+# Capability-spike wiring-proof tasks (MOCK-scale, not the live 30-task benchmark subset).
+# Format: docs/EVAL_HARNESS.md #2, cut down for the throwaway spike harness.
+# See docs/CAPABILITY_SPIKE.md.
+
+tasks:
+  - id: discount-cap
+    repo_dir: fixtures/discount
+    problem_statement: >
+      Applying a discount above 50% still charges the full requested discount
+      instead of capping it. Fix calculate_total() in the invoice module so
+      that any discount above 0.5 is capped at 0.5 before being applied.
+    gold_files: [invoice.py]
+    test_cmd: "test_invoice.py"
+    fail_to_pass: ["test_invoice.py::test_discount_capped_at_50_percent"]
+    pass_to_pass: ["test_invoice.py::test_no_discount"]
+    mock_fix:
+      file: invoice.py
+      find: "return price * (1 - discount)"
+      replace: "return price * (1 - min(discount, 0.5))"
+
+  - id: temperature-formula
+    repo_dir: fixtures/convert
+    problem_statement: >
+      celsius_to_fahrenheit() returns the wrong value. The Celsius to
+      Fahrenheit formula is F = C * 9/5 + 32, but the conversion module
+      currently multiplies by 9/10 instead of 9/5.
+    gold_files: [convert.py]
+    test_cmd: "test_convert.py"
+    fail_to_pass:
+      - "test_convert.py::test_freezing_point"
+      - "test_convert.py::test_boiling_point"
+    pass_to_pass: []
+    mock_fix:
+      file: convert.py
+      find: "return celsius * 9 / 10 + 32"
+      replace: "return celsius * 9 / 5 + 32"
+
+  - id: slug-punctuation
+    repo_dir: fixtures/slugify
+    problem_statement: >
+      slugify() leaves punctuation characters like "!" and "?" in the
+      generated slug. It should strip punctuation before lowercasing and
+      hyphenating the text.
+    gold_files: [slug.py]
+    test_cmd: "test_slug.py"
+    fail_to_pass: ["test_slug.py::test_strips_punctuation"]
+    pass_to_pass: ["test_slug.py::test_simple_title"]
+    mock_fix:
+      file: slug.py
+      find: "return text.lower().replace(\" \", \"-\")"
+      replace: "return re.sub(r\"[^\\w\\s-]\", \"\", text.lower()).replace(\" \", \"-\")"
+      prepend: "import re\n\n\n"
