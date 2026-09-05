@@ -30,8 +30,10 @@ def test_ingest_acceptance_fixture(
     )
 
     assert result.status == "READY"
-    assert result.file_count == 4
-    assert result.languages["python"] == 3
+    # invoice.py, utils.py, checkout.py, order_service.py, test_invoice.py, task.md
+    # (checkout.py/order_service.py added in Phase 5 for real CALLS-edge coverage).
+    assert result.file_count == 6
+    assert result.languages["python"] == 5
     assert result.languages["markdown"] == 1
     assert result.commit_sha.startswith("local:")
 

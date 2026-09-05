@@ -19,3 +19,4 @@ dist-ssr/
 
 # Phase 3
 /backend/artifacts/
+.claude/

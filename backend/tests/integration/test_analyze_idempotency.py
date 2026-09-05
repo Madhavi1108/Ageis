@@ -4,6 +4,7 @@ import time
 
 from app.analysis.analyze import analyze_snapshot
 from app.ingestion.ingest import ingest_repository
+from app.repository.graph import GraphRepository
 from app.repository.repositories import RepositoryRepository
 from app.repository.snapshots import SnapshotRepository
 from app.repository.symbols import SymbolRepository
@@ -56,4 +57,11 @@ def test_force_reanalysis_replaces_symbols_not_duplicates(
 
     assert second.analysed_at != first.analysed_at
     symbols = SymbolRepository(db_session).list_for_snapshot(snapshot.id)
-    assert len(symbols) == second.symbol_count == 7
+    assert len(symbols) == second.symbol_count == 11
+
+    # Phase 5: re-analysis replaces the code graph too, not duplicates it.
+    nodes = GraphRepository(db_session).list_nodes_for_snapshot(snapshot.id)
+    node_count_after_first_force = len(nodes)
+    analyze_snapshot(db_session, snapshot=snapshot, settings=ingestion_settings, force=True)
+    nodes_again = GraphRepository(db_session).list_nodes_for_snapshot(snapshot.id)
+    assert len(nodes_again) == node_count_after_first_force

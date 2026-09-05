@@ -7,6 +7,8 @@ from app.models.artifact import Artifact
 from app.models.audit_log import AuditLog
 from app.models.base import Base
 from app.models.dependency import Dependency
+from app.models.graph_edge import GraphEdge
+from app.models.graph_node import GraphNode
 from app.models.job import Job
 from app.models.repository import Repository
 from app.models.repository_analysis import RepositoryAnalysis
@@ -25,4 +27,6 @@ __all__ = [
     "RepositorySymbol",
     "Dependency",
     "RepositoryAnalysis",
+    "GraphNode",
+    "GraphEdge",
 ]

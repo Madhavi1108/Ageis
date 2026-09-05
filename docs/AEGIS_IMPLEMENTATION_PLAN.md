@@ -1111,6 +1111,20 @@ gitignore + vendor skiplist.
 
 ## 13. Phase 5 — Code Graph & Dependency Analysis
 
+**Status: COMPLETE — 2026-09-05.** `backend/app/analysis/graph/` builds IMPORTS/CALLS/DEFINES/
+TESTS edges from Phase 4's symbols and dependencies, persisted as `graph_node`/`graph_edge`
+(migration `0004`) plus a GRAPH-kind Artifact wired into the `RepositoryAnalysis.graph_artifact_id`
+hook Phase 3/4 left unused; queried via callers/callees/k-hop-impact/shortest-path/neighbours and
+3 new `GET .../analysis/graph*` routes. The acceptance fixture gained `checkout.py`/
+`order_service.py` (calling `invoice.calculate_total`) so "callers of `calculate_total` returns
+`checkout` and `order_service`" — the Specification's own worked example — is a real, passing
+assertion, not simulated. 211 tests pass (the Phase 1 Docker-gated test still auto-skips here);
+95% coverage on the new graph package. Committed as `8657bff`.
+**Open items (documented limitations, not gaps):** only single-file top-level modules resolve for
+IMPORTS/CALLS (sub-packages are `UNRESOLVED`); `from X import a as b` calling `b(...)` is
+`UNRESOLVED` (the alias isn't tracked upstream); Git-derived edges (`CHANGED_BY`, `FIXED_BY`) and
+`REPO`/`COMMIT`/`ISSUE`/`PATCH` nodes remain schema-only until Phase 19/Git integration.
+
 **Goal.** Build a knowledge graph (NetworkX in memory, adjacency in the DB) with nodes
 (repo / file / module / class / function / test / dependency / commit / issue / patch) and edges
 (`IMPORTS`, `CALLS`, `DEFINES`, `TESTS`, `MODIFIES`, `DEPENDS_ON`, `CHANGED_BY`, `RELATED_TO`,

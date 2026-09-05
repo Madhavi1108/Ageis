@@ -68,3 +68,17 @@ class AnalysisRepository:
         self._session.commit()
         self._session.refresh(row)
         return row
+
+    def set_graph_artifact_id(
+        self, snapshot_id: str, artifact_id: str
+    ) -> RepositoryAnalysis | None:
+        """Additive, Phase 5 only: point the analysis row at the GRAPH-kind
+        Artifact just written. Deliberately separate from upsert() so Phase
+        4's call site and contract are untouched."""
+        row = self.get_by_snapshot(snapshot_id)
+        if row is None:
+            return None
+        row.graph_artifact_id = artifact_id
+        self._session.commit()
+        self._session.refresh(row)
+        return row

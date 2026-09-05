@@ -28,6 +28,25 @@ class RawDef:
 
 
 @dataclass(frozen=True)
+class RawCall:
+    """One `ast.Call` expression, captured for Phase 5's code graph (see
+    docs/AEGIS_IMPLEMENTATION_PLAN.md Section 13). `caller_qualname` is the
+    enclosing function/method's qualname ("" for a module-level call, same
+    convention as RawDef.qualname for the MODULE entry). `callee_expr` is the
+    call target as written -- a bare name ("foo"), a dotted attribute chain
+    ("self.foo", "mod.foo"), or None when the call target isn't a Name/
+    Attribute chain at all (e.g. calling the result of another call) and so
+    can never be resolved. Resolution (name+import+scope matching, never type
+    inference) happens later in app/analysis/graph/builder.py -- this layer
+    only records what was literally written.
+    """
+
+    caller_qualname: str
+    callee_expr: str | None
+    lineno: int
+
+
+@dataclass(frozen=True)
 class RawImport:
     module: (
         str | None
@@ -49,6 +68,7 @@ class RawWalk:
     has_main_guard: bool = False
     defs: list[RawDef] = field(default_factory=list)
     imports: list[RawImport] = field(default_factory=list)
+    calls: list[RawCall] = field(default_factory=list)
     # (assigned_name, dotted call target) for module-level `name = Call(...)` assignments,
     # e.g. ("app", "FastAPI") -- feeds entrypoints.py's ASGI/WSGI detection.
     module_level_calls: list[tuple[str, str]] = field(default_factory=list)
@@ -155,6 +175,7 @@ class _Visitor(ast.NodeVisitor):
             )
         ]
         self.imports: list[RawImport] = []
+        self.calls: list[RawCall] = []
         self.dunder_all: list[str] | None = None
         self.has_main_guard = False
         self.module_level_calls: list[tuple[str, str]] = []
@@ -322,6 +343,16 @@ class _Visitor(ast.NodeVisitor):
         target = _dotted_name(node.func)
         if target in ("argparse.ArgumentParser", "ArgumentParser"):
             self.has_argparse_call = True
+        # Caller qualname = the innermost enclosing def, joined exactly like
+        # RawDef.qualname ("" at module level, matching the synthetic MODULE
+        # def's convention). _scope grows for both classes and functions
+        # (visit_ClassDef/_visit_function), so a call made directly in a
+        # class body -- not inside any method, e.g. a class-attribute default
+        # -- gets the class's own qualname as its caller; that's correct,
+        # such code genuinely runs as part of defining the class.
+        self.calls.append(
+            RawCall(caller_qualname=".".join(self._scope), callee_expr=target, lineno=node.lineno)
+        )
         self.generic_visit(node)
 
 
@@ -346,6 +377,7 @@ def parse_and_walk(abs_path: Path, relpath: str) -> RawWalk:
         has_main_guard=visitor.has_main_guard,
         defs=visitor.defs,
         imports=visitor.imports,
+        calls=visitor.calls,
         module_level_calls=visitor.module_level_calls,
         uses_unittest_import=visitor.uses_unittest_import,
         testcase_class_qualnames=visitor.testcase_class_qualnames,

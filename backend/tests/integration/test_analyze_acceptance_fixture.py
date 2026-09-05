@@ -39,10 +39,14 @@ def test_analyze_acceptance_fixture(
     )
 
     # invoice.py (module + calculate_total), utils.py (module + format_currency),
+    # checkout.py (module + process_checkout), order_service.py (module + finalize_order),
     # test_invoice.py (module + test_no_discount + test_discount_capped_at_50_percent).
-    assert result.symbol_count == 7
-    # test_invoice.py's `from invoice import calculate_total` is the only import.
-    assert result.dependency_count == 1
+    # checkout.py and order_service.py were added in Phase 5 (Code Graph & Dependency
+    # Analysis) so "callers of calculate_total" has a real answer -- see
+    # test_analyze_builds_graph.py.
+    assert result.symbol_count == 11
+    # test_invoice.py, checkout.py, and order_service.py each import invoice (LOCAL).
+    assert result.dependency_count == 3
     assert result.entry_points == []
     # No pytest.ini/conftest.py/pyproject.toml anywhere in this fixture -- test_*()
     # naming alone is not proof of pytest (confirmed design decision).
@@ -63,9 +67,9 @@ def test_analyze_persists_local_import_edge(
     analyze_snapshot(db_session, snapshot=snapshot, settings=ingestion_settings)
 
     deps = DependencyRepository(db_session).list_for_snapshot(snapshot.id)
-    assert len(deps) == 1
-    assert deps[0].target == "invoice"
-    assert deps[0].classification == "LOCAL"
+    assert len(deps) == 3
+    assert {d.target for d in deps} == {"invoice"}
+    assert all(d.classification == "LOCAL" for d in deps)
 
 
 def test_analyze_persists_symbols(

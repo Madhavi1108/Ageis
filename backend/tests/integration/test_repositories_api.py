@@ -62,7 +62,7 @@ def test_repositories_round_trip(client, acceptance_fixture_path):
     assert snapshot_resp.status_code == 201, snapshot_resp.text
     snapshot_body = snapshot_resp.json()
     assert snapshot_body["status"] == "READY"
-    assert snapshot_body["file_count"] == 4
+    assert snapshot_body["file_count"] == 6
 
     get_resp = client.get(f"/repositories/{repo_body['id']}")
     assert get_resp.status_code == 200
