@@ -9,12 +9,15 @@ from app.models.base import Base
 from app.models.dependency import Dependency
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
+from app.models.issue import Issue
 from app.models.job import Job
 from app.models.repository import Repository
 from app.models.repository_analysis import RepositoryAnalysis
 from app.models.repository_file import RepositoryFile
 from app.models.repository_symbol import RepositorySymbol
 from app.models.snapshot import RepositorySnapshot
+from app.models.task import Task
+from app.models.task_step import TaskStep
 
 __all__ = [
     "Base",
@@ -29,4 +32,7 @@ __all__ = [
     "RepositoryAnalysis",
     "GraphNode",
     "GraphEdge",
+    "Issue",
+    "Task",
+    "TaskStep",
 ]

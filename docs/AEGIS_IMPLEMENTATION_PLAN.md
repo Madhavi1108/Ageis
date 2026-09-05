@@ -1181,6 +1181,25 @@ fixtures; centrality reproducible; unresolved edges labelled.
 
 ## 14. Phase 6 — Task / Issue Ingestion (Normalization)
 
+**Status: COMPLETE — 2026-09-05.** `backend/app/services/tasks.py` normalizes untrusted issue text
+(CRLF→LF, control/format-char stripping, blank-run collapse, edge trim, byte cap with provenance —
+markdown kept intact, injection strings kept only as inert stored data), infers `task_type` by
+deterministic keyword rules (QUESTION→REFACTOR→BUG→FEATURE→REQUIREMENT), and dedupes on
+`sha256(repo_id + "\0" + normalized_text)`. New `issue`/`task`/`task_step` tables (migration
+`0005`); `Task.state` carries the full §4.3 workflow enum but only `PENDING → {QUEUED, CANCELLED}`
+is exercised here. Six routes: `POST /tasks`, `GET /tasks`, `GET /tasks/{id}`, `POST
+/tasks/{id}/run` (creates a `RUN_TASK` Job, `mark_queued`), `POST /tasks/{id}/cancel` (cooperative
+— the `CANCELLED` row is the flag Phase 21's orchestrator will check), `GET /tasks/{id}/timeline`
+(TaskStep rows merged with Job events). Submitting the Specification's example `task.md` stores a
+`BUG` task with `calculate_total()` / `0.5` intact. 270 tests pass (Phase 1 Docker test still
+auto-skips); 95% coverage on the new service module; migration `0005` upgrade/downgrade clean;
+OpenAPI route surface pinned by a snapshot test.
+**Open items (documented limitations, not gaps):** no live GitHub issue fetch — `IssueAnalysisInput`
++ `IssueRepository` are the structural seam, real import is Phase 19; `task_type` is rules-only (AI
+enrichment = Phase 7's `IssueAnalysis`); the full state machine and its transition guards land in
+Phase 21, as does the `job.task_id` FK and any worker that consumes the `QUEUED` Job;
+`Task.snapshot_id` stays null until snapshot binding in a later phase.
+
 **Goal.** Accept an issue / bug / feature / requirement (free text or a GitHub issue reference) and
 produce a normalized `Task` with type, title, description, acceptance hints, any user-supplied
 files/symbols, constraints, and priority; create `Task` + `TaskStep` + `Job`; move `PENDING ->

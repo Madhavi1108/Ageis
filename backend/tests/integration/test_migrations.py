@@ -53,6 +53,9 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "repository_analysis",
         "graph_node",
         "graph_edge",
+        "issue",
+        "task",
+        "task_step",
     }.issubset(tables)
     engine.dispose()
 
@@ -72,6 +75,9 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "repository_analysis",
         "graph_node",
         "graph_edge",
+        "issue",
+        "task",
+        "task_step",
     ):
         assert table not in tables
     engine.dispose()

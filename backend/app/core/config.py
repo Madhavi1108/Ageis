@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     ingestion_clone_timeout_s: int = Field(default=120, gt=0)
     artifacts_root: str = Field(default="./artifacts")
 
+    # Task / issue ingestion (Phase 6, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 14).
+    # Issue text above this byte budget is truncated (not rejected), with the
+    # original size recorded on the create response for provenance.
+    task_max_description_bytes: int = Field(default=50_000, gt=0)
+    task_max_title_chars: int = Field(default=200, gt=0)
+
     @field_validator("ingestion_local_roots")
     @classmethod
     def _resolve_local_roots(cls, v: list[str]) -> list[str]:
