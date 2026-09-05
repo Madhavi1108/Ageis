@@ -10,6 +10,7 @@ from app.models.code_mapping import CodeMapping
 from app.models.dependency import Dependency
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
+from app.models.impact_analysis import ImpactAnalysis
 from app.models.issue import Issue
 from app.models.job import Job
 from app.models.repository import Repository
@@ -37,4 +38,5 @@ __all__ = [
     "Task",
     "TaskStep",
     "CodeMapping",
+    "ImpactAnalysis",
 ]

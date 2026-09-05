@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.schemas.impact import ImpactAnalysis
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.task import (
     Task,
@@ -21,6 +22,7 @@ from app.schemas.task import (
     TaskList,
     TaskTimeline,
 )
+from app.services import impact as impact_service
 from app.services import mapping as mapping_service
 from app.services import tasks as tasks_service
 
@@ -85,3 +87,19 @@ def get_task_mapping(task_id: str, db: Session = Depends(get_db)) -> IssueCodeMa
     """The persisted issue -> code mapping for this task (Phase 7). Compute it
     first with ``POST /analysis/map`` (``{"task_id": ...}``)."""
     return mapping_service.get_mapping(db, task_id)
+
+
+@router.get("/{task_id}/impact", response_model=ImpactAnalysis)
+def get_task_impact(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> ImpactAnalysis:
+    """The impact analysis for this task (Phase 8): changed set, blast radius,
+    callers, related tests, public API, config/DB refs, regression areas, and
+    the CRS risk-signal bundle. Computed and persisted on first access (or with
+    ``?refresh=true``); requires the Phase 7 mapping to exist."""
+    return impact_service.get_or_compute_impact(
+        db, settings=settings, task_id=task_id, refresh=refresh
+    )

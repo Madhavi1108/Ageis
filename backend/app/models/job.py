@@ -22,6 +22,7 @@ class JobType(str, enum.Enum):
     INGEST = "INGEST"
     ANALYZE = "ANALYZE"
     MAP = "MAP"
+    IMPACT = "IMPACT"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

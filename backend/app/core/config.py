@@ -75,6 +75,12 @@ class Settings(BaseSettings):
     mapping_graph_hops: int = Field(default=2, gt=0)
     mapping_max_indexed_file_bytes: int = Field(default=1_000_000, gt=0)
 
+    # Impact analysis (Phase 8, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 16).
+    # blast_radius_hops: reverse-graph BFS depth from each changed node;
+    # max_regression_areas: cap on the ranked regression-area list.
+    impact_blast_radius_hops: int = Field(default=3, gt=0)
+    impact_max_regression_areas: int = Field(default=20, gt=0)
+
     @field_validator("ingestion_local_roots")
     @classmethod
     def _resolve_local_roots(cls, v: list[str]) -> list[str]:

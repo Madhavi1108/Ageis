@@ -38,6 +38,7 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/cancel", "post"),
     ("/tasks/{task_id}/timeline", "get"),
     ("/tasks/{task_id}/mapping", "get"),
+    ("/tasks/{task_id}/impact", "get"),
 }
 
 
@@ -64,4 +65,5 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/cancel", "post"),
         ("/tasks/{task_id}/timeline", "get"),
         ("/tasks/{task_id}/mapping", "get"),
+        ("/tasks/{task_id}/impact", "get"),
     }

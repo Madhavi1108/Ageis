@@ -1339,6 +1339,31 @@ fixtures -> separate calibration and test sets.
 
 ## 16. Phase 8 — Impact Analysis
 
+**Status: COMPLETE — 2026-09-06.** `backend/app/analysis/impact.py` turns a task's persisted
+Phase 7 `CodeMapping` + the Phase 5 graph into an `ImpactAnalysis`: `changed_set` (candidate files
++ resolved `symbol_id`s), `blast_radius` grouped by hop (reverse-graph BFS to
+`impact_blast_radius_hops`, default 3), direct+indirect `callers` (CALLS-edge predecessor walk;
+hop-1 entries carry the real edge confidence, deeper ones are labelled), `related_tests` (graph
+`TESTS` edges + `test_<module>` naming), `public_api_touched` (route decorator → `"route"`, else
+Phase 4's `is_exported` → `"exported"`), regex-based `config_refs` / `db_refs` (**every item basis
+`INFERENCE`**, never `FACT`), centrality-ranked `regression_areas` (`coverage_gap` fixed at 1.0
+until Phase 12), and a `risk_signal_bundle` keyed by the §4.10.2 CRS signals — `files_changed`,
+`dependency_impact`, `public_api_touched`, `architectural_centrality`, `security_sensitivity`
+populated now; `lines_changed` / `complexity_delta` / `inverse_coverage` / `historical_churn` /
+`prior_failures` emitted as `null` + an `unavailable_reason` (their producing phases are 10 / 12 /
+19+). New `impact_analysis` table (migration `0007`, one row per task, upsert); a single route
+`GET /tasks/{id}/impact?refresh=<bool>` computes-and-persists on first access and serves the
+cached row after (impact is fully derived, so no separate compute endpoint). A rendered
+human-readable `report` is derived on read, never stored. On the acceptance fixture the report
+lists callers `checkout.py` / `order_service.py` and test `test_invoice.py` — the Specification's
+worked example, a real passing assertion. 329 tests pass (Phase 1 Docker test still auto-skips);
+migration `0007` up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** the changed set is the *predicted* mapping
+candidates, not a real diff — a patch-derived set replaces it behind the same schema at Phase 10;
+five CRS signals stay `null` until phases 10/12/19+; `config_refs` / `db_refs` are regex/AST
+best-effort and always `INFERENCE`; `regression_areas` is centrality-only until Phase 12 supplies
+coverage.
+
 **Goal.** From the mapping and the graph, compute affected files and functions, direct callers,
 indirect dependencies, related tests, public APIs, configuration and database references (where
 detectable), and likely regression areas -> an `ImpactAnalysis` report plus a bundle of risk

@@ -33,3 +33,20 @@ class AnalysisNotFoundError(AppError):
         super().__init__(
             "ANALYSIS_NOT_FOUND", message, status_code=status.HTTP_404_NOT_FOUND
         )
+
+
+class ImpactTaskNotFoundError(AppError):
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "IMPACT_TASK_NOT_FOUND", message, status_code=status.HTTP_404_NOT_FOUND
+        )
+
+
+class ImpactMappingMissingError(AppError):
+    """Impact analysis is derived from the Phase 7 issue -> code mapping; it must
+    exist first (POST /analysis/map)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "IMPACT_MAPPING_MISSING", message, status_code=status.HTTP_409_CONFLICT
+        )
