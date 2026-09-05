@@ -63,6 +63,18 @@ class Settings(BaseSettings):
     task_max_description_bytes: int = Field(default=50_000, gt=0)
     task_max_title_chars: int = Field(default=200, gt=0)
 
+    # Issue -> code mapping (Phase 7, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 15).
+    # top_k: candidates returned; confidence_threshold: a candidate whose per-
+    # candidate confidence is below this is dropped (nothing above it -> UNKNOWN,
+    # i.e. an empty candidate list); graph_hops: k-hop radius for the graph-
+    # proximity retriever; max_indexed_file_bytes: a source file larger than this
+    # is skipped by the lexical FTS index (with provenance), never silently
+    # truncated mid-token.
+    mapping_top_k: int = Field(default=10, gt=0)
+    mapping_confidence_threshold: float = Field(default=0.15, ge=0.0, le=1.0)
+    mapping_graph_hops: int = Field(default=2, gt=0)
+    mapping_max_indexed_file_bytes: int = Field(default=1_000_000, gt=0)
+
     @field_validator("ingestion_local_roots")
     @classmethod
     def _resolve_local_roots(cls, v: list[str]) -> list[str]:

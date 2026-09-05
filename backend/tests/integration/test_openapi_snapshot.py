@@ -30,12 +30,14 @@ EXPECTED_OPERATIONS = {
         "/repositories/{repository_id}/snapshots/{snapshot_id}/analysis/graph/node/{node_id}",
         "get",
     ),
+    ("/analysis/map", "post"),
     ("/tasks", "post"),
     ("/tasks", "get"),
     ("/tasks/{task_id}", "get"),
     ("/tasks/{task_id}/run", "post"),
     ("/tasks/{task_id}/cancel", "post"),
     ("/tasks/{task_id}/timeline", "get"),
+    ("/tasks/{task_id}/mapping", "get"),
 }
 
 
@@ -52,7 +54,7 @@ def test_openapi_surface_matches_snapshot():
     assert _operations() == EXPECTED_OPERATIONS
 
 
-def test_all_six_task_routes_are_present():
+def test_all_task_routes_are_present():
     task_ops = {op for op in _operations() if op[0].startswith("/tasks")}
     assert task_ops == {
         ("/tasks", "post"),
@@ -61,4 +63,5 @@ def test_all_six_task_routes_are_present():
         ("/tasks/{task_id}/run", "post"),
         ("/tasks/{task_id}/cancel", "post"),
         ("/tasks/{task_id}/timeline", "get"),
+        ("/tasks/{task_id}/mapping", "get"),
     }

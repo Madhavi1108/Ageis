@@ -112,6 +112,18 @@ class TaskRepository:
             self._session.execute(select(func.count()).select_from(inner)).scalar_one()
         )
 
+    def set_snapshot_id(self, task_id: str, snapshot_id: str) -> Task:
+        """Bind a task to the repository snapshot a later stage will operate on.
+        Phase 7 (issue -> code mapping) is the first stage to need this; the
+        ``Task.snapshot_id`` column has been nullable and unused since Phase 6
+        exactly for this."""
+        task = self._session.get(Task, task_id)
+        assert task is not None
+        task.snapshot_id = snapshot_id
+        self._session.commit()
+        self._session.refresh(task)
+        return task
+
     def set_state(
         self, task_id: str, state: str, *, terminal_reason: str | None = None
     ) -> Task:

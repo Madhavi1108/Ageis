@@ -6,6 +6,7 @@ from __future__ import annotations
 from app.models.artifact import Artifact
 from app.models.audit_log import AuditLog
 from app.models.base import Base
+from app.models.code_mapping import CodeMapping
 from app.models.dependency import Dependency
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
@@ -35,4 +36,5 @@ __all__ = [
     "Issue",
     "Task",
     "TaskStep",
+    "CodeMapping",
 ]

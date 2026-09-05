@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -68,10 +69,13 @@ async def validation_error_handler(
     envelope = ErrorEnvelope(
         code="VALIDATION_ERROR",
         message="Request payload failed validation.",
-        details={"errors": exc.errors()},
+        # jsonable_encoder: a model/root validator that raises ValueError puts the
+        # exception object in `ctx`, which is not directly JSON serializable.
+        details={"errors": jsonable_encoder(exc.errors())},
     )
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=envelope.model_dump()
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder(envelope),
     )
 
 

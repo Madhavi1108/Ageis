@@ -1254,6 +1254,30 @@ prompts; structured fields only; documented in the security model.
 
 ## 15. Phase 7 — Issue -> Code Mapping
 
+**Status: COMPLETE — 2026-09-06.** `backend/app/analysis/mapping/` fuses three live retrievers --
+lexical (an in-memory SQLite **FTS5** index over file source + symbol qualnames/signatures/
+docstrings, ranked by `bm25()`, with a token-overlap fallback if FTS5 is absent), symbol-name
+match, and code-graph proximity (k-hop from the lexical/symbol seeds over the Phase 5 graph) --
+via reciprocal-rank fusion (`mapping-model v1.0.0`, `k = 60`, weights mirrored from
+`docs/METRICS.md` §4 and asserted equal by a sync test). Semantic/embeddings retrieval is a
+wired-in seam (`semantic.py` returns `available=False`; there is no `app/` `AIProvider` yet) and
+its absence scales `overall_confidence` down by `0.85`. Every candidate carries >= 1 concrete
+`Evidence` item (enforced at the `MappingCandidate` schema boundary); a candidate below the
+confidence threshold is dropped, and an empty result is the `UNKNOWN` case
+(`overall_confidence = 0.0`), never an error. New `code_mapping` table (migration `0006`,
+one row per task, upsert); `POST /analysis/map` (task-scoped compute+persist, or stateless
+`snapshot_id` + `issue_text`) and `GET /tasks/{id}/mapping`; task mode binds the newest analysable
+snapshot to `Task.snapshot_id` (the column Phase 6 left null for exactly this). On the acceptance
+fixture, "discount exceeds the configured maximum" maps `invoice.py` / `calculate_total` to the
+top rank with a lexical + symbol evidence trail and `test_invoice.py` as a related test -- a real,
+passing assertion. 300 tests pass (Phase 1 Docker test still auto-skips); migration `0006`
+upgrade/downgrade clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** semantic retrieval is inert until the `app/`
+`AIProvider` abstraction lands; the `git_history` and `memory` retrievers are forward-declared in
+the fusion weight table (no code) until Phase 19 / Phase 20; confidence calibration is heuristic
+(`v1.0.0`) pending Phase 25; the FTS index is rebuilt per call ("build once per snapshot" is a
+Phase 4.13 optimisation, not a Phase 7 gate).
+
 **Goal.** Produce an evidence-backed mapping `Issue -> {files, symbols, tests, dependencies,
 confidence}` by combining lexical search, semantic retrieval, symbol relationships, the code graph,
 Git history (when present), test relationships, repository structure, and engineering memory (when

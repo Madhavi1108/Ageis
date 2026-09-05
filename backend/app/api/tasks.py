@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.schemas.mapping import IssueCodeMapping
 from app.schemas.task import (
     Task,
     TaskCancelRequest,
@@ -20,6 +21,7 @@ from app.schemas.task import (
     TaskList,
     TaskTimeline,
 )
+from app.services import mapping as mapping_service
 from app.services import tasks as tasks_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -76,3 +78,10 @@ def cancel_task(
 @router.get("/{task_id}/timeline", response_model=TaskTimeline)
 def get_task_timeline(task_id: str, db: Session = Depends(get_db)) -> TaskTimeline:
     return tasks_service.build_timeline(db, task_id)
+
+
+@router.get("/{task_id}/mapping", response_model=IssueCodeMapping)
+def get_task_mapping(task_id: str, db: Session = Depends(get_db)) -> IssueCodeMapping:
+    """The persisted issue -> code mapping for this task (Phase 7). Compute it
+    first with ``POST /analysis/map`` (``{"task_id": ...}``)."""
+    return mapping_service.get_mapping(db, task_id)
