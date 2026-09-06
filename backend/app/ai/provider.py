@@ -74,6 +74,10 @@ def _fallback_response(template: str, variables: dict[str, Any]) -> dict[str, An
             "confidence": {"value": 0.2, "basis": "UNKNOWN"},
             "evidence": [],
         }
+    if template == "code_review":
+        # no model available -> the deterministic static + rule layers are the
+        # floor; the AI reviewer simply contributes nothing.
+        return {"findings": []}
     raise ValueError(f"no rule-based fallback for template {template!r}")
 
 

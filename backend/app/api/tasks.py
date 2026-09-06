@@ -18,6 +18,7 @@ from app.schemas.impact import ImpactAnalysis
 from app.schemas.implementation import ImplementationResult
 from app.schemas.regression import RegressionResult
 from app.schemas.repair import RepairResult
+from app.schemas.review import ReviewReport
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -38,6 +39,7 @@ from app.services import mapping as mapping_service
 from app.services import planning as planning_service
 from app.services import regression as regression_service
 from app.services import repair as repair_service
+from app.services import review as review_service
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
 
@@ -289,4 +291,23 @@ def get_task_regression(
         mode="full" if mode == "full" else "smart",
         execute=execute,
         refresh=refresh,
+    )
+
+
+@router.get("/{task_id}/review", response_model=ReviewReport)
+def get_task_review(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    provider=Depends(get_ai_provider),
+) -> ReviewReport:
+    """The automated code review of this task's latest patch (Phase 16):
+    ``ReviewFinding``s from ruff + custom AST safety rules + an AI reviewer,
+    each with source / category / severity / file:line / recommendation.
+    ``blocking`` is true when an OPEN CRITICAL/HIGH finding exists. Computed and
+    persisted on first access (or ``?refresh=true``); requires a Phase 10
+    implementation."""
+    return review_service.get_or_review(
+        db, settings=settings, task_id=task_id, provider=provider, refresh=refresh
     )

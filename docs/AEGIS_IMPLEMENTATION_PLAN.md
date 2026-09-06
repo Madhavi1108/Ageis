@@ -2056,6 +2056,34 @@ Flaky tests -> a quarantine list + a documented retry policy.
 
 ## 24. Phase 16 — Code Review Engine
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/review/` package reviews the latest patch
+(reconstructed into a throwaway workspace — not Docker-gated, nothing executes): `static_checks`
+runs **ruff** with `--select S,C90,E,F,B,PERF` (its bundled flake8-bandit + mccabe stand in for
+`bandit`/`radon`, which run only when `shutil.which` finds them — each absence is a recorded
+`policy_gap`, `mypy` always one here), mapping codes → `(severity, category)`. `rules` adds
+deterministic AST safety checks — secret literal (`SECURITY/CRITICAL`), `eval`/`exec` &
+`subprocess(shell=True)` (`SECURITY/HIGH`), bare `except` (`ERROR_HANDLING/LOW`),
+`except Exception: pass` (`MEDIUM`), test deletion from the edit-ops (`TEST_QUALITY/HIGH`), a new
+non-stdlib/non-declared import (`DEPENDENCY_IMPACT/MEDIUM`) — each citing `file` + `line_start`.
+`agent.ai_review` calls `template="code_review"` (schema-constrained, evidence-required; a finding
+without a concrete `file` + integer `line_start` is forced to `INFO`; `provider=None` or a
+schema-invalid response → `[]`, the deterministic layers are the floor). `aggregate` normalises
+severity, adds a `SCOPE/HIGH` finding per out-of-scope changed file, de-dups by
+`(file, line, category, description-key)` (RULE/STATIC beat AI), sorts by severity, and computes
+`blocking` = any OPEN `CRITICAL`/`HIGH`. New `review` (aggregate, per-task upsert) + `review_finding`
+(rows, replace-for-task) tables (migration `0015`); `GET /tasks/{id}/review?refresh=<bool>`
+computes-and-persists, sets state `REVIEWING`, returns `ReviewReport` (requires a Phase 10
+implementation → else 409). On the acceptance patch: reviewed deterministically across two runs,
+no false `CRITICAL`; a patch injecting `subprocess.run(x, shell=True)` yields a `HIGH SECURITY`
+finding on `invoice.py` with a line + recommendation and `blocking:true`. 558 tests pass (Docker +
+`live_ai` skips unchanged); migration `0015` up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** only `ruff` is guaranteed here — `bandit` /
+`radon` / `mypy` are code-detected and otherwise `policy_gap`s; the AI reviewer degrades to the
+deterministic layers rather than 502-ing; findings are persisted but consumed by Phase 17
+(PCS/CRS) and Phase 18 (verification gate), not yet; the `SCOPE` finding mirrors, not replaces, the
+Phase 10 scope guard; `line_end` is start-line-derived (full hunk-range mapping is a follow-up);
+metric #9 is measured by the Phase 25 harness.
+
 **Goal.** Automated review of every patch across ten categories — correctness, scope compliance,
 security, maintainability, architecture, performance, error handling, test quality, regression risk,
 dependency impact — producing `ReviewFinding` items with severity, category, file, line/range,
