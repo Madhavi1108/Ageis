@@ -66,6 +66,7 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "failure",
         "investigation",
         "repair_attempt",
+        "regression_plan",
     }.issubset(tables)
     engine.dispose()
 
@@ -98,6 +99,7 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "failure",
         "investigation",
         "repair_attempt",
+        "regression_plan",
     ):
         assert table not in tables
     engine.dispose()

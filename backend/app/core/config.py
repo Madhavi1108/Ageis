@@ -136,6 +136,13 @@ class Settings(BaseSettings):
     ai_repair_timeout_s: float = Field(default=90.0, gt=0)
     ai_repair_max_tokens: int = Field(default=6000, gt=0)
 
+    # Regression intelligence (Phase 15, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 23).
+    # related_hops: graph distance from a changed node still counted RELATED;
+    # centrality_decile: a covered file at/above this betweenness percentile is
+    # classified REGRESSION (0.9 = top 10%).
+    regression_related_hops: int = Field(default=2, gt=0)
+    regression_centrality_decile: float = Field(default=0.9, ge=0.0, le=1.0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

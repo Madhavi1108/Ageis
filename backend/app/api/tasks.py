@@ -16,6 +16,7 @@ from app.db.session import get_db
 from app.schemas.failure import FailureAnalysis
 from app.schemas.impact import ImpactAnalysis
 from app.schemas.implementation import ImplementationResult
+from app.schemas.regression import RegressionResult
 from app.schemas.repair import RepairResult
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
@@ -35,6 +36,7 @@ from app.services import implementation as implementation_service
 from app.services import investigation as investigation_service
 from app.services import mapping as mapping_service
 from app.services import planning as planning_service
+from app.services import regression as regression_service
 from app.services import repair as repair_service
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
@@ -262,4 +264,29 @@ def get_task_repairs(
     investigation. Without Docker the loop SAFE_STOPs (sandbox unavailable)."""
     return repair_service.get_or_repair(
         db, settings=settings, task_id=task_id, provider=provider, refresh=refresh
+    )
+
+
+@router.get("/{task_id}/regression", response_model=RegressionResult)
+def get_task_regression(
+    task_id: str,
+    mode: str = "smart",
+    execute: bool = False,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> RegressionResult:
+    """The regression-selection plan for this task (Phase 15): every test
+    classified TARGETED / RELATED / REGRESSION / FULL with a rationale, plus the
+    per-stage selection (``repair`` = TARGETED+RELATED; ``pre_verification`` =
+    smart subset or, with ``?mode=full``, everything). ``?execute=true`` runs the
+    pre-verification subset in the sandbox and flags new failures (unavailable
+    without Docker). Requires the Phase 8 impact analysis."""
+    return regression_service.get_or_plan(
+        db,
+        settings=settings,
+        task_id=task_id,
+        mode="full" if mode == "full" else "smart",
+        execute=execute,
+        refresh=refresh,
     )

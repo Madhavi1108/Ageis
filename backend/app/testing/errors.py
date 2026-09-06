@@ -51,3 +51,24 @@ class TestGenerationFailedError(AppError):
             message,
             status_code=status.HTTP_502_BAD_GATEWAY,
         )
+
+
+class RegressionTaskNotFoundError(AppError):
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "REGRESSION_TASK_NOT_FOUND",
+            message,
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+
+class RegressionInputsMissingError(AppError):
+    """Regression selection classifies tests against the Phase 8 impact
+    analysis -- it must exist first (GET /tasks/{id}/impact)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "REGRESSION_INPUTS_MISSING",
+            message,
+            status_code=status.HTTP_409_CONFLICT,
+        )

@@ -1974,6 +1974,34 @@ diff-size penalty + iteration cap. Long runtime -> wall-clock budget.
 
 ## 23. Phase 15 — Regression Intelligence
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/testing/regression.py` (deterministic, no AI):
+`classify(...)` labels every test in the corpus — existing tests (code-graph `TEST` nodes +
+`is_test` files) and generated `TestCase` rows — as `TARGETED` (covers a changed symbol/file, or
+`test_<changed-module>` naming), `RELATED` (covers something within
+`regression_related_hops` graph hops of the change, or shares a non-root directory), `REGRESSION`
+(covers a file at/above the `regression_centrality_decile` betweenness percentile, or the test's
+file failed in a prior investigation), else `FULL`; each `Classified` carries a `rationale`,
+`covers_symbol`, and `hops`, sorted `(class-rank, test_id)` for determinism. `select_for_stage`
+returns per-stage test ids — `repair` = `TARGETED ∪ RELATED`; `pre_verification` = everything under
+`?mode=full`, or `TARGETED ∪ RELATED ∪ REGRESSION` under `smart` with a recorded
+`subset_justification` + `subset_risk_note` when that omits `FULL`-only tests. New `regression_plan`
+table (migration `0014`, one row per task, upsert); `GET /tasks/{id}/regression?mode=<smart|full>&
+execute=<bool>&refresh=<bool>` classifies + selects, persists, sets state `REGRESSION_TESTING`,
+returns `RegressionResult` (requires the Phase 8 impact analysis → else 409). `?execute=true` runs
+the pre-verification subset in the sandbox and diffs it against the last execution for new failures
+— **unavailable without Docker** (`executed=false` + reason). On the acceptance fixture
+`test_invoice.py::*` and the generated boundary test classify `TARGETED` (covering the changed
+`invoice.py` / `invoice.py::calculate_total`), deterministically across two runs, and `mode=full`
+covers the whole corpus. 537 tests pass (Docker + `live_ai` skips unchanged); migration `0014`
+up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** no AI; prior-failure data is this task's
+`Failure` rows only (the engineering-memory cross-task hook is Phase 20); the changed set is
+`ImpactAnalysis.changed_set` (mapping-predicted, not patch-diff-derived); execution + baseline-diff
++ metric #6's seeded-regression measurement need Docker / the Phase 25 harness; shared-fixture
+detection is out (k-hop + same-non-root-directory only); the DATA_MODEL `TestExecution.selection`
+field is recorded on the `regression_plan` row instead of altering the committed `test_execution`
+table.
+
 **Goal.** A regression-selection engine that classifies tests as `TARGETED`, `RELATED`,
 `REGRESSION`, or `FULL-SUITE` from changed files/symbols, the dependency graph, test-to-code links,
 previous failures, and affected modules. Supports both intelligent selection and full-suite
