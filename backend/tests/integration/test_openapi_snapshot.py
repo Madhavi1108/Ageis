@@ -49,6 +49,7 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/executions", "post"),
     ("/tasks/{task_id}/executions", "get"),
     ("/tasks/{task_id}/failures", "get"),
+    ("/tasks/{task_id}/repairs", "get"),
     ("/executions/{execution_id}", "get"),
 }
 
@@ -87,4 +88,5 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/executions", "post"),
         ("/tasks/{task_id}/executions", "get"),
         ("/tasks/{task_id}/failures", "get"),
+        ("/tasks/{task_id}/repairs", "get"),
     }

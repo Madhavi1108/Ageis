@@ -24,3 +24,22 @@ class NoFailingExecutionError(AppError):
         super().__init__(
             "NO_FAILING_EXECUTION", message, status_code=status.HTTP_409_CONFLICT
         )
+
+
+class RepairTaskNotFoundError(AppError):
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "REPAIR_TASK_NOT_FOUND", message, status_code=status.HTTP_404_NOT_FOUND
+        )
+
+
+class RepairInvestigationMissingError(AppError):
+    """The repair loop consumes the Phase 13 Investigation for the latest failing
+    execution -- it must exist first (GET /tasks/{id}/failures)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "REPAIR_INVESTIGATION_MISSING",
+            message,
+            status_code=status.HTTP_409_CONFLICT,
+        )

@@ -16,6 +16,7 @@ from app.db.session import get_db
 from app.schemas.failure import FailureAnalysis
 from app.schemas.impact import ImpactAnalysis
 from app.schemas.implementation import ImplementationResult
+from app.schemas.repair import RepairResult
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -34,6 +35,7 @@ from app.services import implementation as implementation_service
 from app.services import investigation as investigation_service
 from app.services import mapping as mapping_service
 from app.services import planning as planning_service
+from app.services import repair as repair_service
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
 
@@ -242,4 +244,22 @@ def get_task_failures(
     run."""
     return investigation_service.get_or_investigate(
         db, settings=settings, task_id=task_id, refresh=refresh
+    )
+
+
+@router.get("/{task_id}/repairs", response_model=RepairResult)
+def get_task_repairs(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    provider=Depends(get_ai_provider),
+) -> RepairResult:
+    """The bounded repair loop for this task (Phase 14): ranked root-cause
+    hypotheses, per-iteration candidate fixes, auto-revert on worse, and either
+    a repaired verdict or a SAFE_STOP with evidence. Computed and persisted on
+    first access (or with ``?refresh=true``); requires the Phase 13
+    investigation. Without Docker the loop SAFE_STOPs (sandbox unavailable)."""
+    return repair_service.get_or_repair(
+        db, settings=settings, task_id=task_id, provider=provider, refresh=refresh
     )

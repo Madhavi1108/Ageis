@@ -1883,6 +1883,36 @@ start with pytest, document others.
 
 ## 22. Phase 14 — Autonomous Debugging & Repair (Bounded Loop)
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/debugging/{rca,hypotheses,guard,repair_loop}.py`:
+`rca.analyze` produces a `RootCauseAnalysis` (AI when a provider is configured — `template="rca"`,
+evidence-required; a deterministic `build_fallback_rca` otherwise that emits **one HYPOTHESIS**,
+never a bare FACT). `hypotheses.rank` orders by label priority (FACT > INFERENCE > HYPOTHESIS) then
+the model's rank then evidence count. `guard` supplies `LoopBudget` (iteration + wall-clock),
+`failure_signature` (order-independent), `no_progress` (repeated signature), and the lexicographic
+candidate `score` `(failing, regression_failures, diff_size)`. `repair_loop.run_repair` is the
+controller: RCA once → per iteration propose a `RepairProposal` (AI or heuristic) → an injected
+`runner(ops) -> RunEval` applies the candidate + runs targeted tests → GREEN ⇒ `REPAIRED`,
+`score < best` ⇒ `IMPROVED` (new best), `score > best` ⇒ `WORSENED` + **auto-revert**, else
+`NO_CHANGE`; terminates on GREEN, iteration/wall-clock budget, repeated failure signature,
+diminishing returns (two non-improving iterations), no usable proposal, or
+`PARTIALLY_SUPPORTED` (sandbox unavailable) — the last five emit a `SafeStop`
+`{reason, failure_summary, evidence, attempted_fixes, remaining_uncertainty,
+recommended_human_action}`. New `repair_attempt` table (migration `0013`, one row per iteration,
+`UniqueConstraint(task_id, iteration)`, a terminal row's `run_summary` carries the aggregate);
+`GET /tasks/{id}/repairs?refresh=<bool>` runs the loop (requires the Phase 13 investigation),
+persists the ledger, sets state `REPAIRING`, returns `RepairResult` (`REPAIRED` | `SAFE_STOP`).
+The **runner is injected**, so the whole controller is CI-tested with a fake (`fail→fail→pass` →
+`REPAIRED`; worsening → revert → `SAFE_STOP`; repeated signature → abort; a **property test** over
+25 random scripts asserts `len(attempts) <= repair_max_iterations`); the real Docker path is
+`@pytest.mark.docker`, and without Docker the API returns `SAFE_STOP{reason: "sandbox
+unavailable"}`. 516 tests pass (Docker + `live_ai` skips unchanged); migration `0013` up/down
+clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** no per-iteration regression selection (Phase 15)
+— the loop runs the targeted set and records `regression_failures=0`; no per-iteration code review
+(Phase 16); `candidate_patch_id` / `targeted_execution_id` on `RepairAttempt` stay null (no
+per-iteration `Patch`/`TestExecution` rows written); real evaluation needs Docker; hypothesis
+confidence is uncalibrated until Phase 25.
+
 **Goal.** The Debugging Agent produces an evidence-linked `RootCauseAnalysis` and ranked repair
 hypotheses (`FACT` / `INFERENCE` / `HYPOTHESIS`), applies a candidate fix, re-runs targeted then
 regression tests, reviews, and iterates up to a bounded number of times. Every attempt is recorded.

@@ -125,6 +125,17 @@ class Settings(BaseSettings):
     # frame for the evidence bundle.
     investigation_code_slice_lines: int = Field(default=6, gt=0)
 
+    # Autonomous debugging & repair (Phase 14, docs/AEGIS_IMPLEMENTATION_PLAN.md
+    # Section 22). The loop stops at max_iterations, at the wall-clock budget, on
+    # a repeated failure signature, or when the marginal reduction in failing
+    # tests falls below min_improvement.
+    repair_max_iterations: int = Field(default=4, gt=0)
+    repair_wall_clock_s: int = Field(default=900, gt=0)
+    repair_min_improvement: int = Field(default=1, ge=0)
+    ai_rca_timeout_s: float = Field(default=90.0, gt=0)
+    ai_repair_timeout_s: float = Field(default=90.0, gt=0)
+    ai_repair_max_tokens: int = Field(default=6000, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

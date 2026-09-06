@@ -17,6 +17,7 @@ from app.models.implementation import Implementation, Patch
 from app.models.issue import Issue
 from app.models.job import Job
 from app.models.repository import Repository
+from app.models.repair_attempt import RepairAttempt
 from app.models.repository_analysis import RepositoryAnalysis
 from app.models.repository_file import RepositoryFile
 from app.models.repository_symbol import RepositorySymbol
@@ -51,4 +52,5 @@ __all__ = [
     "TestExecution",
     "Failure",
     "Investigation",
+    "RepairAttempt",
 ]
