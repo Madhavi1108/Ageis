@@ -92,6 +92,15 @@ class Settings(BaseSettings):
     ai_max_retries: int = Field(default=2, ge=0)
     ai_retry_backoff_s: float = Field(default=0.5, ge=0.0)
 
+    # Real patch generation (Phase 10, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 18,
+    # ADR-0008). implementation_max_edit_ops: a model proposing more than this many
+    # ops in one call fails loudly (IMPLEMENTATION_FAILED) rather than being
+    # silently truncated -- an oversized edit set is treated as a scope problem,
+    # not a size problem to paper over.
+    ai_implementation_timeout_s: float = Field(default=90.0, gt=0)
+    ai_implementation_max_tokens: int = Field(default=6000, gt=0)
+    implementation_max_edit_ops: int = Field(default=25, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

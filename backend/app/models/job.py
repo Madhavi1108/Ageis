@@ -24,6 +24,7 @@ class JobType(str, enum.Enum):
     MAP = "MAP"
     IMPACT = "IMPACT"
     PLAN = "PLAN"
+    IMPLEMENT = "IMPLEMENT"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

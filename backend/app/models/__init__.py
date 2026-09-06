@@ -12,6 +12,7 @@ from app.models.engineering_plan import EngineeringPlan
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
 from app.models.impact_analysis import ImpactAnalysis
+from app.models.implementation import Implementation, Patch
 from app.models.issue import Issue
 from app.models.job import Job
 from app.models.repository import Repository
@@ -41,4 +42,6 @@ __all__ = [
     "CodeMapping",
     "ImpactAnalysis",
     "EngineeringPlan",
+    "Implementation",
+    "Patch",
 ]

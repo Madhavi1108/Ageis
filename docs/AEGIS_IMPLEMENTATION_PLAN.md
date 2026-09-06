@@ -1516,6 +1516,35 @@ flakiness -> mock by default, real behind a marker.
 
 ## 18. Phase 10 — Real Patch Generation (Autonomous Implementation)
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/implementation/` package (ported from the
+reduced `backend/aegis/implementation/` walking-skeleton logic, per ADR-0008): `workspace_rw.py`
+(copy-on-write RW clone of the read-only ingestion snapshot workspace, restoring write permissions
+that `shutil.copytree` would otherwise inherit from the read-only source), `editor.py` (anchored
+`create`/`replace`/`insert`/`delete` ops; an ambiguous or missing anchor raises loudly, never
+guesses), `patcher.py` (`unified_diff`, `touched_paths`, `check_reapplies` — Rule 12's "reversible
+and reproducible" verified by independently replaying the recorded ops onto a fresh clone), and
+`scope_tracker.py` (`unplanned_files` — Rule 13, touched paths outside the plan's allowlist are
+flagged and recorded, not silently blocked from being written). `agent.py` asks the configured AI
+provider to fill an `EditOpsAI` schema (new `implementation` prompt template + `frontier` tier,
+already present in `ai/routing.py`'s stage table) from the latest **`APPROVED`** `EngineeringPlan`;
+with no provider configured, generation fails loudly (`IMPLEMENTATION_FAILED`) rather than
+fabricating a fallback edit. New versioned `implementation` table (migration `0009`,
+`UniqueConstraint(task_id, version)`) plus a `patch` table (one non-candidate row per
+implementation today; `is_candidate` reserved for the Phase 14 repair loop) whose diff text is
+stored via an `Artifact(kind=DIFF)` row, not a DB `TEXT` column (ADR-0008). Two routes on the
+`/tasks` router: `POST /tasks/{id}/changes` (apply the plan, persist a new version) and
+`GET /tasks/{id}/changes?version=`; thin `set_state("IMPLEMENTING")` + `TaskStep` row (the guarded
+machine is Phase 21). On the acceptance fixture a canned edit-op capping the discount at 0.5 in
+`invoice.py::calculate_total` produces a real diff that applies cleanly, traces to its plan step,
+and leaves the original snapshot workspace byte-identical; an edit-op to a file outside the
+plan/mapping/impact scope is flagged in `scope_violations`, not silently dropped. 391 tests pass (2
+auto-skip: the Phase 1 Docker test and the `@pytest.mark.live_ai` smoke test); migration `0009`
+up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** an out-of-scope op is recorded but still
+applied (blocking it outright is Phase 21's guarded workflow); the Phase 14 repair loop that would
+populate `is_candidate` patches doesn't exist yet; `check_reapplies` is implemented and unit-tested
+but not yet wired into the service's persisted result.
+
 **Goal.** The Implementation Agent applies the approved plan to a writable copy of the workspace,
 producing a real unified diff. It enforces minimal scope, keeps every change reversible, and
 supports file creation, modification, insertion, replacement, import edits, configuration changes,
