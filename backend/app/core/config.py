@@ -101,6 +101,14 @@ class Settings(BaseSettings):
     ai_implementation_max_tokens: int = Field(default=6000, gt=0)
     implementation_max_edit_ops: int = Field(default=25, gt=0)
 
+    # Test generation (Phase 11, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 19).
+    # testing_max_cases: a model proposing more than this many cases in one call
+    # fails loudly rather than being silently truncated (same rationale as
+    # implementation_max_edit_ops).
+    ai_test_synthesis_timeout_s: float = Field(default=90.0, gt=0)
+    ai_test_synthesis_max_tokens: int = Field(default=6000, gt=0)
+    testing_max_cases: int = Field(default=25, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

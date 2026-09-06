@@ -1605,6 +1605,35 @@ scope tracked.
 
 ## 19. Phase 11 — Test Generation
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/testing/` package: `generator.py`
+(`build_case_matrix` -- one row per (target symbol, kind) covering EDGE/NEGATIVE/BOUNDARY/
+REGRESSION/ISSUE_SPECIFIC; `propose_test_cases` asks the configured AI provider to fill a
+`TestCasesAI` schema, using the already-present `test_synthesis`/`frontier` stage from
+`ai/routing.py`), `catalog.py` (`check_syntax` -- an `ast.parse` gate only; actually importing a
+test module executes it, which Absolute Rule 9 reserves for the Phase 12 sandbox --
+`existing_test_names` + `deduplicate` against the snapshot's existing tests), and `selector.py`
+(`select_targeted_set` -- every non-`INVALID` generated case). Every proposed case is a **brand-new
+file** (never an edit to an existing test's content), so "never modify unrelated existing tests"
+holds by construction rather than by a scope check. New `test_case` table (migration `0010`,
+denormalized: `task_id`/`snapshot_id`/`implementation_id`/`version` live directly on each row, one
+`version` per generation run, `UniqueConstraint(task_id, version, name)`). Generation clones a
+throwaway RW workspace (`app/implementation/workspace_rw.py`, reused from Phase 10) from the
+snapshot, replays the latest `Implementation`'s `edit_ops` onto it so the case matrix reflects the
+post-fix code, writes each kept case's file into it for the syntax check, then discards the
+workspace -- nothing is persisted to disk beyond the DB rows (each row carries its own `code`).
+Two routes: `POST /tasks/{id}/tests` (generate + persist a new version) and
+`GET /tasks/{id}/tests?version=`; thin `set_state("GENERATING_TESTS")` + `TaskStep` row. On the
+acceptance fixture, a canned boundary case (`discount == 0.5`) and negative case
+(`discount == 0.9`) for `invoice.py::calculate_total` are both `GENERATED` with an empty
+`policy_gaps` list; a syntactically broken case is flagged `INVALID` and excluded from the targeted
+set; a case whose name collides with `test_invoice.py`'s existing `test_no_discount` is dropped by
+`deduplicate`. 411 tests pass; migration `0010` up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** de-duplication is exact-name/exact-path only
+(no near-duplicate or semantic-overlap detection); `policy_gaps` (missing BOUNDARY/NEGATIVE
+coverage per symbol) is informational only, computed at generation time and not persisted -- a
+later `GET` of the same version returns an empty list rather than recomputing it; full collection
+(`pytest --collect-only`) is Phase 12's job, not this phase's.
+
 **Goal.** The Testing Agent generates tests for the changed behaviour, considering the existing
 framework, nearby tests, changed functions, public behaviour, edge / negative / boundary /
 regression / issue-specific cases. Tests are written into the RW workspace and tracked as

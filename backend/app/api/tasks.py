@@ -25,11 +25,13 @@ from app.schemas.task import (
     TaskList,
     TaskTimeline,
 )
+from app.schemas.testing import TestGeneration
 from app.services import impact as impact_service
 from app.services import implementation as implementation_service
 from app.services import mapping as mapping_service
 from app.services import planning as planning_service
 from app.services import tasks as tasks_service
+from app.services import testing as testing_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -171,3 +173,29 @@ def get_task_changes(
     """The latest persisted implementation + diff for this task (or a
     specific ``?version=``)."""
     return implementation_service.get_implementation(db, task_id, version=version)
+
+
+@router.post("/{task_id}/tests", status_code=201, response_model=TestGeneration)
+def create_task_tests(
+    task_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    provider=Depends(get_ai_provider),
+) -> TestGeneration:
+    """Generate + persist a new batch of tests for this task's latest
+    Implementation (Phase 11). Requires ``POST /tasks/{id}/changes`` to have
+    produced an Implementation."""
+    return testing_service.generate_tests(
+        db, settings=settings, task_id=task_id, provider=provider
+    )
+
+
+@router.get("/{task_id}/tests", response_model=TestGeneration)
+def get_task_tests(
+    task_id: str,
+    version: int | None = None,
+    db: Session = Depends(get_db),
+) -> TestGeneration:
+    """The latest persisted test-generation batch for this task (or a
+    specific ``?version=``)."""
+    return testing_service.get_tests(db, task_id, version=version)

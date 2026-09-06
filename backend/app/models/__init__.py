@@ -22,6 +22,7 @@ from app.models.repository_symbol import RepositorySymbol
 from app.models.snapshot import RepositorySnapshot
 from app.models.task import Task
 from app.models.task_step import TaskStep
+from app.models.test_case import TestCase
 
 __all__ = [
     "Base",
@@ -44,4 +45,5 @@ __all__ = [
     "EngineeringPlan",
     "Implementation",
     "Patch",
+    "TestCase",
 ]
