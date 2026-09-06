@@ -9,6 +9,7 @@ from app.models.base import Base
 from app.models.code_mapping import CodeMapping
 from app.models.dependency import Dependency
 from app.models.engineering_plan import EngineeringPlan
+from app.models.failure import Failure, Investigation
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
 from app.models.impact_analysis import ImpactAnalysis
@@ -48,4 +49,6 @@ __all__ = [
     "Patch",
     "TestCase",
     "TestExecution",
+    "Failure",
+    "Investigation",
 ]

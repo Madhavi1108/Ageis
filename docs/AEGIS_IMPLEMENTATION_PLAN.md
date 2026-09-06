@@ -1801,6 +1801,36 @@ the config, not only the runtime behaviour.
 
 ## 21. Phase 13 — Failure Investigation
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/debugging/` package (no AI): `traceback_parser`
+turns a failing execution's stdout into structured `ParsedFailure`s — pytest `=== FAILURES ===` /
+`=== ERRORS ===` blocks, `E` detail lines, short frame lines, the `short test summary info` list,
+chained exceptions (`chained=True`, outermost primary), the plain `Traceback (most recent call
+last):` shape, and assertion-rewrite call names (`+ where X = f(...)`); an unrecognised shape
+yields one `frames=[]` record with the raw text kept. `classify` maps to
+`ASSERTION|EXCEPTION|COLLECTION_ERROR|TIMEOUT|IMPORT_ERROR|ENV` from the exception type + output
+markers + the execution outcome. `frames.resolve_frames` maps each `(path, lineno)` to the
+innermost `RepositorySymbol` span (`symbol_id` or `None`), reads an N-line code slice from the
+snapshot workspace, and flags `in_diff` (path in the Implementation's `edit_ops`).
+`investigate.run` assembles `facts` (re-checkable: outcome, `test failed: Exc: msg`, `frame → symbol`,
+`frame within an applied edit`, assertion-call references) and `inferences` (explicitly hedged
+*candidate signals* — "most-implicated symbol …, not a confirmed cause"; "related test …";
+"classified … from …"), a `classification` dict (`primary_test`, `primary_symbol_id`,
+`primary_frame`, counts), and an evidence bundle (code slices, diff hunks filtered to the
+implicated files, related tests via graph `TESTS` edges; `recent_commits=[]` until Phase 19). New
+`failure` + `investigation` tables (migration `0012`, `Investigation` upsert per `(task,
+execution)`); one route `GET /tasks/{id}/failures?refresh=<bool>` — finds the latest *failing*
+`TestExecution` (`FAIL|ERROR|TIMEOUT|OOM`; `PASS`/`PARTIALLY_SUPPORTED`/absent → 409
+`NO_FAILING_EXECUTION`), computes-and-persists on first access, sets state `INVESTIGATING`. On a
+seeded acceptance-repo assertion failure the analysis names `test_discount_capped_at_50_percent`,
+classifies `ASSERTION`, and reports `primary_symbol_id = invoice.py::calculate_total` with evidence
+and no invented cause — a real, deterministic, passing assertion. 471 tests pass (Docker + `live_ai`
+skips unchanged); migration `0012` up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** no root cause (that is Phase 14's
+`RootCauseAnalysis`); `in_diff` is path-level, not line-precise; real failing executions still need
+Docker so the golden seeds a `FAIL` row + a canned pytest-output artifact; `recent_commits` empty
+until Phase 19; pytest/unittest shapes only — other frameworks fall through to `frames=[]` +
+`UNKNOWN`.
+
 **Goal.** On failing tests, collect structured failure data — stack traces, failing tests, changed
 files, relevant code slices, recent changes, related tests, dependency context — into a
 `FailureAnalysis` that separates `FACT` from `INFERENCE` and never invents a cause.

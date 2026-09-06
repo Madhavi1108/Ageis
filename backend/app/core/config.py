@@ -120,6 +120,11 @@ class Settings(BaseSettings):
     sandbox_nproc_limit: int = Field(default=512, gt=0)
     sandbox_wall_clock_s: int = Field(default=600, gt=0)
 
+    # Failure investigation (Phase 13, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 21).
+    # code_slice_lines: lines of source context gathered around each traceback
+    # frame for the evidence bundle.
+    investigation_code_slice_lines: int = Field(default=6, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

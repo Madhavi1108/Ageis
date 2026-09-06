@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.ai.deps import get_ai_provider
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.schemas.failure import FailureAnalysis
 from app.schemas.impact import ImpactAnalysis
 from app.schemas.implementation import ImplementationResult
 from app.schemas.mapping import IssueCodeMapping
@@ -30,6 +31,7 @@ from app.schemas.testing import TestGeneration
 from app.services import execution as execution_service
 from app.services import impact as impact_service
 from app.services import implementation as implementation_service
+from app.services import investigation as investigation_service
 from app.services import mapping as mapping_service
 from app.services import planning as planning_service
 from app.services import tasks as tasks_service
@@ -223,3 +225,21 @@ def get_task_executions(
 ) -> list[TestExecution]:
     """Every persisted execution for this task, newest first."""
     return execution_service.list_executions(db, task_id)
+
+
+@router.get("/{task_id}/failures", response_model=FailureAnalysis)
+def get_task_failures(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> FailureAnalysis:
+    """The failure investigation for this task's latest failing TestExecution
+    (Phase 13): parsed tracebacks, frames resolved to symbols, a deterministic
+    failure-type classification, and an evidence bundle -- facts + hedged
+    candidate signals, no root cause. Computed and persisted on first access
+    (or with ``?refresh=true``); 409 if the latest execution passed or did not
+    run."""
+    return investigation_service.get_or_investigate(
+        db, settings=settings, task_id=task_id, refresh=refresh
+    )
