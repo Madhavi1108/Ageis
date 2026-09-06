@@ -1,17 +1,22 @@
-# AEGIS sandbox image -- Phase 1 (Walking Skeleton) version.
+# AEGIS sandbox image -- shared by the Phase 1 walking skeleton
+# (backend/aegis/sandbox/runner.py) and the Phase 12 full-system sandbox
+# (backend/app/sandbox/runner.py).
 #
-# Minimal image with pytest baked in so DockerSandboxRunner (backend/aegis/
-# sandbox/runner.py) never needs network access at test-run time (the
-# sandbox policy sets network_mode="none" -- see backend/aegis/sandbox/
-# policy.py and docs/SECURITY_MODEL.md Section 2).
+# Minimal image with pytest baked in so neither DockerSandboxRunner ever
+# needs network access at test-run time (the sandbox policy sets
+# network_mode="none" -- see {backend/aegis,backend/app}/sandbox/policy.py
+# and docs/SECURITY_MODEL.md Section 2 / docs/DECISIONS/ADR-0010).
 #
-# Build once:  docker build -t aegis-sandbox:py311-skeleton -f docker/sandbox.Dockerfile .
+# Build for the walking skeleton: docker build -t aegis-sandbox:py311-skeleton -f docker/sandbox.Dockerfile .
+# Build for Phase 12:              docker build -t aegis-sandbox:py311 -f docker/sandbox.Dockerfile .
 #
-# Phase 12 (Secure Execution, full system) replaces this with a digest-pinned,
-# further-hardened image and a proper dependency-install pre-step for target
-# repositories with their own third-party requirements (docs/DECISIONS/
-# ADR-0010). This Dockerfile is intentionally minimal for the walking
-# skeleton, which only needs to run a repo's own stdlib-only test suite.
+# Open item (documented, not a gap): ADR-0010 calls for the image to be
+# pinned by digest; no registry/CI publishing pipeline exists yet to produce
+# and record one, so app/sandbox/policy.py::DEFAULT_IMAGE is tag-pinned only.
+# This Dockerfile is intentionally minimal -- it only needs to run a repo's
+# own stdlib-only test suite; the guarded dependency-install pre-step for
+# repositories with third-party requirements is a separate open item (see
+# docs/AEGIS_IMPLEMENTATION_PLAN.md Section 20's status note).
 
 FROM python:3.11-slim
 

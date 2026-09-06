@@ -25,7 +25,9 @@ from app.schemas.task import (
     TaskList,
     TaskTimeline,
 )
+from app.schemas.execution import TestExecution
 from app.schemas.testing import TestGeneration
+from app.services import execution as execution_service
 from app.services import impact as impact_service
 from app.services import implementation as implementation_service
 from app.services import mapping as mapping_service
@@ -199,3 +201,25 @@ def get_task_tests(
     """The latest persisted test-generation batch for this task (or a
     specific ``?version=``)."""
     return testing_service.get_tests(db, task_id, version=version)
+
+
+@router.post("/{task_id}/executions", status_code=201, response_model=TestExecution)
+def create_task_execution(
+    task_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> TestExecution:
+    """Run this task's latest GENERATED tests in the Docker sandbox and
+    persist a new TestExecution version (Phase 12). Requires
+    ``POST /tasks/{id}/tests`` to have produced at least one GENERATED case.
+    Returns ``outcome=PARTIALLY_SUPPORTED`` (not an error) when Docker is
+    unavailable."""
+    return execution_service.execute_tests(db, settings=settings, task_id=task_id)
+
+
+@router.get("/{task_id}/executions", response_model=list[TestExecution])
+def get_task_executions(
+    task_id: str, db: Session = Depends(get_db)
+) -> list[TestExecution]:
+    """Every persisted execution for this task, newest first."""
+    return execution_service.list_executions(db, task_id)

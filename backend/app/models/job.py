@@ -26,6 +26,7 @@ class JobType(str, enum.Enum):
     PLAN = "PLAN"
     IMPLEMENT = "IMPLEMENT"
     GENERATE_TESTS = "GENERATE_TESTS"
+    EXECUTE_TESTS = "EXECUTE_TESTS"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

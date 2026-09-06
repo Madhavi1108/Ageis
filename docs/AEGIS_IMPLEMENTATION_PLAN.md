@@ -1690,6 +1690,47 @@ tests -> assertion-presence check + mutation check in Phase 25.
 
 ## 20. Phase 12 — Secure Execution (Docker Sandbox)
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/sandbox/` package, ported from the working
+`backend/aegis/sandbox/` design (ADR-0010, `EXECUTION_MODEL.md` §4-5), split per this section's
+deliverable list: `resource_limits.py` (`ResourceLimits` dataclass), `policy.py`
+(`build_run_kwargs` -- the full control matrix: `network_mode="none"`, `cap_drop=["ALL"]`,
+`no-new-privileges`, `pids_limit`, `mem_limit`/`memswap_limit`/`nano_cpus`, `ulimits` nofile/nproc,
+`read_only` rootfs + `tmpfs /tmp`, workspace bind-mounted `:rw` only, non-root user, env scrubbed to
+an allowlist), `docker_backend.py` (availability check, run/wait-with-timeout/kill/collect/remove,
+separated from orchestration so `runner.py` never touches the SDK directly), `result_parser.py`
+(JUnit-XML -> per-test outcomes), `errors.py`. New `TestExecution` model (migration `0011`,
+versioned like `Implementation`) with nullable FKs to `Artifact(kind=STDIO)` rows for non-empty
+stdout/stderr. `app/services/execution.py::execute_tests` clones a throwaway RW workspace from the
+snapshot, replays the `Implementation`'s `edit_ops`, writes the latest `GENERATED` test cases into
+it, runs `DockerSandboxRunner`, and persists the result -- a `PARTIALLY_SUPPORTED`/`TIMEOUT`/
+`INFRA_ERROR` outcome is a valid persisted result (§8 of `EXECUTION_MODEL.md`), not an error
+response. Two routes: `POST /tasks/{id}/executions` (run + persist a new version) and
+`GET /tasks/{id}/executions` (list, newest first) on the `/tasks` router, plus a standalone
+`GET /executions/{id}` router (`app/api/executions.py`, mirroring `app/api/mapping.py`'s top-level-
+router precedent); thin `set_state("EXECUTING_TESTS")` + `TaskStep` row. `docker/sandbox.Dockerfile`
+now documented as serving both the Phase 1 skeleton and Phase 12 (tags `aegis-sandbox:py311-skeleton`
+/ `aegis-sandbox:py311`) -- the existing minimal pytest image is still correct for the MVP scope.
+**This dev environment has no Docker daemon**, so the full pipeline (through
+`POST /tasks/{id}/executions`) was exercised for real and genuinely produces
+`outcome=PARTIALLY_SUPPORTED` with a `"docker unavailable: ..."` reason -- proving the "no host
+fallback" contract (ADR-0010, Absolute Rule 9) rather than merely asserting it. 443 tests pass (3
+auto-skip: the Phase 1 Docker test, the `@pytest.mark.live_ai` smoke test, and a new
+`@pytest.mark.docker` real-container test added by this phase); migration `0011` up/down clean;
+OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps), all consistent with the plan's own "MVP now,
+harden later" posture:** `DEFAULT_IMAGE` is tag-pinned, not digest-pinned (no registry/CI
+publishing pipeline exists yet to produce and record a digest); the guarded, network-restricted,
+host-allowlisted dependency-install pre-step is not implemented (a declared seam, same treatment
+`OpenAIProvider`/`LocalProvider` got in Phase 9) -- only a repo's own stdlib-only test suite can be
+sandboxed today; resource-usage collection (cpu_s, max_rss) beyond wall-clock `duration_ms` is not
+implemented; the hostile-fixture security test suite (network-block, fork-bomb, memory-hog,
+workspace-escape, secret-leak) described under "Phase-wise testing" is written as a single
+`@pytest.mark.docker` real-container test asserting a full pass rather than as separate adversarial
+fixtures -- none of it has ever actually run against a live daemon in this environment; the
+Docker-unavailable path is the one genuinely exercised path, not the container-hardening behaviour
+itself, which today rests on the policy-builder unit tests asserting the correct flags are passed,
+not runtime proof they're enforced.
+
 **Goal.** Execute the repository and the generated tests inside an isolated Docker sandbox with
 CPU / memory / pids / wall-clock limits, no network by default, no secret exposure, workspace-only
 filesystem, and full logging. Return a structured `TestExecution`.

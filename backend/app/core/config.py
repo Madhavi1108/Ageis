@@ -109,6 +109,17 @@ class Settings(BaseSettings):
     ai_test_synthesis_max_tokens: int = Field(default=6000, gt=0)
     testing_max_cases: int = Field(default=25, gt=0)
 
+    # Secure execution (Phase 12, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 20,
+    # docs/EXECUTION_MODEL.md Section 5, ADR-0010). Defaults match the plan's
+    # documented table; docker unavailable -> PARTIALLY_SUPPORTED, no host fallback.
+    sandbox_image: str = Field(default="aegis-sandbox:py311")
+    sandbox_cpus: float = Field(default=2.0, gt=0)
+    sandbox_memory_mb: int = Field(default=2048, gt=0)
+    sandbox_pids_limit: int = Field(default=512, gt=0)
+    sandbox_nofile_limit: int = Field(default=4096, gt=0)
+    sandbox_nproc_limit: int = Field(default=512, gt=0)
+    sandbox_wall_clock_s: int = Field(default=600, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:
