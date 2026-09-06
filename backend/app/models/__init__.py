@@ -23,6 +23,7 @@ from app.models.repair_attempt import RepairAttempt
 from app.models.repository_analysis import RepositoryAnalysis
 from app.models.repository_file import RepositoryFile
 from app.models.repository_symbol import RepositorySymbol
+from app.models.scoring import RepositoryHealth, RiskAssessment
 from app.models.snapshot import RepositorySnapshot
 from app.models.task import Task
 from app.models.task_step import TaskStep
@@ -58,4 +59,6 @@ __all__ = [
     "RegressionPlan",
     "Review",
     "ReviewFinding",
+    "RiskAssessment",
+    "RepositoryHealth",
 ]

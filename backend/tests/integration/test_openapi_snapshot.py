@@ -18,6 +18,7 @@ EXPECTED_OPERATIONS = {
     ("/version", "get"),
     ("/repositories", "post"),
     ("/repositories/{repository_id}", "get"),
+    ("/repositories/{repository_id}/health", "get"),
     ("/repositories/{repository_id}/snapshots", "post"),
     ("/repositories/{repository_id}/snapshots/{snapshot_id}/analysis", "post"),
     ("/repositories/{repository_id}/snapshots/{snapshot_id}/analysis", "get"),
@@ -52,6 +53,8 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/repairs", "get"),
     ("/tasks/{task_id}/regression", "get"),
     ("/tasks/{task_id}/review", "get"),
+    ("/tasks/{task_id}/confidence", "get"),
+    ("/tasks/{task_id}/risk", "get"),
     ("/executions/{execution_id}", "get"),
 }
 
@@ -93,4 +96,6 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/repairs", "get"),
         ("/tasks/{task_id}/regression", "get"),
         ("/tasks/{task_id}/review", "get"),
+        ("/tasks/{task_id}/confidence", "get"),
+        ("/tasks/{task_id}/risk", "get"),
     }

@@ -19,6 +19,8 @@ from app.schemas.repository import (
     RepositoryCreateRequest,
     RepositoryRef,
 )
+from app.schemas.scoring import RepositoryHealthProfile
+from app.services import scoring as scoring_service
 
 router = APIRouter(prefix="/repositories", tags=["repositories"])
 
@@ -60,6 +62,26 @@ def get_repository(repository_id: str, db: Session = Depends(get_db)) -> Reposit
     if repo is None:
         raise RepositoryNotFoundError(f"repository {repository_id} not found")
     return RepositoryRef.model_validate(repo, from_attributes=True)
+
+
+@router.get("/{repository_id}/health", response_model=RepositoryHealthProfile)
+def get_repository_health(
+    repository_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> RepositoryHealthProfile:
+    """The Repository Health Profile for this repository's newest analysed
+    snapshot (Phase 17): a deterministic, versioned 0-100 score from weighted
+    sub-scores (maintainability, coverage, dependency coupling, churn
+    stability, documentation ratio, CI presence) plus ``risky_modules`` (the
+    top decile by centrality x churn x inverse-coverage x complexity).
+    Sub-scores with no data source in this environment carry the documented
+    neutral prior. Computed and persisted on first access (or ``?refresh=true``);
+    requires at least one analysed snapshot (409)."""
+    return scoring_service.get_or_health(
+        db, settings=settings, repository_id=repository_id, refresh=refresh
+    )
 
 
 @router.post("/{repository_id}/snapshots", status_code=201, response_model=IngestResult)

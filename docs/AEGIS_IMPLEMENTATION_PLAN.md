@@ -2140,6 +2140,47 @@ evidence gate + downgrade.
 
 ## 25. Phase 17 — Risk & Confidence Engine
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/scoring/` package (deterministic, no AI):
+`model_registry` holds every `scoring-model v1.0.0` constant as a documented copy of
+`docs/METRICS.md` §2 (`test_scoring_model_version_sync.py` asserts equality + the version string,
+mirroring the mapping-model sync test). `signals.collect_patch_signals` reads already-persisted
+Phase 8/10/12/14/15/16 data into normalized `Signal`s — `targeted_pass`/`regression_pass` from the
+latest `TestExecution` results (cross-referenced to `RegressionPlan` classification),
+`review_clean` + the `security_gate` multiplier from OPEN `ReviewFinding`s, `scope_clean` from
+`Implementation.scope_violations`, `size_fit`/`lines_changed` from the reconstructed diff,
+`dep_fit`/`files_changed`/`dependency_impact`/`public_api_touched`/`architectural_centrality`/
+`security_sensitivity` from `ImpactAnalysis.risk_signal_bundle` + `.callers`, `repair_fit` from the
+`RepairAttempt` ledger, `prior_failures` from `Investigation`/`Failure` frames, `complexity_delta`
+from a deterministic AST branch-count over the edit-ops. Signals with no data source in this build
+(per-line `coverage`/`inverse_coverage`; `historical_churn`/`history_stable`; sometimes
+`complexity_delta`) return the documented neutral prior (`UNAVAILABLE_PRIOR_GOOD=0.5` /
+`UNAVAILABLE_PRIOR_RISK=0.0`, `docs/METRICS.md` §2.5) with an `unavailable_reason`, and each score
+reports `overall_confidence = 1 - Σ(unavailable weights)`. `confidence.compute_pcs` applies
+`PCS_raw = 100·Σ(wᵢ·sᵢ)`, the `security_gate`, and the hard override (unresolved CRITICAL finding /
+scope violation / failing regression → cap 40 + `BLOCKED`, `hard_gate` names each). `risk.compute_crs`
+is the plain weighted sum with the 0-24/25-49/50-74/75-100 bands. `repo_health.compute_rhp` scores
+maintainability (span-length proxy), documentation ratio, inverse dependency coupling (graph
+fan-in/out), and CI presence from Phase 4/5 data; `test_coverage`/`churn_stability` use the prior;
+`risky_modules` = top decile by `centrality·churn·inverse_coverage·complexity`; `restrict_to`
+yields the Task-Specific Risk Profile. New `risk_assessment` (per-task upsert, matches DATA_MODEL
+§2.4) + `repository_health` (per-snapshot upsert, a documented DATA_MODEL extension like Phase 15's
+`regression_plan`) tables (migration `0016`); `GET /tasks/{id}/confidence`, `GET /tasks/{id}/risk`
+(computed together, one row, each a projection; require a Phase 10 implementation + Phase 8 impact
+→ else 409), `GET /repositories/{id}/health` (newest analysed snapshot → else 409). No task-state
+transition (the machine names none). The per-signal contribution list sums to the score; scores are
+reproducible across runs and `?refresh=true`. 595 tests pass, 3 skip (Docker + `live_ai` +
+`docker`-marked, unchanged); migration `0016` up/down clean; OpenAPI surface re-pinned (+3 GET
+routes).
+**Open items (documented limitations, not gaps):** `coverage`/`inverse_coverage` (no coverage
+instrumentation), `historical_churn`/`history_stable`/`churn_stability` (Git history is Phase 19),
+and `regression_pass` (the regression suite needs Docker) fall back to priors here, so
+`overall_confidence` is <1.0 on every real task in this environment; `maintainability` is a coarse
+span-length proxy pending radon (Phase 25); `complexity_delta` is a best-effort AST branch delta
+and goes unavailable when an edit-op body is not parseable in isolation; scope "override with
+reason" (the 0.5 case) has no data model yet so a violation is always 0.0; wiring PCS/CRS into the
+HITL policy / scope guard / verification gate is Phase 18/21; all `v1.0.0` constants are
+provisional and calibrated against a labelled dataset in Phase 25.
+
 **Goal.** Implement the deterministic, documented, versioned Patch Confidence Score, Change Risk
 Score, Repository Health Profile, and Task-Specific Risk Profile from Section 4.10 — with explicit
 signals, normalization, weights, formula, thresholds, evidence, and `model_version`.

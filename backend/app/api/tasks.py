@@ -19,6 +19,7 @@ from app.schemas.implementation import ImplementationResult
 from app.schemas.regression import RegressionResult
 from app.schemas.repair import RepairResult
 from app.schemas.review import ReviewReport
+from app.schemas.scoring import PatchConfidence, PatchRiskAssessment
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -40,6 +41,7 @@ from app.services import planning as planning_service
 from app.services import regression as regression_service
 from app.services import repair as repair_service
 from app.services import review as review_service
+from app.services import scoring as scoring_service
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
 
@@ -311,3 +313,42 @@ def get_task_review(
     return review_service.get_or_review(
         db, settings=settings, task_id=task_id, provider=provider, refresh=refresh
     )
+
+
+@router.get("/{task_id}/confidence", response_model=PatchConfidence)
+def get_task_confidence(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> PatchConfidence:
+    """The Patch Confidence Score for this task's latest patch (Phase 17):
+    a deterministic, versioned 0-100 score (``HIGH`` / ``MEDIUM`` / ``LOW`` /
+    ``VERY_LOW`` / ``BLOCKED``) with a per-signal contribution breakdown that
+    sums to the value, an ``overall_confidence`` that drops for every
+    signal with no data source, and a ``hard_gate`` list naming any override
+    (unresolved CRITICAL finding, scope violation, failing regression).
+    Computed and persisted on first access (or ``?refresh=true``); requires a
+    Phase 10 implementation (409) and a Phase 8 impact analysis (409)."""
+    return scoring_service.get_or_score(
+        db, settings=settings, task_id=task_id, refresh=refresh
+    )[0]
+
+
+@router.get("/{task_id}/risk", response_model=PatchRiskAssessment)
+def get_task_risk(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> PatchRiskAssessment:
+    """The Change Risk Score for this task's latest patch (Phase 17):
+    a deterministic, versioned 0-100 score (``LOW`` / ``MEDIUM`` / ``HIGH`` /
+    ``CRITICAL``) with a per-signal contribution breakdown, plus the
+    Task-Specific Risk Profile (the Repository Health Profile restricted to
+    this task's impact set). Computed and persisted alongside the confidence
+    score on first access (or ``?refresh=true``); requires a Phase 10
+    implementation (409) and a Phase 8 impact analysis (409)."""
+    return scoring_service.get_or_score(
+        db, settings=settings, task_id=task_id, refresh=refresh
+    )[1]

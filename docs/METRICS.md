@@ -111,6 +111,24 @@ Each of PCS / CRS / RHP documents: metric, purpose, signals, normalization, weig
 thresholds, categories, evidence, version. This section is that documentation; the code registry
 (`scoring/model_registry.py`) mirrors these tables and the sync test asserts equality.
 
+### 2.5 Unavailable-signal handling (`scoring-model v1.0.0`)
+
+Some signals have no data source in the current build — per-changed-line coverage (no coverage
+instrumentation), historical churn (`historical_churn`, `history_stable`, `churn_stability` —
+Git history is Phase 19), and sometimes `complexity_delta` (unparseable edit-op bodies). Phase 17
+keeps the §2.1–2.3 formulas **exactly** and handles a missing signal with a documented neutral
+prior plus a lowered confidence, rather than renormalizing weights.
+
+| Constant | Value | Applies to | Rationale |
+|---|---|---|---|
+| `UNAVAILABLE_PRIOR_GOOD` | `0.5` | a missing "higher = better" signal (PCS signals, RHP sub-scores) | neither flatter the patch with `1.0` nor punish it with `0.0` for absent instrumentation |
+| `UNAVAILABLE_PRIOR_RISK` | `0.0` | a missing "higher = riskier" signal (CRS signals) | absence of evidence is never invented as risk |
+
+Each score also returns `overall_confidence = 1 − Σ(weight of each unavailable signal)` and, in
+`per_signal_contributions`, every signal's `basis` (`FACT` / `INFERENCE`) and its
+`unavailable_reason` when it fell back to a prior. All `v1.0.0` values are provisional and are
+revisited in Phase 25.
+
 ---
 
 ## 3. `pricing-table v1.0.0` (for metric #13)
