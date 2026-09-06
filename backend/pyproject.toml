@@ -40,6 +40,7 @@ include = ["aegis*", "app*"]
 testpaths = ["tests"]
 markers = [
     "docker: requires a running Docker daemon (skipped automatically when absent)",
+    "live_ai: exercises a real AI provider (opt-in; runs only with RUN_LIVE_AI=1)",
 ]
 # All tests here are plain functions; disable class-based collection so
 # pytest doesn't warn about domain schemas named Test* (TestOutcome,

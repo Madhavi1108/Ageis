@@ -8,6 +8,7 @@ from app.models.audit_log import AuditLog
 from app.models.base import Base
 from app.models.code_mapping import CodeMapping
 from app.models.dependency import Dependency
+from app.models.engineering_plan import EngineeringPlan
 from app.models.graph_edge import GraphEdge
 from app.models.graph_node import GraphNode
 from app.models.impact_analysis import ImpactAnalysis
@@ -39,4 +40,5 @@ __all__ = [
     "TaskStep",
     "CodeMapping",
     "ImpactAnalysis",
+    "EngineeringPlan",
 ]

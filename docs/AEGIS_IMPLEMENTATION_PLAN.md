@@ -1420,6 +1420,36 @@ documented schema and example; persisted.
 
 ## 17. Phase 9 — Engineering Planning + Plan Validation
 
+**Status: COMPLETE — 2026-09-06.** New `backend/app/ai/` package brings the real provider
+abstraction into `app/` (ADR-0005): `AIProvider` Protocol, `MockProvider` (canned-by-`task_key` +
+a rule-based planning fallback — the CI default), `ClaudeProvider` (real, `RUN_LIVE_AI=1` +
+`ANTHROPIC_API_KEY`, retry/backoff on transient errors, per-call timeout, `temperature=0.0`),
+`OpenAIProvider` / `LocalProvider` (interface-complete seams that raise a clean
+`AI_PROVIDER_NOT_CONFIGURED`), plus `schema_guard` (one repair round then clean `AIOutputInvalid`),
+`prompt.render` (untrusted values substituted **only** inside `<data>` blocks — a load-time check
+refuses any template that places a placeholder in the instruction body), `routing.tier_for`
+(per-stage cheap/frontier map, env-overridable), and `request_log.log_ai_call` (provider / model /
+tier / latency + a **sha256 prompt digest** — never the raw body). `backend/app/agents/planning.py`
+holds `propose_plan`, the deterministic `build_fallback_plan` (used when `ai_provider="none"`), and
+`validate_plan` — a six-check rules engine (`schema`, `files_exist`, `scope_subset`,
+`steps_have_tests`, `rollback_present`, `assumptions_nonempty`) returning `APPROVED` / `REVISE` /
+`REJECTED` (scope escape, empty modify-set, or a missing referenced file → `REJECTED`). New
+versioned `engineering_plan` table (migration `0008`, `UniqueConstraint(task_id, version)` — a
+REVISE produces a new version); `validation` + `validation_verdict` columns hold the
+`PlanValidation` (an AI-output schema, not its own entity). Three routes on the `/tasks` router:
+`POST /tasks/{id}/plan` (generate + persist a new version), `GET /tasks/{id}/plan?version=`,
+`POST /tasks/{id}/plan/validate?version=`; thin `set_state("PLANNING"/"PLAN_VALIDATION")` +
+`TaskStep` rows (the guarded machine is Phase 21). On the acceptance fixture a canned plan naming
+`invoice.py` / `calculate_total` with a boundary step + test strategy + rollback validates
+`APPROVED`; a scope-escaping plan is `REJECTED`; with `ai_provider="none"` the rule-based fallback
+still produces a plan. 360 tests pass (Phase 1 Docker test + the new `@pytest.mark.live_ai` smoke
+both auto-skip); migration `0008` up/down clean; OpenAPI surface re-pinned.
+**Open items (documented limitations, not gaps):** `MockProvider` is the only provider exercised
+in CI; `OpenAIProvider` / `LocalProvider` are seams until their request bodies are wired; routing
+is a Python map, not `ai/routing.yaml` (PyYAML isn't a declared dependency); engineering-memory
+plan inputs are a forward-declared empty list until Phase 20; per-task cost/latency budget
+enforcement (metric #13) is Phase 21.
+
 **Goal.** The Planning Agent produces a machine-readable `EngineeringPlan` (problem interpretation,
 assumptions, files to inspect, files to modify, symbols to modify, dependencies, implementation
 steps, test strategy, expected behaviour, regression risks, rollback strategy, confidence). The

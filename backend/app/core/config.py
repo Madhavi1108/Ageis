@@ -81,6 +81,25 @@ class Settings(BaseSettings):
     impact_blast_radius_hops: int = Field(default=3, gt=0)
     impact_max_regression_areas: int = Field(default=20, gt=0)
 
+    # AI provider + planning (Phase 9, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 17,
+    # ADR-0005, ADR-0019). ``ai_provider="none"`` skips the model entirely and uses
+    # the deterministic rule-based fallback plan; ``"mock"`` is the CI default.
+    # ``"claude"`` is real but only usable with RUN_LIVE_AI=1 + ANTHROPIC_API_KEY.
+    ai_provider: str = Field(default="mock")
+    ai_model: str = Field(default="claude-sonnet-5")
+    ai_planning_timeout_s: float = Field(default=60.0, gt=0)
+    ai_planning_max_tokens: int = Field(default=4000, gt=0)
+    ai_max_retries: int = Field(default=2, ge=0)
+    ai_retry_backoff_s: float = Field(default=0.5, ge=0.0)
+
+    @field_validator("ai_provider")
+    @classmethod
+    def _valid_ai_provider(cls, v: str) -> str:
+        allowed = {"mock", "claude", "openai", "local", "none"}
+        if v not in allowed:
+            raise ValueError(f"ai_provider must be one of {sorted(allowed)}, got {v!r}")
+        return v
+
     @field_validator("ingestion_local_roots")
     @classmethod
     def _resolve_local_roots(cls, v: list[str]) -> list[str]:

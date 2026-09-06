@@ -10,10 +10,12 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.ai.deps import get_ai_provider
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
 from app.schemas.impact import ImpactAnalysis
 from app.schemas.mapping import IssueCodeMapping
+from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
     Task,
     TaskCancelRequest,
@@ -24,6 +26,7 @@ from app.schemas.task import (
 )
 from app.services import impact as impact_service
 from app.services import mapping as mapping_service
+from app.services import planning as planning_service
 from app.services import tasks as tasks_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -103,3 +106,38 @@ def get_task_impact(
     return impact_service.get_or_compute_impact(
         db, settings=settings, task_id=task_id, refresh=refresh
     )
+
+
+@router.post("/{task_id}/plan", status_code=201, response_model=EngineeringPlan)
+def create_task_plan(
+    task_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    provider=Depends(get_ai_provider),
+) -> EngineeringPlan:
+    """Generate + persist a new EngineeringPlan version for this task (Phase 9).
+    Requires the Phase 7 mapping and the Phase 8 impact analysis to exist."""
+    return planning_service.generate_plan(
+        db, settings=settings, task_id=task_id, provider=provider
+    )
+
+
+@router.get("/{task_id}/plan", response_model=EngineeringPlan)
+def get_task_plan(
+    task_id: str,
+    version: int | None = None,
+    db: Session = Depends(get_db),
+) -> EngineeringPlan:
+    """The latest persisted plan for this task (or a specific ``?version=``)."""
+    return planning_service.get_plan(db, task_id, version=version)
+
+
+@router.post("/{task_id}/plan/validate", response_model=EngineeringPlan)
+def validate_task_plan(
+    task_id: str,
+    version: int | None = None,
+    db: Session = Depends(get_db),
+) -> EngineeringPlan:
+    """Run the plan-validation rules engine and record the verdict
+    (``APPROVED`` / ``REVISE`` / ``REJECTED``) on the plan row."""
+    return planning_service.validate_plan_for_task(db, task_id, version=version)
