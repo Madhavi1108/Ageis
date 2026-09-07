@@ -20,6 +20,7 @@ from app.schemas.regression import RegressionResult
 from app.schemas.repair import RepairResult
 from app.schemas.review import ReviewReport
 from app.schemas.scoring import PatchConfidence, PatchRiskAssessment
+from app.schemas.verification import VerificationDecisionRequest, VerificationResult
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -42,6 +43,7 @@ from app.services import regression as regression_service
 from app.services import repair as repair_service
 from app.services import review as review_service
 from app.services import scoring as scoring_service
+from app.services import verification as verification_service
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
 
@@ -352,3 +354,47 @@ def get_task_risk(
     return scoring_service.get_or_score(
         db, settings=settings, task_id=task_id, refresh=refresh
     )[1]
+
+
+@router.get("/{task_id}/verification", response_model=VerificationResult)
+def get_task_verification(
+    task_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    provider=Depends(get_ai_provider),
+) -> VerificationResult:
+    """The completion verdict for this task (Phase 18): a deterministic
+    checklist -- acceptance tests, the regression/full suite, patch
+    re-application, scope, code review, plan alignment, and the PCS/CRS gate --
+    each ``PASS`` / ``FAIL`` / ``UNKNOWN`` with evidence, an overall
+    ``VERIFIED`` / ``NOT_VERIFIED`` / ``PARTIAL``, the plan-alignment breakdown,
+    and the explainability trace (why file / why change / why test / why safe).
+    Moves the task to ``COMPLETED`` (VERIFIED), ``AWAITING_APPROVAL`` (PARTIAL),
+    or ``FAILED`` (NOT_VERIFIED). Computed and persisted on first access (or
+    ``?refresh=true``); requires a Phase 10 implementation (409) and a Phase 9
+    plan (409)."""
+    return verification_service.get_or_verify(
+        db, settings=settings, task_id=task_id, provider=provider, refresh=refresh
+    )
+
+
+@router.post("/{task_id}/verification/decision", response_model=VerificationResult)
+def decide_task_verification(
+    task_id: str,
+    body: VerificationDecisionRequest,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> VerificationResult:
+    """Resolve a task that verification left in ``AWAITING_APPROVAL`` (a
+    ``PARTIAL`` verdict). ``APPROVE`` supersedes it with a ``VERIFIED`` row and
+    moves the task to ``COMPLETED``; ``REJECT`` yields ``NOT_VERIFIED`` and
+    ``FAILED``. 409 if the task is not awaiting a decision."""
+    return verification_service.resolve_decision(
+        db,
+        settings=settings,
+        task_id=task_id,
+        decision=body.decision,
+        reason=body.reason,
+        actor=body.actor,
+    )

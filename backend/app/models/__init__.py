@@ -29,6 +29,7 @@ from app.models.task import Task
 from app.models.task_step import TaskStep
 from app.models.test_case import TestCase
 from app.models.test_execution import TestExecution
+from app.models.verification import Verification
 
 __all__ = [
     "Base",
@@ -61,4 +62,5 @@ __all__ = [
     "ReviewFinding",
     "RiskAssessment",
     "RepositoryHealth",
+    "Verification",
 ]

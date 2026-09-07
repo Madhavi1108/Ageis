@@ -32,6 +32,7 @@ class JobType(str, enum.Enum):
     REGRESSION = "REGRESSION"
     REVIEW = "REVIEW"
     SCORE = "SCORE"
+    VERIFY = "VERIFY"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

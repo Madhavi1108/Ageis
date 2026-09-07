@@ -150,6 +150,14 @@ class Settings(BaseSettings):
     review_ai_max_tokens: int = Field(default=6000, gt=0)
     review_max_diff_bytes: int = Field(default=200_000, gt=0)
 
+    # Verification (Phase 18, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 26).
+    # score_gate criterion (7): PCS at/above min AND CRS at/below max, else the
+    # verdict is PARTIAL and the task lands in AWAITING_APPROVAL for a human
+    # decision. Defaults align with the scoring-model MEDIUM bands
+    # (app/scoring/model_registry.py: PCS MEDIUM floor 70, CRS MEDIUM ceiling 49).
+    verification_pcs_min: int = Field(default=70, ge=0, le=100)
+    verification_crs_max: int = Field(default=49, ge=0, le=100)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

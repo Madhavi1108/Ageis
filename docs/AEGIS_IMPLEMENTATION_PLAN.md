@@ -2237,9 +2237,32 @@ Signal gaps -> documented defaults + lower confidence.
 
 ## 26. Phase 18 — Verification
 
-**Goal.** The Verification Agent decides whether the task is actually complete by checking the
-requested behaviour, the tests, the regression suite, patch consistency, scope, security, and
-plan alignment. A task is never complete merely because code was generated.
+**Status: COMPLETE — 2026-09-07.** New `backend/app/verification/` package (deterministic, no
+AI): `criteria.py` (seven `check_*` evaluators), `alignment.py` (plan-vs-diff breakdown),
+`aggregate.py` (verdict + resulting task state + confidence), `trace.py` (the why-file /
+why-change / why-test / why-safe trace, ported from `aegis/verification/trust.py`), and
+`agent.py::verify` wiring them over a DB-free `VerificationInputs`. `services/verification.py`
+does the reads (it first calls `get_or_review` / `get_or_score` / `get_or_plan` so their
+criteria have data), re-derives the workspace to run `check_reapplies` + the scope check,
+writes the trace as a `kind=TRACE` artifact, persists a `verification` row, and drives the task
+to `COMPLETED` (VERIFIED) / `AWAITING_APPROVAL` (PARTIAL) / `FAILED` (NOT_VERIFIED). `GET
+/tasks/{id}/verification` computes-and-caches on first access; `POST
+/tasks/{id}/verification/decision` resolves an `AWAITING_APPROVAL` task (APPROVE → VERIFIED /
+COMPLETED, REJECT → NOT_VERIFIED / FAILED) by superseding the live row. `verification` is a
+history chain (`superseded_by` self-FK) rather than an upsert, per `docs/DATA_MODEL.md`
+Section 2.4. Migration `0017`; config `verification_pcs_min` (70) / `verification_crs_max`
+(49). A criterion whose input is absent or whose sandbox run did not happen is `UNKNOWN`, never
+a silent `FAIL`; a mandatory `UNKNOWN` (or the advisory score gate not passing) yields
+`PARTIAL`. New tests: `test_verification_{criteria,alignment,aggregate,trace}.py` (unit),
+`test_verification_{api,acceptance_fixture}.py` (integration).
+
+**Open items (documented limitations, not gaps):** without Docker the acceptance-tests and
+regression-suite criteria are `UNKNOWN`, so a clean patch lands in `AWAITING_APPROVAL` rather
+than `VERIFIED` (the false-complete rate stays 0 — nothing is `VERIFIED` unless every mandatory
+criterion actually passed). Criterion 4 ("scope clean or overridden-with-reason") only reads
+`implementation.scope_violations` — an override actor + reason has no persistence yet (Phase
+21). The decision endpoint's `actor` is free text with no RBAC (Phase 21). `replay_fidelity`
+is 1.0/0.0 from `check_reapplies`, not a full deterministic-replay manifest (Phase 20).
 
 **Depends on.** Phases 9, 10, 11, 12, 14, 15, 16, 17.
 

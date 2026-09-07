@@ -55,6 +55,8 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/review", "get"),
     ("/tasks/{task_id}/confidence", "get"),
     ("/tasks/{task_id}/risk", "get"),
+    ("/tasks/{task_id}/verification", "get"),
+    ("/tasks/{task_id}/verification/decision", "post"),
     ("/executions/{execution_id}", "get"),
 }
 
@@ -98,4 +100,6 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/review", "get"),
         ("/tasks/{task_id}/confidence", "get"),
         ("/tasks/{task_id}/risk", "get"),
+        ("/tasks/{task_id}/verification", "get"),
+        ("/tasks/{task_id}/verification/decision", "post"),
     }
