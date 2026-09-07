@@ -35,6 +35,7 @@ class JobType(str, enum.Enum):
     VERIFY = "VERIFY"
     GIT = "GIT"
     PR = "PR"
+    MEMORY = "MEMORY"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

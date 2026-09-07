@@ -14,6 +14,7 @@ without Docker -> the loop SAFE_STOPs cleanly); tests pass a fake.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -53,9 +54,11 @@ from app.schemas.failure import FailureAnalysis
 from app.schemas.implementation import EditOp
 from app.schemas.repair import RepairAttemptView, RepairResult, SafeStop
 from app.services import investigation as investigation_service
+from app.services import memory as memory_service
 
 _RESOLVE_FROM_SETTINGS = object()
 _NON_FAILING = {"PASS", "PARTIALLY_SUPPORTED"}
+_logger = logging.getLogger("app.services.repair")
 
 
 # --------------------------------------------------------------------------- #
@@ -349,6 +352,19 @@ def get_or_repair(
     )
     TaskRepository(db).set_state(task_id, TaskState.REPAIRING.value)
     jobs.mark_succeeded(job.id)
+
+    if loop_result.outcome == "SAFE_STOP" and settings.memory_enabled:
+        try:
+            memory_service.record_task(
+                db, settings=settings, task_id=task_id, outcome="SAFE_STOP"
+            )
+        except Exception:  # noqa: BLE001 -- memory is best-effort
+            _logger.warning(
+                "engineering-memory write failed for safe-stopped task %s",
+                task_id,
+                exc_info=True,
+            )
+
     return _result_from_rows(task_id, execution.id, rows)
 
 

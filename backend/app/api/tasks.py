@@ -22,6 +22,7 @@ from app.schemas.review import ReviewReport
 from app.schemas.scoring import PatchConfidence, PatchRiskAssessment
 from app.schemas.verification import VerificationDecisionRequest, VerificationResult
 from app.schemas.github import PullRequestCreateRequest, PullRequestOut
+from app.schemas.memory import EngineeringMemoryOut
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -44,6 +45,7 @@ from app.services import regression as regression_service
 from app.services import repair as repair_service
 from app.services import review as review_service
 from app.services import scoring as scoring_service
+from app.services import memory as memory_service
 from app.services import pr as pr_service
 from app.services import verification as verification_service
 from app.github.client import GitHubClient
@@ -432,3 +434,14 @@ def create_task_pr(
 def get_task_pr(task_id: str, db: Session = Depends(get_db)) -> PullRequestOut:
     """The latest pull request recorded for this task (404 if none)."""
     return pr_service.get_pr(db, task_id)
+
+
+@router.get("/{task_id}/memory", response_model=EngineeringMemoryOut)
+def get_task_memory(
+    task_id: str, db: Session = Depends(get_db)
+) -> EngineeringMemoryOut:
+    """The engineering-memory record written when this task reached a terminal
+    state (Phase 20): issue text, touched symbols, failure signatures, fix
+    summary, plan/patch refs, review + verification summary, outcome. 404 if the
+    task never reached a terminal state (or ``memory_enabled`` was off)."""
+    return memory_service.get_for_task(db, task_id)

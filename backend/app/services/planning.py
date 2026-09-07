@@ -39,6 +39,7 @@ from app.repository.jobs import JobRepository
 from app.repository.task_steps import TaskStepRepository
 from app.repository.tasks import TaskRepository
 from app.schemas.plan import EngineeringPlan, EngineeringPlanAI, PlanValidation
+from app.services import memory as memory_service
 
 #: sentinel so callers can pass provider=None explicitly (the "none" provider)
 #: while an omitted argument still means "resolve from settings".
@@ -125,6 +126,9 @@ def generate_plan(
                 candidate_files=candidate_files, candidate_symbols=candidate_symbols
             )
         else:
+            memory_hits = memory_service.retrieve_hits_for_task(
+                db, settings=settings, task_id=task_id
+            )
             plan_ai = planning_agent.propose_plan(
                 task_key=task_id,
                 task_text=task.description_sanitized,
@@ -134,6 +138,7 @@ def generate_plan(
                 provider=provider,
                 timeout_s=settings.ai_planning_timeout_s,
                 max_tokens=settings.ai_planning_max_tokens,
+                memory_hits=memory_service.format_hits(memory_hits),
             )
     except AIOutputInvalid as exc:
         jobs.mark_failed(

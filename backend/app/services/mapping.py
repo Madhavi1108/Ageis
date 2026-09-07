@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.analysis.mapping import mapper
+from app.analysis.mapping import mapper, memory_retriever
 from app.analysis.mapping.errors import (
     MappingNotFoundError,
     MappingSnapshotNotReadyError,
@@ -35,6 +35,7 @@ from app.repository.jobs import JobRepository
 from app.repository.snapshots import SnapshotRepository
 from app.repository.tasks import TaskRepository
 from app.schemas.mapping import IssueCodeMapping, MappingCandidate
+from app.services import memory as memory_service
 
 _ANALYSABLE = (
     SnapshotStatus.READY.value,
@@ -96,12 +97,14 @@ def run_mapping(
 ) -> IssueCodeMapping:
     k = top_k or settings.mapping_top_k
 
+    repository_id: str | None = None
     if task_id is not None:
         task = TaskRepository(db).get(task_id)
         if task is None:
             raise MappingTaskNotFoundError(f"task {task_id} not found")
         resolved_snapshot = _resolve_snapshot_for_task(db, task)
         text = task.description_sanitized
+        repository_id = task.repository_id
     else:
         assert snapshot_id is not None and issue_text is not None
         snap = SnapshotRepository(db).get(snapshot_id)
@@ -121,6 +124,19 @@ def run_mapping(
         task_id=task_id,
     )
     jobs.mark_running(job.id)
+
+    # Phase 20: feature-flagged prior-task evidence (task mode only).
+    memory_result = None
+    if task_id is not None and settings.memory_enabled:
+        hits = memory_service.search(
+            db,
+            settings=settings,
+            query=text,
+            repository_id=repository_id,
+            exclude_task_id=task_id,
+        )
+        memory_result = memory_retriever.build_result(hits)
+
     try:
         computation = mapper.map_issue(
             db,
@@ -128,6 +144,7 @@ def run_mapping(
             issue_text=text,
             settings=settings,
             top_k=k,
+            memory_result=memory_result,
         )
     except AppError as exc:
         jobs.mark_failed(job.id, error={"code": exc.code, "message": exc.message})

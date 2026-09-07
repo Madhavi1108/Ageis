@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -55,6 +56,7 @@ from app.schemas.verification import (
     VerificationDecision,
     VerificationResult,
 )
+from app.services import memory as memory_service
 from app.services import regression as regression_service
 from app.services import review as review_service
 from app.services import scoring as scoring_service
@@ -72,6 +74,23 @@ from app.verification.errors import (
 )
 
 _RESOLVE_FROM_SETTINGS = object()
+_logger = logging.getLogger("app.services.verification")
+
+
+def _record_memory_safely(
+    db: Session, *, settings: Settings, task_id: str, outcome: str
+) -> None:
+    """Write the Phase 20 engineering-memory record for a task that just
+    reached a terminal state. Never fails the caller -- a memory-write problem
+    is logged, not propagated."""
+    if not settings.memory_enabled:
+        return
+    try:
+        memory_service.record_task(
+            db, settings=settings, task_id=task_id, outcome=outcome
+        )
+    except Exception:  # noqa: BLE001 -- memory is best-effort
+        _logger.warning("engineering-memory write failed for task %s", task_id, exc_info=True)
 
 
 # --------------------------------------------------------------------------- #
@@ -340,6 +359,11 @@ def get_or_verify(
     )
     jobs.mark_succeeded(job.id)
 
+    if computation.resulting_state == TaskState.COMPLETED.value:
+        _record_memory_safely(
+            db, settings=settings, task_id=task_id, outcome="VERIFIED"
+        )
+
     return _project_row(row)
 
 
@@ -419,5 +443,10 @@ def resolve_decision(
         task_id, new_state, terminal_reason=terminal_reason
     )
     jobs.mark_succeeded(job.id)
+
+    if new_state == TaskState.COMPLETED.value:
+        _record_memory_safely(
+            db, settings=settings, task_id=task_id, outcome="VERIFIED"
+        )
 
     return _project_row(row)

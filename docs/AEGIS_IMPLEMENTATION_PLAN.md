@@ -2413,9 +2413,40 @@ errors -> clear messaging + `REVIEW_REQUIRED`.
 
 ## 28. Phase 20 — Engineering Memory
 
-**Goal.** Persist completed tasks (issue, repository, plan, implementation, tests, failures, root
-cause, repair attempts, final patch, review findings, verification) and retrieve relevant historical
-knowledge for future tasks — used as evidence, never as truth, never blindly copied.
+**Status: COMPLETE — 2026-09-07.** New `backend/app/memory/` package (pure, deterministic):
+`store.build_record` assembles a completed-task bundle from the pipeline rows (the
+`verification._collect_inputs` template); `signatures.py` derives failure signatures + a fix
+summary; `index.py` is an in-memory SQLite FTS5 index over the records with a token-overlap
+fallback (the `analysis/mapping/lexical.py` pattern, `app.analysis.mapping.text` primitives);
+`retrieve.py` blends normalized lexical score + query/symbol overlap + a same-repository boost +
+recency decay into ranked `MemoryHit`s, each carrying provenance and the constant "historical —
+verify" label. `services/memory.py::record_task` writes the `EngineeringMemory` row and
+recomputes the per-repository `RepositoryKnowledge` aggregate (risky files, recurring failures,
+prior mappings); it is a **no-op unless `settings.memory_enabled`** (opt-in, first boolean flag in
+`Settings`). Terminal-state hooks (guarded, best-effort — a memory-write error is logged, never
+propagated) are added to `verification.get_or_verify` / `resolve_decision` (on
+`COMPLETED`/`VERIFIED`) and `repair.get_or_repair` (on `SAFE_STOP`). Feature-flagged evidence
+consumers, all inert when disabled: **mapping** — `services/mapping.py` retrieves hits and passes
+a `RetrieverResult(name="memory")` (built by `analysis/mapping/memory_retriever.py`) into
+`mapper.map_issue`; the fusion weight `memory: 0.6` and the `INFERENCE` label already existed.
+**planning** — `services/planning.py` fills the existing `{{MEMORY_HITS}}` prompt slot with a
+formatted, non-authoritative rendering. **regression** — `_memory_risk_files` unions
+`RepositoryKnowledge.risky_files` + similar-task touched files into `classify(prior_failure_files=…)`.
+Models `EngineeringMemory` (upsert per task) + `RepositoryKnowledge` (deliberate DATA_MODEL
+extension, upsert per repo); migration `0019`. New API: `GET /memory`, `POST /memory/search`,
+`GET /tasks/{id}/memory`. New tests: `test_memory_{index,retrieve,signatures}.py` (unit),
+`test_memory_{api,acceptance_fixture}.py` (integration, incl. the Spec two-task discount scenario
+and a `memory_enabled=False` control). Memory is evidence, never truth: a past patch is never
+applied and a hit never overrides current evidence.
+
+**Open items (documented limitations, not gaps):** RCA does not yet receive memory hits — the AI
+RCA prompt (`app/ai/prompts/rca.md`) has no memory slot and threading hits through the repair
+loop is a follow-up (mapping / planning / regression cover the retrieval consumers and the
+acceptance scenario). `embedding_ref` stays `NULL` — retrieval is lexical + symbol overlap +
+same-repo boost + recency; a local embedding model can be wired into `memory/` later. The index
+is built in-memory per call (the `analysis/mapping/lexical.py` precedent), not a
+migration-created persistent FTS5 table. Retention / GC of old memory rows (ADR-0016 "covered by
+retention policy") is deferred. No RBAC on `/memory` (Phase 21).
 
 **Depends on.** Phases 7, 9, 14, 16, 18.
 

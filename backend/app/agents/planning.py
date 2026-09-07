@@ -49,6 +49,7 @@ def propose_plan(
     provider: AIProvider,
     timeout_s: float,
     max_tokens: int,
+    memory_hits: str = "(none)",
 ) -> EngineeringPlanAI:
     variables: dict[str, Any] = {
         "task_key": task_key,
@@ -56,7 +57,9 @@ def propose_plan(
         "candidate_files": "\n".join(candidate_files) or "(none)",
         "candidate_symbols": "\n".join(candidate_symbols) or "(none)",
         "impact_summary": _impact_summary(impact),
-        "memory_hits": "(none -- engineering memory lands in Phase 20)",
+        # Phase 20: prior similar tasks as "historical -- verify" evidence
+        # (feature-flagged in app/services/planning.py).
+        "memory_hits": memory_hits or "(none)",
         # list forms for the MockProvider rule-based fallback (not templated)
         "candidate_files_list": candidate_files,
         "candidate_symbols_list": candidate_symbols,

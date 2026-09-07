@@ -63,7 +63,10 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/verification/decision", "post"),
     ("/tasks/{task_id}/pr", "post"),
     ("/tasks/{task_id}/pr", "get"),
+    ("/tasks/{task_id}/memory", "get"),
     ("/executions/{execution_id}", "get"),
+    ("/memory", "get"),
+    ("/memory/search", "post"),
     ("/github/repos/{owner}/{repo}", "get"),
     ("/github/repos/{owner}/{repo}/issues/{number}", "get"),
     ("/github/repos/{owner}/{repo}/issues/{number}/import", "post"),
@@ -113,4 +116,5 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/verification/decision", "post"),
         ("/tasks/{task_id}/pr", "post"),
         ("/tasks/{task_id}/pr", "get"),
+        ("/tasks/{task_id}/memory", "get"),
     }

@@ -9,6 +9,7 @@ from app.models.base import Base
 from app.models.code_mapping import CodeMapping
 from app.models.commit import Commit
 from app.models.dependency import Dependency
+from app.models.engineering_memory import EngineeringMemory
 from app.models.engineering_plan import EngineeringPlan
 from app.models.failure import Failure, Investigation
 from app.models.graph_edge import GraphEdge
@@ -24,6 +25,7 @@ from app.models.review import Review, ReviewFinding
 from app.models.repair_attempt import RepairAttempt
 from app.models.repository_analysis import RepositoryAnalysis
 from app.models.repository_file import RepositoryFile
+from app.models.repository_knowledge import RepositoryKnowledge
 from app.models.repository_symbol import RepositorySymbol
 from app.models.scoring import RepositoryHealth, RiskAssessment
 from app.models.snapshot import RepositorySnapshot
@@ -67,4 +69,6 @@ __all__ = [
     "Verification",
     "Commit",
     "PullRequest",
+    "EngineeringMemory",
+    "RepositoryKnowledge",
 ]

@@ -174,6 +174,19 @@ class Settings(BaseSettings):
     git_history_max_depth: int = Field(default=200, gt=0)
     git_pr_branch_prefix: str = Field(default="aegis/")
 
+    # Engineering memory (Phase 20, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 28,
+    # ADR-0016). Opt-in: with memory_enabled=False the terminal-state writer and
+    # every retrieval hook (mapping / planning / regression) are dormant and the
+    # pipeline behaves exactly as before. Retrieved hits are always labelled
+    # "historical -- verify", scored by lexical + symbol overlap + a same-repo
+    # boost + recency decay, and never override current evidence or auto-apply a
+    # patch.
+    memory_enabled: bool = Field(default=False)
+    memory_retrieval_top_k: int = Field(default=5, gt=0)
+    memory_min_similarity: float = Field(default=0.05, ge=0.0, le=1.0)
+    memory_same_repo_boost: float = Field(default=0.25, ge=0.0, le=1.0)
+    memory_recency_half_life_days: float = Field(default=30.0, gt=0)
+
     @field_validator("ai_provider")
     @classmethod
     def _valid_ai_provider(cls, v: str) -> str:

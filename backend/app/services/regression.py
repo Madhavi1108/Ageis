@@ -36,6 +36,8 @@ from app.testing.errors import (
     RegressionTaskNotFoundError,
 )
 from app.testing.regression import CorpusTest, Classified, classify, select_for_stage
+from app.repository.repository_knowledge import RepositoryKnowledgeRepository
+from app.services import memory as memory_service
 
 
 # --------------------------------------------------------------------------- #
@@ -124,6 +126,27 @@ def _prior_failure_files(db: Session, task_id: str) -> set[str]:
         for fr in failure.frames or []:
             if fr.get("file"):
                 out.add(fr["file"])
+    return out
+
+
+def _memory_risk_files(db: Session, settings: Settings, task_id: str) -> set[str]:
+    """Phase 20 (feature-flagged): files that moved often or were touched by a
+    similar prior task in this repo -- a soft REGRESSION bias, never a gate."""
+    if not settings.memory_enabled:
+        return set()
+    task = TaskRepository(db).get(task_id)
+    if task is None:
+        return set()
+    out: set[str] = set()
+    knowledge = RepositoryKnowledgeRepository(db).get_by_repository(task.repository_id)
+    if knowledge is not None:
+        out.update(
+            e["path"] for e in (knowledge.risky_files or []) if e.get("path")
+        )
+    for hit in memory_service.retrieve_hits_for_task(
+        db, settings=settings, task_id=task_id
+    ):
+        out.update(hit.touched_files)
     return out
 
 
@@ -217,7 +240,10 @@ def get_or_plan(
         changed_symbols=changed_symbols,
         graph=graph,
         centrality=centrality,
-        prior_failure_files=_prior_failure_files(db, task_id),
+        prior_failure_files=(
+            _prior_failure_files(db, task_id)
+            | _memory_risk_files(db, settings, task_id)
+        ),
         related_hops=settings.regression_related_hops,
         centrality_decile=settings.regression_centrality_decile,
     )

@@ -172,6 +172,7 @@ def map_issue(
     issue_text: str,
     settings: Settings,
     top_k: int,
+    memory_result=None,
 ) -> MappingComputation:
     files, skipped, id_to_path = _load_files(session, snapshot_id, settings)
     symbols = _load_symbols(session, snapshot_id, id_to_path)
@@ -190,7 +191,11 @@ def map_issue(
         session, snapshot_id, seed_paths, hops=settings.mapping_graph_hops
     )
 
+    # Phase 20: prior-task evidence, if the caller retrieved any (feature-flagged
+    # in app/services/mapping.py). Weighted 0.6 by fuse.py; labelled INFERENCE.
     results = [lex, sym, grph, sem]
+    if memory_result is not None:
+        results.append(memory_result)
     fused = fuse(results)
     candidates = to_candidates(
         fused, threshold=settings.mapping_confidence_threshold, top_k=top_k

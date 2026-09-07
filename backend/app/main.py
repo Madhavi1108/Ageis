@@ -19,6 +19,7 @@ from app.api import (
     github,
     health,
     mapping,
+    memory,
     repositories,
     tasks,
 )
@@ -77,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(tasks.router)
     app.include_router(executions.router)
     app.include_router(github.router)
+    app.include_router(memory.router)
 
     return app
 
