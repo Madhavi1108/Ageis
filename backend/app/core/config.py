@@ -11,7 +11,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _VALID_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
@@ -157,6 +157,22 @@ class Settings(BaseSettings):
     # (app/scoring/model_registry.py: PCS MEDIUM floor 70, CRS MEDIUM ceiling 49).
     verification_pcs_min: int = Field(default=70, ge=0, le=100)
     verification_crs_max: int = Field(default=49, ge=0, le=100)
+
+    # Git / GitHub integration (Phase 19, docs/AEGIS_IMPLEMENTATION_PLAN.md
+    # Section 27, ADR-0014, ADR-0015). github_token is the only secret-typed
+    # field; it is read via .get_secret_value() only when a GitHubClient is
+    # built, never logged (app/core/security.py redacts the token shapes
+    # regardless). PR creation against a branch in github_protected_branches
+    # needs an explicit human approval flag.
+    github_api_base_url: str = Field(default="https://api.github.com")
+    github_token: SecretStr | None = Field(default=None)
+    github_timeout_s: float = Field(default=20.0, gt=0)
+    github_max_retries: int = Field(default=2, ge=0)
+    github_protected_branches: list[str] = Field(
+        default_factory=lambda: ["main", "master"]
+    )
+    git_history_max_depth: int = Field(default=200, gt=0)
+    git_pr_branch_prefix: str = Field(default="aegis/")
 
     @field_validator("ai_provider")
     @classmethod

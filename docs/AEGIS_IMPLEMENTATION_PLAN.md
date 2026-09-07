@@ -2319,10 +2319,38 @@ path.
 
 ## 27. Phase 19 — Git / GitHub Integration
 
-**Goal.** Deep Git intelligence (blame, history, churn, related commits, regression history) feeding
-planning, mapping, and review; a GitHub provider for repository / issue / PR / branch / commit
-retrieval and optional branch -> commit -> PR creation on `VERIFIED`. Tokens are never exposed;
-every failure mode is a structured state.
+**Status: COMPLETE — 2026-09-07.** New `backend/app/git/` package (pure, GitPython, no network
+beyond an optional re-clone): `repo_access.open_repo` reaches a real repo for a snapshot -- the
+LOCAL origin, or a fresh shallow re-clone for GITHUB -- since the materialized workspace has no
+`.git`; `history.extract_commits`, `blame.blame_file`, `churn.compute_churn`, and `queries.py`
+(the four Spec §15 questions). New `backend/app/github/` package: a thin `httpx` `client.py`
+(auth header, bounded `429`/`5xx` retries honoring `Retry-After`, every status mapped to a
+`errors.py` type, a redacted `request_log.py`), `provider.py` (repo/issue fetch + idempotent
+issue import), and `pr_builder.py` (the §27 report subset as markdown). `services/git_intel.py`
+extracts + caches `Commit` rows and assembles a `GitContext` (`available:false`, HTTP 200, when
+no history is reachable). `services/pr.py::create_pr` always writes a `PR_BODY` artifact + a
+`PullRequest` row; it opens a real GitHub PR only for a `VERIFIED` task on a GITHUB repo with a
+token, and -- for a protected base -- an explicit `{"approved": true}`; a `PullRequest` is
+`CREATED` only on a real `201` with a stored URL/number, any GitHub failure lands as
+`state=FAILED` with a structured `failure_reason` (never a 5xx). Models `Commit` (keyed on the
+repository) + `PullRequest`; migration `0018`. New API: `GET /repositories/{id}/git/{history,
+churn,blame,context}`, `POST`/`GET /tasks/{id}/pr`, and a new `/github` router (`GET
+/github/repos/{owner}/{repo}`, `.../issues/{number}`, `POST .../import`). New config block
+(`github_token` is the first `SecretStr`); `httpx` promoted to a runtime dependency. Author
+emails are stored only as `sha256(repository_id:email)`. New tests:
+`test_git_{history,churn,queries,blame}.py`, `test_github_{client,redaction}.py` (unit);
+`test_{git,github,pr}_api.py`, `test_pr_acceptance_fixture.py` (integration). GitHub is fully
+mocked in CI via `httpx.MockTransport`.
+
+**Open items (documented limitations, not gaps):** graph edges `CHANGED_BY` / `FIXED_BY` and
+`COMMIT` nodes are still schema-only -- `GraphRepository.replace_for_snapshot` wipes every edge on
+each analysis, so history intelligence is delivered via the `commit` table + `GitContext` (which
+is what feeds planning / mapping / review), not graph edges. The Phase 19 churn stubs in
+`app/scoring/{signals,repo_health}.py` and `app/analysis/impact.py` still return their neutral
+priors -- wiring real `CommitRepository` churn into those signals is a follow-up (kept separate
+to avoid perturbing the Phase 17 scoring model + its sync gate). PR creation uses the GitHub
+Contents/Git-Data REST API (no local `git push`, no credentials in git operations). No live
+GitHub smoke test yet (CI is fully mocked). No RBAC on `POST /tasks/{id}/pr` (Phase 21).
 
 **Depends on.** Phases 3, 18; retroactively enriches 6, 7, 12, 16.
 

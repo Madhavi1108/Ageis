@@ -19,6 +19,10 @@ EXPECTED_OPERATIONS = {
     ("/repositories", "post"),
     ("/repositories/{repository_id}", "get"),
     ("/repositories/{repository_id}/health", "get"),
+    ("/repositories/{repository_id}/git/history", "get"),
+    ("/repositories/{repository_id}/git/churn", "get"),
+    ("/repositories/{repository_id}/git/blame", "get"),
+    ("/repositories/{repository_id}/git/context", "get"),
     ("/repositories/{repository_id}/snapshots", "post"),
     ("/repositories/{repository_id}/snapshots/{snapshot_id}/analysis", "post"),
     ("/repositories/{repository_id}/snapshots/{snapshot_id}/analysis", "get"),
@@ -57,7 +61,12 @@ EXPECTED_OPERATIONS = {
     ("/tasks/{task_id}/risk", "get"),
     ("/tasks/{task_id}/verification", "get"),
     ("/tasks/{task_id}/verification/decision", "post"),
+    ("/tasks/{task_id}/pr", "post"),
+    ("/tasks/{task_id}/pr", "get"),
     ("/executions/{execution_id}", "get"),
+    ("/github/repos/{owner}/{repo}", "get"),
+    ("/github/repos/{owner}/{repo}/issues/{number}", "get"),
+    ("/github/repos/{owner}/{repo}/issues/{number}/import", "post"),
 }
 
 
@@ -102,4 +111,6 @@ def test_all_task_routes_are_present():
         ("/tasks/{task_id}/risk", "get"),
         ("/tasks/{task_id}/verification", "get"),
         ("/tasks/{task_id}/verification/decision", "post"),
+        ("/tasks/{task_id}/pr", "post"),
+        ("/tasks/{task_id}/pr", "get"),
     }

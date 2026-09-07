@@ -33,6 +33,8 @@ class JobType(str, enum.Enum):
     REVIEW = "REVIEW"
     SCORE = "SCORE"
     VERIFY = "VERIFY"
+    GIT = "GIT"
+    PR = "PR"
     RUN_TASK = "RUN_TASK"
     BENCHMARK = "BENCHMARK"
     GC = "GC"

@@ -13,6 +13,8 @@ from app.ingestion.errors import RepositoryNotFoundError
 from app.ingestion.ingest import ingest_repository
 from app.ingestion.url_validator import validate_local_path, validate_remote_url
 from app.repository.repositories import RepositoryRepository
+from app.git.errors import GitBlamePathRequiredError
+from app.schemas.git import BlameHunk, GitContext
 from app.schemas.repository import (
     IngestRequest,
     IngestResult,
@@ -20,6 +22,7 @@ from app.schemas.repository import (
     RepositoryRef,
 )
 from app.schemas.scoring import RepositoryHealthProfile
+from app.services import git_intel as git_intel_service
 from app.services import scoring as scoring_service
 
 router = APIRouter(prefix="/repositories", tags=["repositories"])
@@ -81,6 +84,68 @@ def get_repository_health(
     requires at least one analysed snapshot (409)."""
     return scoring_service.get_or_health(
         db, settings=settings, repository_id=repository_id, refresh=refresh
+    )
+
+
+@router.get("/{repository_id}/git/history", response_model=GitContext)
+def get_git_history(
+    repository_id: str,
+    limit: int = 50,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> GitContext:
+    """Recent commits + related-fix commits for this repository's newest
+    snapshot (Phase 19). Extracted from a real Git repo on first access (the
+    LOCAL origin, or a shallow re-clone for GITHUB) and cached in the ``commit``
+    table; ``?refresh=true`` re-extracts. A files-only ingest or a synthesized
+    snapshot id yields ``available: false`` (HTTP 200)."""
+    return git_intel_service.get_or_extract_history(
+        db, settings=settings, repository_id=repository_id, limit=limit, refresh=refresh
+    )
+
+
+@router.get("/{repository_id}/git/churn", response_model=GitContext)
+def get_git_churn(
+    repository_id: str,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> GitContext:
+    """Per-file churn (commit count, insertions, deletions, distinct authors)
+    over the extracted history."""
+    return git_intel_service.get_or_extract_history(
+        db, settings=settings, repository_id=repository_id, refresh=refresh
+    )
+
+
+@router.get("/{repository_id}/git/blame", response_model=list[BlameHunk])
+def get_git_blame(
+    repository_id: str,
+    path: str | None = None,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> list[BlameHunk]:
+    """``git blame`` hunks for ``?path=`` at HEAD (author emails hashed).
+    Returns ``[]`` when no Git history is reachable or the path is untracked."""
+    if not path:
+        raise GitBlamePathRequiredError("git blame requires a ?path= query parameter")
+    return git_intel_service.get_blame(
+        db, settings=settings, repository_id=repository_id, path=path
+    )
+
+
+@router.get("/{repository_id}/git/context", response_model=GitContext)
+def get_git_context(
+    repository_id: str,
+    limit: int = 50,
+    refresh: bool = False,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> GitContext:
+    """The full assembled Git context: commits, churn, and related fixes."""
+    return git_intel_service.get_or_extract_history(
+        db, settings=settings, repository_id=repository_id, limit=limit, refresh=refresh
     )
 
 

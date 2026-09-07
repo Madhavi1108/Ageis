@@ -7,6 +7,7 @@ from app.models.artifact import Artifact
 from app.models.audit_log import AuditLog
 from app.models.base import Base
 from app.models.code_mapping import CodeMapping
+from app.models.commit import Commit
 from app.models.dependency import Dependency
 from app.models.engineering_plan import EngineeringPlan
 from app.models.failure import Failure, Investigation
@@ -16,6 +17,7 @@ from app.models.impact_analysis import ImpactAnalysis
 from app.models.implementation import Implementation, Patch
 from app.models.issue import Issue
 from app.models.job import Job
+from app.models.pull_request import PullRequest
 from app.models.repository import Repository
 from app.models.regression_plan import RegressionPlan
 from app.models.review import Review, ReviewFinding
@@ -63,4 +65,6 @@ __all__ = [
     "RiskAssessment",
     "RepositoryHealth",
     "Verification",
+    "Commit",
+    "PullRequest",
 ]

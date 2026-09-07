@@ -72,6 +72,8 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "risk_assessment",
         "repository_health",
         "verification",
+        "commit",
+        "pull_request",
     }.issubset(tables)
     engine.dispose()
 
@@ -110,6 +112,8 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "risk_assessment",
         "repository_health",
         "verification",
+        "commit",
+        "pull_request",
     ):
         assert table not in tables
     engine.dispose()

@@ -21,6 +21,7 @@ from app.schemas.repair import RepairResult
 from app.schemas.review import ReviewReport
 from app.schemas.scoring import PatchConfidence, PatchRiskAssessment
 from app.schemas.verification import VerificationDecisionRequest, VerificationResult
+from app.schemas.github import PullRequestCreateRequest, PullRequestOut
 from app.schemas.mapping import IssueCodeMapping
 from app.schemas.plan import EngineeringPlan
 from app.schemas.task import (
@@ -43,7 +44,10 @@ from app.services import regression as regression_service
 from app.services import repair as repair_service
 from app.services import review as review_service
 from app.services import scoring as scoring_service
+from app.services import pr as pr_service
 from app.services import verification as verification_service
+from app.github.client import GitHubClient
+from app.github.deps import get_github_client
 from app.services import tasks as tasks_service
 from app.services import testing as testing_service
 
@@ -398,3 +402,33 @@ def decide_task_verification(
         reason=body.reason,
         actor=body.actor,
     )
+
+
+@router.post("/{task_id}/pr", status_code=201, response_model=PullRequestOut)
+def create_task_pr(
+    task_id: str,
+    body: PullRequestCreateRequest | None = None,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    github_client: GitHubClient = Depends(get_github_client),
+) -> PullRequestOut:
+    """Generate the PR body + a ``PullRequest`` row for a VERIFIED task
+    (Phase 19). Always writes a ``PR_BODY`` artifact. Opens a real GitHub PR
+    only when the repo is GITHUB, a token is configured, and -- for a protected
+    base branch -- ``{"approved": true}`` is sent. A GitHub failure lands as
+    ``state=FAILED`` with a structured ``failure_reason``, never a 5xx. 409 if
+    the task is not VERIFIED."""
+    approved = bool(body.approved) if body is not None else False
+    return pr_service.create_pr(
+        db,
+        settings=settings,
+        task_id=task_id,
+        github_client=github_client,
+        approved=approved,
+    )
+
+
+@router.get("/{task_id}/pr", response_model=PullRequestOut)
+def get_task_pr(task_id: str, db: Session = Depends(get_db)) -> PullRequestOut:
+    """The latest pull request recorded for this task (404 if none)."""
+    return pr_service.get_pr(db, task_id)

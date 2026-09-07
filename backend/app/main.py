@@ -13,7 +13,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.api import analysis, executions, health, mapping, repositories, tasks
+from app.api import (
+    analysis,
+    executions,
+    github,
+    health,
+    mapping,
+    repositories,
+    tasks,
+)
 from app.core.config import get_settings
 from app.core.errors import (
     AppError,
@@ -68,6 +76,7 @@ def create_app() -> FastAPI:
     app.include_router(mapping.router)
     app.include_router(tasks.router)
     app.include_router(executions.router)
+    app.include_router(github.router)
 
     return app
 
