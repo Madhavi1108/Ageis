@@ -13,13 +13,14 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.core.auth import operator_required
 from app.schemas.mapping import IssueCodeMapping, MapRequest
 from app.services import mapping as mapping_service
 
 router = APIRouter(prefix="/analysis", tags=["mapping"])
 
 
-@router.post("/map", status_code=201, response_model=IssueCodeMapping)
+@router.post("/map", status_code=201, response_model=IssueCodeMapping, dependencies=[operator_required])
 def create_mapping(
     body: MapRequest,
     db: Session = Depends(get_db),

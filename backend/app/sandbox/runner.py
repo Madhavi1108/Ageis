@@ -10,6 +10,9 @@ code directly on the host").
 
 from __future__ import annotations
 
+import subprocess
+import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -103,3 +106,68 @@ class DockerSandboxRunner:
             stdout=result.logs,
             duration_ms=duration_ms,
         )
+
+
+class LocalSubprocessRunner:
+    """``sandbox_mode="fake"`` -- runs pytest as a LOCAL SUBPROCESS in the RW
+    workspace, NOT in Docker. Ported from aegis/sandbox/runner.py::FakeSandboxRunner.
+
+    This exists ONLY to demonstrate the orchestrator end-to-end without a Docker
+    daemon (CI, dev). It executes repository code directly on the host, so it
+    must NEVER be pointed at an untrusted repository -- only AEGIS's own trusted
+    fixtures. ``execution.execute_tests`` selects it via ``app.sandbox.select``.
+    """
+
+    def __init__(self, timeout_s: float = 600.0) -> None:
+        self.timeout_s = timeout_s
+
+    def run_tests(self, ws_root: Path, test_command: list[str]) -> TestExecutionRun:
+        command_str = "pytest " + " ".join(test_command)
+        started = time.monotonic()
+        with tempfile.TemporaryDirectory(prefix="aegis-local-sandbox-") as tmp:
+            report_path = Path(tmp) / "report.xml"
+            full_command = [
+                sys.executable,
+                "-m",
+                "pytest",
+                *test_command,
+                f"--junitxml={report_path}",
+            ]
+            try:
+                proc = subprocess.run(
+                    full_command,
+                    cwd=ws_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=self.timeout_s,
+                )
+            except subprocess.TimeoutExpired:
+                return TestExecutionRun(
+                    command=command_str,
+                    exit_code=-1,
+                    outcome="TIMEOUT",
+                    reason=f"exceeded {self.timeout_s}s (local sandbox)",
+                    duration_ms=int((time.monotonic() - started) * 1000),
+                )
+            duration_ms = int((time.monotonic() - started) * 1000)
+            outcomes = parse_junit_xml(report_path)
+            if not outcomes:
+                return TestExecutionRun(
+                    command=command_str,
+                    exit_code=proc.returncode,
+                    outcome="INFRA_ERROR",
+                    reason="no test report produced",
+                    stdout=proc.stdout,
+                    stderr=proc.stderr,
+                    duration_ms=duration_ms,
+                )
+            overall = "PASS" if all(o.outcome == "PASS" for o in outcomes) else "FAIL"
+            return TestExecutionRun(
+                command=command_str,
+                exit_code=proc.returncode,
+                outcome=overall,
+                results=outcomes,
+                stdout=proc.stdout,
+                stderr=proc.stderr,
+                duration_ms=duration_ms,
+            )

@@ -48,7 +48,7 @@ from app.repository.tasks import TaskRepository
 from app.repository.test_cases import TestCaseRepository
 from app.repository.test_executions import TestExecutionRepository
 from app.sandbox.resource_limits import ResourceLimits
-from app.sandbox.runner import DockerSandboxRunner
+from app.sandbox.select import build_runner
 from app.schemas.execution import TestExecutionRun, TestOutcome
 from app.schemas.failure import FailureAnalysis
 from app.schemas.implementation import EditOp
@@ -163,8 +163,8 @@ def _build_docker_runner(db: Session, *, settings: Settings, task_id: str):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(case.code, encoding="utf-8")
                 test_files.append(case.path)
-            run_result = DockerSandboxRunner(
-                image=settings.sandbox_image, limits=_limits(settings)
+            run_result = build_runner(
+                settings, image=settings.sandbox_image, limits=_limits(settings)
             ).run_tests(ws.root, sorted(set(test_files)))
             return RunEval(
                 run=run_result, diff_size=diff_size, scope_violations=violations

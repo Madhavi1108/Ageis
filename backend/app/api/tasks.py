@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.ai.deps import get_ai_provider
+from app.core.auth import approver_required, operator_required
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
 from app.schemas.failure import FailureAnalysis
@@ -56,7 +57,7 @@ from app.services import testing as testing_service
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-@router.post("", status_code=201, response_model=TaskCreateResponse)
+@router.post("", status_code=201, response_model=TaskCreateResponse, dependencies=[operator_required])
 def create_task(
     body: TaskCreate,
     db: Session = Depends(get_db),
@@ -89,12 +90,12 @@ def get_task(task_id: str, db: Session = Depends(get_db)) -> Task:
     return tasks_service.get_task(db, task_id)
 
 
-@router.post("/{task_id}/run", response_model=Task)
+@router.post("/{task_id}/run", response_model=Task, dependencies=[operator_required])
 def run_task(task_id: str, db: Session = Depends(get_db)) -> Task:
     return tasks_service.run_task(db, task_id)
 
 
-@router.post("/{task_id}/cancel", response_model=Task)
+@router.post("/{task_id}/cancel", response_model=Task, dependencies=[operator_required])
 def cancel_task(
     task_id: str,
     body: TaskCancelRequest | None = None,
@@ -132,7 +133,7 @@ def get_task_impact(
     )
 
 
-@router.post("/{task_id}/plan", status_code=201, response_model=EngineeringPlan)
+@router.post("/{task_id}/plan", status_code=201, response_model=EngineeringPlan, dependencies=[operator_required])
 def create_task_plan(
     task_id: str,
     db: Session = Depends(get_db),
@@ -156,7 +157,7 @@ def get_task_plan(
     return planning_service.get_plan(db, task_id, version=version)
 
 
-@router.post("/{task_id}/plan/validate", response_model=EngineeringPlan)
+@router.post("/{task_id}/plan/validate", response_model=EngineeringPlan, dependencies=[operator_required])
 def validate_task_plan(
     task_id: str,
     version: int | None = None,
@@ -168,7 +169,10 @@ def validate_task_plan(
 
 
 @router.post(
-    "/{task_id}/changes", status_code=201, response_model=ImplementationResult
+    "/{task_id}/changes",
+    status_code=201,
+    response_model=ImplementationResult,
+    dependencies=[operator_required],
 )
 def create_task_changes(
     task_id: str,
@@ -195,7 +199,7 @@ def get_task_changes(
     return implementation_service.get_implementation(db, task_id, version=version)
 
 
-@router.post("/{task_id}/tests", status_code=201, response_model=TestGeneration)
+@router.post("/{task_id}/tests", status_code=201, response_model=TestGeneration, dependencies=[operator_required])
 def create_task_tests(
     task_id: str,
     db: Session = Depends(get_db),
@@ -221,7 +225,7 @@ def get_task_tests(
     return testing_service.get_tests(db, task_id, version=version)
 
 
-@router.post("/{task_id}/executions", status_code=201, response_model=TestExecution)
+@router.post("/{task_id}/executions", status_code=201, response_model=TestExecution, dependencies=[operator_required])
 def create_task_execution(
     task_id: str,
     db: Session = Depends(get_db),
@@ -385,7 +389,7 @@ def get_task_verification(
     )
 
 
-@router.post("/{task_id}/verification/decision", response_model=VerificationResult)
+@router.post("/{task_id}/verification/decision", response_model=VerificationResult, dependencies=[approver_required])
 def decide_task_verification(
     task_id: str,
     body: VerificationDecisionRequest,
@@ -406,7 +410,7 @@ def decide_task_verification(
     )
 
 
-@router.post("/{task_id}/pr", status_code=201, response_model=PullRequestOut)
+@router.post("/{task_id}/pr", status_code=201, response_model=PullRequestOut, dependencies=[approver_required])
 def create_task_pr(
     task_id: str,
     body: PullRequestCreateRequest | None = None,

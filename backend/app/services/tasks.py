@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings
-from app.models.job import JobState, JobType
+from app.models.job import JobState
 from app.models.task import TERMINAL_TASK_STATES, TaskState, TaskType
 from app.repository.issues import IssueRepository
 from app.repository.jobs import JobRepository
@@ -395,14 +395,9 @@ def run_task(db: Session, task_id: str) -> TaskSchema:
             attempted="run",
         )
 
-    jobs = JobRepository(db)
-    job = jobs.create(
-        type=JobType.RUN_TASK.value,
-        idempotency_key=f"run:{task.id}",
-        task_id=task.id,
-        dedupe_key=task.idempotency_key,
-    )
-    jobs.mark_queued(job.id)
+    from app.orchestration import job_queue
+
+    job_queue.enqueue_run(db, task.id)
 
     steps = TaskStepRepository(db)
     steps.close_current(task.id)
@@ -433,6 +428,18 @@ def cancel_task(
         if job.state in (JobState.PENDING.value, JobState.QUEUED.value):
             jobs.mark_cancelled(job.id)
 
+    # Cooperative cancel: if a run is already in flight (any state past QUEUED),
+    # flag it and let the orchestrator finalise CANCELLED at the next stage
+    # boundary -- don't yank a running stage out from under the worker.
+    if task.state not in (TaskState.PENDING.value, TaskState.QUEUED.value):
+        tasks.set_cancel_requested(task.id, True)
+        if reason:
+            tasks.set_state(task.id, task.state, terminal_reason=reason)
+        TaskStepRepository(db).append(
+            task_id=task.id, state=task.state, agent="api:cancel-requested"
+        )
+        return _to_task_schema(tasks.get(task.id))
+
     steps = TaskStepRepository(db)
     steps.close_current(task.id)
     tasks.set_state(
@@ -460,6 +467,11 @@ def build_timeline(db: Session, task_id: str) -> TaskTimeline:
                 state=step.state,
                 at=step.entered_at,
                 detail=step.agent,
+                exited_at=step.exited_at,
+                duration_ms=step.duration_ms,
+                error=step.error,
+                input_ref=step.input_ref,
+                output_ref=step.output_ref,
             )
         )
 

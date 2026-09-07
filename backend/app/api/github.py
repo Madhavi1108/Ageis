@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.core.auth import operator_required
 from app.github.client import GitHubClient
 from app.github.deps import get_github_client
 from app.github.provider import GitHubProvider
@@ -51,6 +52,7 @@ def get_github_issue(
     "/repos/{owner}/{repo}/issues/{number}/import",
     status_code=201,
     response_model=IssueRef,
+    dependencies=[operator_required],
 )
 def import_github_issue(
     owner: str,

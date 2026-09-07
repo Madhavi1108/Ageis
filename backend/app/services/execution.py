@@ -43,7 +43,7 @@ from app.sandbox.errors import (
     TestExecutionTestsMissingError,
 )
 from app.sandbox.resource_limits import ResourceLimits
-from app.sandbox.runner import DockerSandboxRunner
+from app.sandbox.select import build_runner
 from app.schemas.execution import TestExecution
 
 
@@ -158,8 +158,10 @@ def execute_tests(
             touched_paths.append(case.path)
         test_command = sorted(set(touched_paths))
 
-        runner = DockerSandboxRunner(
-            image=settings.sandbox_image, limits=_limits_from_settings(settings)
+        runner = build_runner(
+            settings,
+            image=settings.sandbox_image,
+            limits=_limits_from_settings(settings),
         )
         run_result = runner.run_tests(ws.root, test_command)
 

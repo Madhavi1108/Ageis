@@ -2500,6 +2500,41 @@ label + never authoritative.
 
 ## 29. Phase 21 — FastAPI Completion + Job / Orchestration
 
+**Status: COMPLETE — 2026-09-07.** New `backend/app/orchestration/` package: `state_machine.py`
+(the guarded §4.3 transition table + `transition()` -- the single writer that closes the open
+`TaskStep`, sets `Task.state`, and appends a ref-linked step); `orchestrator.py::run_task`
+sequences every stage service (ingest → analyze+map+impact → plan → validate → implement →
+generate_tests → execute → [investigate → repair → re-execute] → regression → review → score →
+verify), each consuming the prior stage's persisted row, checkpointing the job after each stage;
+`job_queue.py` (idempotent `enqueue_run`, FIFO `claim_next` with `dedupe_key` skipping,
+`retry_or_fail` exponential backoff, `reclaim_orphans` crash-recovery); `worker.py`
+(`OrchestrationWorker` -- an asyncio, concurrency-capped loop; `run_once` for tests; replaces
+`worker_placeholder.py`). `POST /tasks/{id}/run` now enqueues a claimable job; `cancel_task` is
+cooperative mid-run (a `task.cancel_requested` flag the orchestrator honours at the next stage
+boundary). New `AEGIS_SANDBOX_MODE=fake` (`app/sandbox/{runner.LocalSubprocessRunner,select}`) so
+the pipeline reaches `COMPLETED` without Docker -- trusted fixtures only; default `docker`
+unchanged. Opt-in auth (`app/core/auth.py`: `Role`, `require_role`; `auth_enabled=False` default,
+`AEGIS_API_KEYS` maps a key → role) declared on every mutating route (`operator_required` /
+`approver_required`). New `/jobs` router (list + filter + `limit`/`offset`/`total`, get, cancel)
++ `schemas/job.py`. Timeline entries now carry `exited_at` / `duration_ms` / `error` /
+`input_ref` / `output_ref`. Migration `0020` (`task.cancel_requested`, `ix_job_state_queued_at`).
+New tests: `test_state_machine.py`, `test_job_queue.py`, `test_auth.py` (unit);
+`test_orchestrator_pipeline.py` (the connectedness anchor: FK chain + orchestrator step-ref
+chain), `test_worker_lifecycle.py`, `test_jobs_api.py`, `test_auth_api.py` (integration).
+
+**Open items (documented limitations, not gaps):** the guarded state machine drives the
+**orchestrator** path; the standalone per-stage POST endpoints keep their lenient `set_state`
+(they are debugging/skeleton affordances). `AuditLog` still has no writer and the hash-chain is
+unimplemented -- the timeline is STEP + JOB (enriched), no domain "events" source yet. No
+standalone `/plans`, `/patches`, `/tests`, `/reviews`, `/verification`, `/reports` routers -- all
+served by `/tasks/{id}/*` (`/reports` needs a Trust-Report artifact endpoint that doesn't exist).
+List pagination is `limit`/`offset`/`total`, not cursor. The worker is a single asyncio process
+(the `job_queue` functions are the seam for RQ/Celery/arq). RBAC covers mutating routes only; no
+`/config` / `/policy` / `/providers` endpoints exist to guard. `Job.task_id` stays a plain
+indexed column (no FK) to avoid a fragile SQLite batch migration. On a resume, stages re-run from
+the top (idempotent / new-version) and `_stage()` fast-forwards past states the task already
+passed, rather than skipping by checkpoint name.
+
 **Goal.** Complete and harden every endpoint group and the job system, and wire the Orchestrator so
 the whole pipeline runs as one connected workflow driven by the state machine.
 

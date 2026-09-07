@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.db.session import get_db
+from app.core.auth import operator_required
 from app.ingestion.errors import RepositoryNotFoundError
 from app.ingestion.ingest import ingest_repository
 from app.ingestion.url_validator import validate_local_path, validate_remote_url
@@ -38,7 +39,7 @@ def _derive_name(url_or_path: str) -> str:
     return PurePath(cleaned).name or cleaned
 
 
-@router.post("", status_code=201, response_model=RepositoryRef)
+@router.post("", status_code=201, response_model=RepositoryRef, dependencies=[operator_required])
 def create_repository(
     body: RepositoryCreateRequest,
     db: Session = Depends(get_db),
@@ -149,7 +150,7 @@ def get_git_context(
     )
 
 
-@router.post("/{repository_id}/snapshots", status_code=201, response_model=IngestResult)
+@router.post("/{repository_id}/snapshots", status_code=201, response_model=IngestResult, dependencies=[operator_required])
 def create_snapshot(
     repository_id: str,
     body: IngestRequest,

@@ -11,6 +11,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api import (
@@ -18,6 +19,7 @@ from app.api import (
     executions,
     github,
     health,
+    jobs,
     mapping,
     memory,
     repositories,
@@ -63,6 +65,25 @@ def create_app() -> FastAPI:
     )
     app.middleware("http")(_correlation_id_middleware)
 
+    _max_body = settings.request_max_body_bytes
+
+    @app.middleware("http")
+    async def _limit_body_size(  # noqa: ANN001, ANN202
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        cl = request.headers.get("content-length")
+        if cl is not None and cl.isdigit() and int(cl) > _max_body:
+            return JSONResponse(
+                status_code=413,
+                content={
+                    "code": "REQUEST_TOO_LARGE",
+                    "message": f"request body exceeds {_max_body} bytes",
+                    "details": None,
+                    "evidence": None,
+                },
+            )
+        return await call_next(request)
+
     # FastAPI's add_exception_handler is typed against the base Exception
     # signature; narrower per-exception-type handlers are the documented
     # pattern (https://fastapi.tiangolo.com/tutorial/handling-errors/) but
@@ -79,6 +100,7 @@ def create_app() -> FastAPI:
     app.include_router(executions.router)
     app.include_router(github.router)
     app.include_router(memory.router)
+    app.include_router(jobs.router)
 
     return app
 

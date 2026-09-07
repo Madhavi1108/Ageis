@@ -16,6 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _VALID_LOG_LEVELS = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
 _VALID_ENVIRONMENTS = {"dev", "test", "prod"}
+_VALID_SANDBOX_MODES = {"docker", "fake"}
 
 
 class Settings(BaseSettings):
@@ -186,6 +187,44 @@ class Settings(BaseSettings):
     memory_min_similarity: float = Field(default=0.05, ge=0.0, le=1.0)
     memory_same_repo_boost: float = Field(default=0.25, ge=0.0, le=1.0)
     memory_recency_half_life_days: float = Field(default=30.0, gt=0)
+
+    # Orchestration + job worker (Phase 21, docs/AEGIS_IMPLEMENTATION_PLAN.md
+    # Section 29). sandbox_mode="fake" runs pytest as a local subprocess (the
+    # walking-skeleton's --sandbox fake) -- ONLY for trusted fixtures; default
+    # "docker" is unchanged. auth defaults OFF: mutating routes declare a role
+    # but require_role is a no-op unless auth_enabled. api_keys maps an API key
+    # to a role name (viewer|operator|approver|admin), e.g.
+    # AEGIS_API_KEYS='{"k1":"operator"}'.
+    sandbox_mode: str = Field(default="docker")
+    auth_enabled: bool = Field(default=False)
+    api_keys: dict[str, str] = Field(default_factory=dict)
+    orchestrator_max_plan_revisions: int = Field(default=1, ge=0)
+    orchestrator_max_regression_retries: int = Field(default=0, ge=0)
+    orchestrator_open_pr: bool = Field(default=False)
+    worker_poll_interval_s: float = Field(default=1.0, gt=0)
+    worker_max_concurrency: int = Field(default=2, gt=0)
+    worker_stale_after_s: int = Field(default=900, gt=0)
+    job_backoff_base_s: float = Field(default=2.0, gt=0)
+
+    @field_validator("sandbox_mode")
+    @classmethod
+    def _valid_sandbox_mode(cls, v: str) -> str:
+        if v not in _VALID_SANDBOX_MODES:
+            raise ValueError(
+                f"sandbox_mode must be one of {sorted(_VALID_SANDBOX_MODES)}, got {v!r}"
+            )
+        return v
+
+    @field_validator("api_keys")
+    @classmethod
+    def _valid_api_keys(cls, v: dict[str, str]) -> dict[str, str]:
+        allowed = {"viewer", "operator", "approver", "admin"}
+        for key, role in v.items():
+            if role not in allowed:
+                raise ValueError(
+                    f"api_keys[{key!r}] role must be one of {sorted(allowed)}, got {role!r}"
+                )
+        return v
 
     @field_validator("ai_provider")
     @classmethod

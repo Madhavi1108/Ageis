@@ -77,6 +77,11 @@ def test_upgrade_then_downgrade_is_clean(tmp_path, monkeypatch):
         "engineering_memory",
         "repository_knowledge",
     }.issubset(tables)
+    # Phase 21 (0020): task.cancel_requested + the job claim index.
+    task_cols = {c["name"] for c in inspect(engine).get_columns("task")}
+    assert "cancel_requested" in task_cols
+    job_indexes = {ix["name"] for ix in inspect(engine).get_indexes("job")}
+    assert "ix_job_state_queued_at" in job_indexes
     engine.dispose()
 
     command.downgrade(config, "base")

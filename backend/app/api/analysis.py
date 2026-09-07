@@ -16,6 +16,7 @@ from app.analysis.graph.centrality import compute_centrality
 from app.analysis.graph.errors import GraphNodeNotFoundError, GraphNotFoundError
 from app.analysis.graph.store import build_networkx
 from app.core.config import Settings, get_settings
+from app.core.auth import operator_required
 from app.db.session import get_db
 from app.repository.analyses import AnalysisRepository
 from app.repository.graph import GraphRepository
@@ -39,6 +40,7 @@ def _get_snapshot_or_404(db: Session, repository_id: str, snapshot_id: str):
     "/{repository_id}/snapshots/{snapshot_id}/analysis",
     status_code=201,
     response_model=RepositoryAnalysisResult,
+    dependencies=[operator_required],
 )
 def create_analysis(
     repository_id: str,

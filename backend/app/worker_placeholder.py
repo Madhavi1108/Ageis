@@ -1,29 +1,16 @@
-"""Placeholder worker entrypoint.
+"""Worker entrypoint shim.
 
-Proves the docker-compose ``worker`` service shape (a long-running process
-sharing the api image) without any real job-processing logic. Real job
-consumption is orchestration-layer work for a later phase.
+Kept for the docker-compose ``worker`` service and any scripts that import
+``app.worker_placeholder:main``. The real job-processing loop now lives in
+``app.orchestration.worker`` (Phase 21).
 """
 
 from __future__ import annotations
 
-import logging
-import time
+from app.orchestration.worker import main
 
-from app.core.config import get_settings
-from app.core.logging import configure_logging
-
-logger = logging.getLogger("aegis.worker_placeholder")
+__all__ = ["main"]
 
 
-def main() -> None:
-    settings = get_settings()
-    configure_logging(settings)
-    logger.info("worker placeholder started; no job-processing logic yet")
-    while True:
-        time.sleep(60)
-        logger.info("worker placeholder heartbeat")
-
-
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

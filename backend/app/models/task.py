@@ -21,7 +21,15 @@ from __future__ import annotations
 
 import enum
 
-from sqlalchemy import JSON, ForeignKey, Index, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.ids import new_id
@@ -70,9 +78,14 @@ class TaskState(str, enum.Enum):
     PARTIALLY_SUPPORTED = "PARTIALLY_SUPPORTED"
 
 
-#: States from which no further progression is possible.
+#: States from which no further progression is possible (docs/AEGIS_IMPLEMENTATION_PLAN.md §4.3).
 TERMINAL_TASK_STATES = frozenset(
-    {TaskState.COMPLETED.value, TaskState.FAILED.value, TaskState.CANCELLED.value}
+    {
+        TaskState.COMPLETED.value,
+        TaskState.FAILED.value,
+        TaskState.CANCELLED.value,
+        TaskState.PARTIALLY_SUPPORTED.value,
+    }
 )
 
 
@@ -106,6 +119,12 @@ class Task(Base, TimestampMixin):
     idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
     state: Mapped[str] = mapped_column(
         String(24), nullable=False, default=TaskState.PENDING.value
+    )
+    # Phase 21 cooperative cancel: set by POST /tasks/{id}/cancel while a run is
+    # in flight; the orchestrator finalises the task to CANCELLED at the next
+    # stage boundary.
+    cancel_requested: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False
     )
     terminal_reason: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_by: Mapped[str] = mapped_column(

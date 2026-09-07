@@ -135,3 +135,13 @@ class TaskRepository:
         self._session.commit()
         self._session.refresh(task)
         return task
+
+    def set_cancel_requested(self, task_id: str, value: bool = True) -> Task:
+        """Phase 21 cooperative-cancel flag; the orchestrator reads it between
+        stages and finalises the task to CANCELLED."""
+        task = self._session.get(Task, task_id)
+        assert task is not None
+        task.cancel_requested = value
+        self._session.commit()
+        self._session.refresh(task)
+        return task

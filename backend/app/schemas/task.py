@@ -110,6 +110,12 @@ class TimelineEntry(BaseModel):
     state: str
     at: datetime
     detail: str | None = None
+    # STEP-only, all optional (backward compatible)
+    exited_at: datetime | None = None
+    duration_ms: int | None = None
+    error: dict | None = None
+    input_ref: str | None = None
+    output_ref: str | None = None
 
 
 class TaskTimeline(BaseModel):
