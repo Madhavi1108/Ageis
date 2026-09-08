@@ -53,6 +53,7 @@ from app.schemas.execution import TestExecutionRun, TestOutcome
 from app.schemas.failure import FailureAnalysis
 from app.schemas.implementation import EditOp
 from app.schemas.repair import RepairAttemptView, RepairResult, SafeStop
+from app.services import implementation as implementation_service
 from app.services import investigation as investigation_service
 from app.services import memory as memory_service
 
@@ -345,6 +346,22 @@ def get_or_repair(
             snapshot_id=execution.snapshot_id,
             safe_stop=loop_result.safe_stop,
         )
+
+    # Phase 24: a REPAIRED result is the accumulated fix for this task's one
+    # implementation -- promote it onto the Implementation row so execute_retry
+    # and verification reconstruct the fixed workspace (without this the loop
+    # goes green in its throwaway workspace and nothing downstream ever sees it).
+    if loop_result.outcome == "REPAIRED" and loop_result.final_ops:
+        try:
+            implementation_service.apply_repaired_ops(
+                db, settings=settings, task_id=task_id, repair_ops=loop_result.final_ops
+            )
+        except Exception:  # noqa: BLE001 -- a promotion failure must not lose the ledger
+            _logger.warning(
+                "could not promote repaired ops into the implementation for task %s",
+                task_id,
+                exc_info=True,
+            )
 
     rows = repo.replace_for_task(task_id, _attempt_rows(loop_result))
     TaskStepRepository(db).append(

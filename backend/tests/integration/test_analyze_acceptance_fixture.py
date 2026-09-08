@@ -40,11 +40,13 @@ def test_analyze_acceptance_fixture(
 
     # invoice.py (module + calculate_total), utils.py (module + format_currency),
     # checkout.py (module + process_checkout), order_service.py (module + finalize_order),
+    # config.py (module only -- MAX_DISCOUNT is a bare constant, not a symbol),
     # test_invoice.py (module + test_no_discount + test_discount_capped_at_50_percent).
     # checkout.py and order_service.py were added in Phase 5 (Code Graph & Dependency
     # Analysis) so "callers of calculate_total" has a real answer -- see
-    # test_analyze_builds_graph.py.
-    assert result.symbol_count == 11
+    # test_analyze_builds_graph.py; config.py added in Phase 24 (see
+    # docs/ACCEPTANCE_SCENARIOS.md).
+    assert result.symbol_count == 12
     # test_invoice.py, checkout.py, and order_service.py each import invoice (LOCAL).
     assert result.dependency_count == 3
     assert result.entry_points == []

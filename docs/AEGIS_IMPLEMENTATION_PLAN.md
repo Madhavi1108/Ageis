@@ -558,7 +558,10 @@ No phase is "done" on scaffolding, TODOs, or unexecuted tests.
 ### 5.5 Shared fixtures
 
 - `test-repositories/aegis-acceptance/` — the controlled repo (finalized in Phase 24; a minimal
-  version exists from Phase 3 so earlier phases have something real to run against).
+  version exists from Phase 3 so earlier phases have something real to run against). Plain files on
+  disk (no committed `.git`); the crafted Git history is replayed at test time by
+  `backend/tests/e2e/_acceptance_repo.py`. The scenario-C negative variant is
+  `test-repositories/aegis-acceptance-unfixable/`.
 - `test-repositories/fixtures/` — small single-purpose repos: syntax-error file, monorepo layout,
   poetry vs pep621 vs requirements, aliased imports, dynamic dispatch, network-touching test,
   fork-bombing test, memory hog, out-of-workspace writer, seeded-secret reader.
@@ -2799,6 +2802,63 @@ drift -> contract tests.
 ---
 
 ## 32. Phase 24 — End-to-End Controlled Repository
+
+**Status: COMPLETE — 2026-09-08.** The controlled repo `test-repositories/aegis-acceptance/` is
+finalized: added `config.py` (`MAX_DISCOUNT = 0.5`) and `task_feature.md` (the scenario-B feature
+seed) alongside the existing `invoice`/`checkout`/`order_service`/`utils`/`test_invoice`/`task.md`
+— all nine required properties now hold. New sibling fixture
+`test-repositories/aegis-acceptance-unfixable/` (`rounding.py` delegating to banker's `round()`,
+`test_rounding.py`, `task.md`) is the scenario-C negative variant. The crafted **Git history is
+built at test time**, not committed: `backend/tests/e2e/_acceptance_repo.py::build_acceptance_git_repo`
+replays four commits (skeleton → order helpers → **"Fix rounding drift in calculate_total()"**, the
+prior related fix that touched the target symbol → config + known-failing boundary test) whose
+final working tree is byte-identical to the on-disk fixture; `scripts/build_acceptance_repo.py` is
+a CLI wrapper. `backend/tests/e2e/_acceptance_scenarios.py` holds the deterministic `MockProvider`
+answers for scenarios A/B/C keyed by task id (planning/implementation/test_synthesis, plus rca +
+repair for A/C — MockProvider has no rule-based fallback for those templates); gold expectations
+live in `backend/tests/e2e/gold/{scenario_a,b,c}.json` (typed by `_gold.GoldScenario`) **outside**
+the ingested tree so the ~20 per-stage `*_acceptance_fixture.py` tests are unperturbed.
+`backend/tests/e2e/test_full_pipeline.py` (+ `tests/e2e/conftest.py`) drives the real `app/`
+orchestrator with `sandbox_mode="fake"`: `test_scenario_a_drives_all_18_workflow_steps` asserts
+every Specification §39 step produced its persisted structured output (ingest → analyze → map →
+impact → plan/validate → implement → generate-tests → execute **FAIL** → investigate → repair
+**REPAIRED** → execute-retry **PASS** → regression → review → score → verify **VERIFIED** →
+COMPLETED → final diff → `LOCAL_ARTIFACT` PR), cross-checks the 18-section `build_task_report`,
+and asserts Git intelligence surfaced the prior related fix and engineering memory recorded the
+task; `test_scenario_b_feature_request_creates_new_files` covers the `create`-op file-creation
+path (verification is `PARTIAL` → `COMPLETED` via approval — a purely-additive feature earns no
+mandatory `acceptance_tests_pass` PASS in a Docker-less run); `test_scenario_c_unfixable_reaches_safe_stop`
+asserts `RepairResult.outcome == "SAFE_STOP"` with a populated `SafeStop` and a non-`COMPLETED`,
+non-`VERIFIED` terminal state; `test_scenario_a_ai_call_budget_is_bounded` is the §5.7 cost band
+(provisional, calibrated in Phase 25); `test_docker_variant_reaches_verified` (`@pytest.mark.docker`)
+re-runs scenario A through a real daemon and auto-skips. **Wiring fix (small `app/` change):** a
+`REPAIRED` repair-loop result was persisted only as `RepairAttempt` rows —
+`RepairResult.final_edit_ops` was consumed nowhere, so `execute_retry`/verification reconstructed
+the *incomplete* implementation and an introduced-then-repaired run could never reach `VERIFIED`.
+`app/services/repair.py::get_or_repair` now calls new
+`app/services/implementation.py::apply_repaired_ops(...)` on `REPAIRED`, which stacks the repair
+ops onto the latest `Implementation` row **in place** (same id → test-case/execution bindings
+stay valid) and rewrites its `Patch` + diff artifact via new
+`ImplementationRepository.replace_ops` / `PatchRepository.update_diff`; covered by
+`backend/tests/integration/test_repair_promotes_implementation.py`. New `e2e` pytest marker;
+`test-repositories/aegis-acceptance`'s file/symbol counts updated in the five integration tests
+that hard-code them (`test_ingest_local_fixture`, `test_analyze_acceptance_fixture`,
+`test_analyze_idempotency`, `test_analysis_api`, `test_repositories_api`). `docs/ACCEPTANCE_SCENARIOS.md`
+added. No migration. No new API routes (OpenAPI unchanged).
+
+**Open items (documented limitations, not gaps):** the acceptance E2E runs only through the fake
+sandbox in CI — the real-daemon path is `@pytest.mark.docker` and never runs here, the same
+standing as Phase 1 / Phase 12's never-run Docker happy path. The Git history is regenerated
+deterministically at test time rather than committed as a real `.git` (nested repos are brittle
+and the plain directory backs ~20 existing tests); `build_acceptance_git_repo` is the single
+source of that history. Scenario B lands `PARTIAL` and needs a human `APPROVE` to reach
+`COMPLETED` because verification's `acceptance_tests_pass` criterion does not bind a brand-new
+symbol's test as "targeted" in a Docker-less run — a verification edge for purely-additive
+features, not a pipeline gap. The cost/latency band asserts only a coarse call-count ceiling;
+priced-token budgets are Phase 25. The benchmark set (Phase 25) stays disjoint from this repo —
+no overfitting mitigation here beyond keeping them separate. `apply_repaired_ops` overwrites the
+implementation row's ops in place, so the pre-repair op list is recoverable only from the
+`repair_attempt` ledger, not as a distinct `Implementation` version.
 
 **Goal.** Build the acceptance test repository — multiple Python modules, dependency relationships,
 existing tests, real Git history, intentionally incomplete behaviour, at least one reproducible bug,

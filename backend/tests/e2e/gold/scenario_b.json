@@ -1,0 +1,17 @@
+{
+  "scenario": "B",
+  "title": "Add order-level tax to the checkout flow",
+  "task_file": "task_feature.md",
+  "kind": "FEATURE",
+  "introduced_failure": false,
+  "expected_localization_files": ["order_service.py"],
+  "expected_files_modified": ["order_service.py"],
+  "expected_files_created": ["tax.py"],
+  "expected_symbols": ["order_service.py::finalize_order"],
+  "expected_tests": ["test_tax.py::test_apply_tax_adds_rate"],
+  "expected_first_execution_failing": false,
+  "expected_repair_outcome": null,
+  "expected_verification_verdict": "VERIFIED",
+  "expected_terminal_state": "COMPLETED",
+  "prior_related_fix_message_contains": null
+}

@@ -57,7 +57,7 @@ def test_force_reanalysis_replaces_symbols_not_duplicates(
 
     assert second.analysed_at != first.analysed_at
     symbols = SymbolRepository(db_session).list_for_snapshot(snapshot.id)
-    assert len(symbols) == second.symbol_count == 11
+    assert len(symbols) == second.symbol_count == 12  # +config.py module (Phase 24)
 
     # Phase 5: re-analysis replaces the code graph too, not duplicates it.
     nodes = GraphRepository(db_session).list_nodes_for_snapshot(snapshot.id)

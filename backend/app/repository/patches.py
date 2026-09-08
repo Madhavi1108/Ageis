@@ -37,6 +37,27 @@ class PatchRepository:
         self._session.refresh(patch)
         return patch
 
+    def update_diff(
+        self,
+        patch_id: str,
+        *,
+        artifact_id: str,
+        touched_paths: list,
+        diff_size: int,
+    ) -> Patch:
+        """Repoint a patch at a freshly rendered diff (Phase 24: after a
+        REPAIRED repair loop rewrites the implementation's applied ops)."""
+        patch = self._session.get(Patch, patch_id)
+        if patch is None:  # pragma: no cover - caller guarantees existence
+            raise ValueError(f"patch {patch_id} not found")
+        patch.artifact_id = artifact_id
+        patch.touched_paths = touched_paths
+        patch.diff_size = diff_size
+        self._session.add(patch)
+        self._session.commit()
+        self._session.refresh(patch)
+        return patch
+
     def get_by_implementation(self, implementation_id: str) -> Patch | None:
         stmt = select(Patch).where(
             Patch.implementation_id == implementation_id, Patch.is_candidate.is_(False)

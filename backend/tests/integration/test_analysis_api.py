@@ -58,13 +58,13 @@ def test_analysis_round_trip(client, acceptance_fixture_path):
     assert post_resp.status_code == 201, post_resp.text
     body = post_resp.json()
     # See test_analyze_acceptance_fixture.py for the exact per-file breakdown
-    # (5 files: invoice/utils/checkout/order_service/test_invoice).
-    assert body["symbol_count"] == 11
+    # (6 py files: invoice/utils/checkout/order_service/config/test_invoice).
+    assert body["symbol_count"] == 12
     assert body["dependency_count"] == 3
 
     get_resp = client.get(f"/repositories/{repo_id}/snapshots/{snapshot_id}/analysis")
     assert get_resp.status_code == 200
-    assert get_resp.json()["symbol_count"] == 11
+    assert get_resp.json()["symbol_count"] == 12
 
 
 def test_get_analysis_before_running_returns_404(client, acceptance_fixture_path):

@@ -233,6 +233,94 @@ def generate_implementation(
         ws.cleanup()
 
 
+def apply_repaired_ops(
+    db: Session,
+    *,
+    settings: Settings,
+    task_id: str,
+    repair_ops: list[EditOp],
+) -> ImplementationResult:
+    """Promote a REPAIRED repair-loop result into the task's implementation
+    (Phase 24, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 32).
+
+    The repair loop evaluates ``impl.edit_ops + repair_ops`` on a throwaway
+    workspace; when it goes GREEN nothing downstream ever sees that fix because
+    ``execute_retry`` / verification reconstruct the workspace from the
+    Implementation row's own ``edit_ops``. This stacks the repair ops onto the
+    latest Implementation row **in place** (same id -> the test-case and
+    execution bindings stay valid) and rewrites its Patch + diff artifact, so a
+    genuine introduced-then-repaired failure can still reach VERIFIED.
+    """
+    impl_row = ImplementationRepository(db).get_latest_by_task(task_id)
+    if impl_row is None:
+        raise ImplementationNotFoundError(f"no implementation for task {task_id}")
+    plan_row = EngineeringPlanRepository(db).get_latest_by_task(task_id)
+    if plan_row is None:  # pragma: no cover - repair always runs after planning
+        raise ImplementationPlanNotApprovedError(
+            f"task {task_id} has no plan to scope the repaired implementation"
+        )
+
+    combined = [EditOp.model_validate(op) for op in impl_row.edit_ops] + list(repair_ops)
+
+    source_workspace = workspace_dir(impl_row.snapshot_id, settings)
+    ws = clone_rw(impl_row.snapshot_id, source_workspace)
+    try:
+        result = implementation_agent.apply_and_diff(
+            ws,
+            source_workspace,
+            combined,
+            allowed_scope=_allowed_scope(db, task_id, plan_row),
+        )
+        if not result.applied_ops:
+            raise ImplementationFailedError(
+                f"repaired edit ops could not be applied: {result.failed_op_error}"
+            )
+
+        traceability = _traceability(result.applied_ops)
+        row = ImplementationRepository(db).replace_ops(
+            impl_row.id,
+            edit_ops=[op.model_dump() for op in result.applied_ops],
+            scope_violations=sorted(result.scope_violations),
+            traceability=traceability,
+        )
+
+        patches_dir = Path(settings.artifacts_root) / "patches"
+        patches_dir.mkdir(parents=True, exist_ok=True)
+        diff_path = patches_dir / f"{row.id}-repaired-{new_id()}.diff"
+        diff_bytes = result.diff_text.encode("utf-8")
+        diff_path.write_bytes(diff_bytes)
+        artifact = ArtifactRepository(db).create(
+            kind=ArtifactKind.DIFF.value,
+            store=ArtifactStoreKind.FS.value,
+            uri=str(diff_path),
+            retention=ArtifactRetention.RETAINED.value,
+            snapshot_id=row.snapshot_id,
+            task_id=task_id,
+            sha256=hashlib.sha256(diff_bytes).hexdigest(),
+            size_bytes=len(diff_bytes),
+            content_type="text/x-diff",
+        )
+        patch_repo = PatchRepository(db)
+        existing = patch_repo.get_by_implementation(row.id)
+        if existing is not None:
+            patch = patch_repo.update_diff(
+                existing.id,
+                artifact_id=artifact.id,
+                touched_paths=sorted(result.touched),
+                diff_size=len(diff_bytes),
+            )
+        else:  # pragma: no cover - generate_implementation always writes one
+            patch = patch_repo.create(
+                implementation_id=row.id,
+                artifact_id=artifact.id,
+                touched_paths=sorted(result.touched),
+                diff_size=len(diff_bytes),
+            )
+        return _row_to_schema(row, patch=patch, diff_text=result.diff_text)
+    finally:
+        ws.cleanup()
+
+
 def get_implementation(
     db: Session, task_id: str, *, version: int | None = None
 ) -> ImplementationResult:

@@ -1,0 +1,17 @@
+{
+  "scenario": "C",
+  "title": "round_half_away() does not round halves away from zero (unfixable)",
+  "task_file": "task.md",
+  "kind": "BUG",
+  "introduced_failure": true,
+  "expected_localization_files": ["rounding.py"],
+  "expected_files_modified": ["rounding.py"],
+  "expected_files_created": [],
+  "expected_symbols": ["rounding.py::round_half_away"],
+  "expected_tests": ["test_round_half_away_boundary.py::test_half_rounds_away_from_zero"],
+  "expected_first_execution_failing": true,
+  "expected_repair_outcome": "SAFE_STOP",
+  "expected_verification_verdict": "NOT_VERIFIED",
+  "expected_terminal_state": "NOT_COMPLETED",
+  "prior_related_fix_message_contains": null
+}

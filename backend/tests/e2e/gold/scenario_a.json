@@ -1,0 +1,17 @@
+{
+  "scenario": "A",
+  "title": "Fix incorrect invoice total when discount exceeds the configured maximum",
+  "task_file": "task.md",
+  "kind": "BUG",
+  "introduced_failure": true,
+  "expected_localization_files": ["invoice.py"],
+  "expected_files_modified": ["invoice.py"],
+  "expected_files_created": [],
+  "expected_symbols": ["invoice.py::calculate_total"],
+  "expected_tests": ["test_discount_cap_boundary.py::test_discount_at_or_above_max"],
+  "expected_first_execution_failing": true,
+  "expected_repair_outcome": "REPAIRED",
+  "expected_verification_verdict": "VERIFIED",
+  "expected_terminal_state": "COMPLETED",
+  "prior_related_fix_message_contains": "rounding drift"
+}

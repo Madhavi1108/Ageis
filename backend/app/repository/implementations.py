@@ -45,6 +45,35 @@ class ImplementationRepository:
         ).scalar_one()
         return int(current) + 1
 
+    def replace_ops(
+        self,
+        implementation_id: str,
+        *,
+        edit_ops: list,
+        scope_violations: list,
+        traceability: dict,
+    ) -> Implementation:
+        """Overwrite an existing row's applied edit-ops in place (Phase 24).
+
+        A REPAIRED repair-loop result is the accumulated fix for *this* task's
+        one implementation, not a separate implementation attempt -- and every
+        downstream binding (test cases -> implementation, executions ->
+        implementation) points at this row's id. Stacking the repair ops onto
+        the row in place keeps those bindings valid so ``execute_retry`` and
+        verification reconstruct the fixed workspace. History of what the loop
+        tried lives in the ``repair_attempt`` ledger.
+        """
+        row = self._session.get(Implementation, implementation_id)
+        if row is None:  # pragma: no cover - caller guarantees existence
+            raise ValueError(f"implementation {implementation_id} not found")
+        row.edit_ops = edit_ops
+        row.scope_violations = scope_violations
+        row.traceability = traceability
+        self._session.add(row)
+        self._session.commit()
+        self._session.refresh(row)
+        return row
+
     def create_version(
         self,
         task_id: str,

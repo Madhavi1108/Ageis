@@ -30,11 +30,13 @@ def test_ingest_acceptance_fixture(
     )
 
     assert result.status == "READY"
-    # invoice.py, utils.py, checkout.py, order_service.py, test_invoice.py, task.md
-    # (checkout.py/order_service.py added in Phase 5 for real CALLS-edge coverage).
-    assert result.file_count == 6
-    assert result.languages["python"] == 5
-    assert result.languages["markdown"] == 1
+    # invoice.py, utils.py, checkout.py, order_service.py, config.py, test_invoice.py,
+    # task.md, task_feature.md (checkout.py/order_service.py added in Phase 5 for real
+    # CALLS-edge coverage; config.py + task_feature.md added in Phase 24 to finalize the
+    # controlled repo -- see docs/ACCEPTANCE_SCENARIOS.md).
+    assert result.file_count == 8
+    assert result.languages["python"] == 6
+    assert result.languages["markdown"] == 2
     assert result.commit_sha.startswith("local:")
 
     from app.ingestion.workspace import workspace_dir
