@@ -2920,6 +2920,42 @@ separate.
 
 ## 33. Phase 25 — Benchmarking + Metric Calibration
 
+**Status: COMPLETE — 2026-09-08.** New repo-root `benchmarks/` package drives the real Phase-21
+`app/` orchestrator headless over curated mini-repo datasets, captures raw signals, and computes
+all 16 objective metrics with generated (never hard-coded) numbers. Modules: `schema.py`
+(`BenchmarkTask` / `TaskRun` / `BenchmarkResult` — SWE-bench-Lite-style task contract + raw-signal
+bundle), `dataset.py` (YAML loader + fixture materialiser + content digest), `runner.py`
+(`CountingMockProvider` for #13 token accounting; synthesises the canned planning / implementation
+/ test_synthesis / rca / repair answers from each task's compact `mock` block; reconstructs the
+final workspace and runs its `fail_to_pass` / `pass_to_pass` as ground truth), `metrics.py` (the 16
+calculators — each a pure function returning a formula, n, bootstrap 95% CI, and `FACT` /
+`UNAVAILABLE` basis — never a silent 0), `report.py` (results.json / results.xlsx / summary.md),
+`calibrate.py` (train / held-out scoring-model check), `publish.py` (runs every dataset → combined
++ per-dataset tables → `docs/BENCHMARK_RESULTS.md`), `agents/` (the `ReferenceAgent` protocol for
+#15 + a `Noop` baseline). CLI: `python -m benchmarks {list,run,report,calibrate,publish}`;
+`run --dataset micro --check` is the CI benchmark smoke.
+
+Datasets: `micro` (3 tasks — the deterministic CI smoke) and `seeded` (3 fault-injection tasks —
+one regression the canned fix silently introduces for #6, one planted `eval()` the reviewer must
+flag for #9, one ineffective repair that stalls the bounded loop → SAFE_STOP). **Harness sign-off
+gate:** without Docker the pipeline never executes targeted tests in-stage, so it stops at
+`AWAITING_APPROVAL` with `pipeline_verdict = PARTIAL` even for a correct fix; the runner stands in
+for the human approver *only* when the reconstructed workspace is ground-truth green, never blindly
+— this makes a false-complete structurally impossible here (#10) and is why the earlier
+indiscriminate auto-approve was removed. Small `app/` behaviour touched: none — the harness is
+read-only against `app/`. `docs/METRICS.md` status + §5 updated with the calibration outcome
+(`scoring-model v1.0.0` **RETAINED** — 5 labeled points ≪ the 50-point re-fit threshold; no
+constant or version change); `docs/EVAL_HARNESS.md` §5 updated with the sign-off gate;
+`docs/BENCHMARK_RESULTS.md` generated (6 tasks, combined + per-dataset). Tests:
+`backend/tests/unit/test_benchmark_metrics.py` (hand-computed fixture per calculator),
+`test_benchmark_calibrate.py`, `test_benchmark_report.py` (serializer + committed-doc structure /
+anti-hard-coding scan); `backend/tests/integration/test_benchmark_pipeline.py`
+(`@pytest.mark.benchmark` — micro reproducibility + seeded #6/#9/SAFE_STOP + publish-doc
+consistency). New `benchmark` pytest marker; `/.bench/` git-ignored (run output). **Open item:**
+metric #15 (competitive delta) stays `N/A` — it needs real reference agents (OpenHands / Aider) in
+their own containers on the identical task set, which this Docker-less, credential-less environment
+cannot provide; `benchmarks/agents/README.md` documents the wiring for a live run.
+
 **Goal.** A repeatable benchmark framework over a curated set of controlled tasks; record task,
 repository, expected files, expected behaviour, tests, outcome, time, iterations, patch quality, and
 failures; compute the 16 objective metrics (including cost per verified task, latency percentiles,

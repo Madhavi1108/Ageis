@@ -1,0 +1,102 @@
+# seeded -- the fault-injection set that exercises metrics #6 (regression
+# detection) and #9 (review defect detection), plus the SAFE_STOP / false-
+# complete corners of #5, #10 and #12. Deterministic with MockProvider + the
+# fake sandbox. Format: docs/EVAL_HARNESS.md Section 2.
+#
+# Run on demand / nightly (NOT part of the CI benchmark smoke -- that is the
+# `micro` set). `python -m benchmarks publish` folds both into
+# docs/BENCHMARK_RESULTS.md.
+tasks:
+  # --- metric #6: a canned "fix" that closes the failing test but silently
+  #     breaks a pass_to_pass test (classic zero-guard off-by-one).
+  - id: mean-empty
+    repo_dir: repos/mean-empty
+    problem_statement: >
+      mean([]) raises ZeroDivisionError. It should return 0.0 for an empty
+      list. Non-empty inputs must keep their current behaviour.
+    task_type: BUG
+    difficulty: EASY
+    gold_files: [stats.py]
+    symbols_to_modify: ["stats.py::mean"]
+    fail_to_pass: ["test_stats.py::test_mean_empty"]
+    pass_to_pass: ["test_stats.py::test_mean_basic"]
+    seeded_regression: true
+    mock:
+      fix:
+        file: stats.py
+        find: "    return sum(xs) / len(xs)"
+        replace: "    if not xs:\n        return 0.0\n    return sum(xs) / (len(xs) + 1)"
+      generated_tests:
+        - path: test_gen_mean.py
+          content: |
+            from stats import mean
+
+
+            def test_generated_mean_empty():
+                assert mean([]) == 0.0
+
+  # --- metric #9: the correct fix, plus a planted eval() call the rule-based
+  #     reviewer must flag. verification_label=INCORRECT -> a true negative for
+  #     #10 (the reviewer keeps a defective patch out of "done").
+  - id: eval-defect
+    repo_dir: repos/eval-defect
+    problem_statement: >
+      safe_add(a, b) returns a - b instead of a + b. Fix the operator.
+    task_type: BUG
+    difficulty: EASY
+    gold_files: [calc.py]
+    symbols_to_modify: ["calc.py::safe_add"]
+    fail_to_pass: ["test_calc.py::test_adds"]
+    pass_to_pass: ["test_calc.py::test_module_imports"]
+    seeded_defect_kind: eval_exec
+    verification_label: INCORRECT
+    mock:
+      fix:
+        file: calc.py
+        find: "    return a - b"
+        replace: "    return a + b"
+      defect:
+        file: calc.py
+        find: "def safe_add(a, b):"
+        replace: "def _run(expr):\n    return eval(expr)\n\n\ndef safe_add(a, b):"
+      generated_tests:
+        - path: test_gen_calc.py
+          content: |
+            from calc import safe_add
+
+
+            def test_generated_add():
+                assert safe_add(2, 3) == 5
+
+  # --- SAFE_STOP: the first implementation misses, the repair proposal is
+  #     ineffective, the bounded loop stalls -> SAFE_STOP (metrics #5, #11, #12).
+  - id: port-default
+    repo_dir: repos/port-default
+    problem_statement: >
+      parse_port("") raises ValueError. An empty string should yield the
+      default port 8080.
+    task_type: BUG
+    difficulty: MEDIUM
+    gold_files: [config.py]
+    symbols_to_modify: ["config.py::parse_port"]
+    fail_to_pass: ["test_config.py::test_empty_default"]
+    pass_to_pass: ["test_config.py::test_numeric"]
+    verification_label: INCORRECT
+    expect_repair_outcome: SAFE_STOP
+    mock:
+      incomplete_fix:
+        file: config.py
+        find: "    return int(raw)"
+        replace: "    return int(raw or 0)"
+      dead_repair:
+        file: config.py
+        find: "    return int(raw or 0)"
+        replace: "    return int(raw or 1)"
+      generated_tests:
+        - path: test_gen_config.py
+          content: |
+            from config import parse_port
+
+
+            def test_generated_default():
+                assert parse_port("") == 8080

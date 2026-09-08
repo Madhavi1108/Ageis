@@ -20,3 +20,6 @@ dist-ssr/
 # Phase 3
 /backend/artifacts/
 .claude/
+
+# Phase 25 -- benchmark run outputs (docs/BENCHMARK_RESULTS.md is the committed artifact)
+/.bench/

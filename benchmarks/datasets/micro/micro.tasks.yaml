@@ -1,0 +1,95 @@
+# micro -- the CI benchmark-smoke set (3 tasks). Deterministic with MockProvider
+# + the fake sandbox. Format: docs/EVAL_HARNESS.md Section 2.
+tasks:
+  - id: discount-cap
+    repo_dir: repos/discount-cap
+    problem_statement: >
+      calculate_total() in the invoice module applies discounts above 50% in
+      full instead of capping them. Cap any discount above 0.5 at 0.5 before
+      applying it.
+    task_type: BUG
+    difficulty: EASY
+    gold_files: [invoice.py]
+    symbols_to_modify: ["invoice.py::calculate_total"]
+    fail_to_pass: ["test_invoice.py::test_cap_at_half"]
+    pass_to_pass: ["test_invoice.py::test_no_discount"]
+    verification_label: CORRECT
+    mock:
+      fix:
+        file: invoice.py
+        find: "return price * (1 - discount)"
+        replace: "return price * (1 - min(discount, 0.5))"
+      generated_tests:
+        - path: test_gen_cap.py
+          content: |
+            from invoice import calculate_total
+
+
+            def test_generated_cap():
+                assert calculate_total(100.0, 0.9) == 50.0
+
+  - id: celsius
+    repo_dir: repos/celsius
+    problem_statement: >
+      celsius_to_fahrenheit() multiplies by 9/10 instead of 9/5. The correct
+      formula is F = C * 9/5 + 32.
+    task_type: BUG
+    difficulty: EASY
+    gold_files: [convert.py]
+    symbols_to_modify: ["convert.py::celsius_to_fahrenheit"]
+    fail_to_pass: ["test_convert.py::test_boiling"]
+    pass_to_pass: ["test_convert.py::test_freezing"]
+    verification_label: CORRECT
+    expect_repair_outcome: REPAIRED
+    mock:
+      incomplete_fix:
+        file: convert.py
+        find: "return celsius * 9 / 10 + 32"
+        replace: "return celsius * 9 / 4 + 32"
+      fix:
+        file: convert.py
+        find: "return celsius * 9 / 4 + 32"
+        replace: "return celsius * 9 / 5 + 32"
+      generated_tests:
+        - path: test_gen_boil.py
+          content: |
+            from convert import celsius_to_fahrenheit
+
+
+            def test_generated_boiling():
+                assert celsius_to_fahrenheit(100) == 212
+
+  - id: add-tax
+    repo_dir: repos/add-tax
+    problem_statement: >
+      Orders are charged without tax. Add a tax.py module with
+      apply_tax(subtotal, rate) and apply a 10% tax inside order_total().
+    task_type: FEATURE
+    difficulty: MEDIUM
+    gold_files: [order.py]
+    symbols_to_modify: ["order.py::order_total"]
+    allowed_paths: [order.py, tax.py]
+    fail_to_pass: ["test_order.py::test_total_includes_tax"]
+    pass_to_pass: ["test_order.py::test_no_items"]
+    verification_label: CORRECT
+    mock:
+      create:
+        - path: tax.py
+          content: |
+            def apply_tax(subtotal, rate):
+                return round(subtotal * (1 + rate), 2)
+      extra_edits:
+        - file: order.py
+          find: "    return subtotal"
+          replace: "    return apply_tax(subtotal, 0.1)"
+        - file: order.py
+          find: "def order_total(subtotal):"
+          replace: "from tax import apply_tax\n\n\ndef order_total(subtotal):"
+      generated_tests:
+        - path: test_gen_tax.py
+          content: |
+            from tax import apply_tax
+
+
+            def test_generated_tax():
+                assert apply_tax(100, 0.1) == 110.0

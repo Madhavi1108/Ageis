@@ -89,13 +89,25 @@ best of them on **verified-change quality and false-complete rate**, not necessa
 for task in dataset:
     prepare sandbox from repo@base_commit
     run AEGIS headless -> collect all artifacts + token/cost accounting + timings
-    evaluate fail_to_pass / pass_to_pass in the sandbox
+    record the pipeline's own verdict (pipeline_verdict) before any sign-off
+    reconstruct the final workspace -> evaluate fail_to_pass / pass_to_pass (ground truth)
+    if AWAITING_APPROVAL and ground truth is green: sign off (APPROVE); else leave it
     (optional) run each reference agent -> evaluate the same way
 write results.json + results.xlsx + a Markdown summary
 compute metrics 1-16 with confidence intervals
 ```
 
 Deterministic with `MockProvider`; live runs behind `RUN_LIVE_AI=1`.
+
+**Sign-off gate.** Without Docker the pipeline never executes targeted tests in-stage, so it
+stops at `AWAITING_APPROVAL` with `pipeline_verdict = PARTIAL` even for a correct fix. The harness
+stands in for the human approver **only** when the reconstructed final workspace passes every
+`fail_to_pass` and keeps every `pass_to_pass` green — never blindly. This keeps metric #10's
+false-complete rate honest (a broken patch is never signed off) at the cost of not exercising the
+pipeline's *autonomous* verify path here; `pipeline_verdict` is reported alongside the final
+verdict so the distinction is visible. Datasets: `micro` (CI smoke, 3 tasks) and `seeded`
+(fault-injection for #6/#9 + SAFE_STOP, run on demand). `python -m benchmarks publish` folds both
+into `docs/BENCHMARK_RESULTS.md`.
 
 ---
 
