@@ -19,6 +19,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.core.security.pathjail import safe_join
+
 
 @dataclass
 class RWWorkspace:
@@ -28,7 +30,16 @@ class RWWorkspace:
     root: Path
 
     def path_for(self, rel_path: str) -> Path:
-        return self.root / rel_path
+        """Resolve ``rel_path`` inside this workspace.
+
+        ``rel_path`` is frequently untrusted (an AI ``EditOp.path`` /
+        ``TestCaseAI.path``, or a path replayed from the DB), so it goes
+        through the path jail: an absolute path, a drive/UNC root, ``..``
+        traversal, or a symlink escape raises
+        :class:`app.core.security.pathjail.PathJailError` (callers translate
+        that to their own failure type -- see ``editor.apply_edit_op``).
+        """
+        return safe_join(self.root, rel_path)
 
     def cleanup(self) -> None:
         shutil.rmtree(self.root, ignore_errors=True)

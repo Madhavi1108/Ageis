@@ -35,17 +35,44 @@ def materialize_from_clone(cloned_repo_root: Path, dest: Path) -> None:
 
 
 def materialize_from_local(source_root: Path, dest: Path) -> None:
-    """Copy `source_root` into `dest` -- never move/mutate the user's own working tree."""
+    """Copy `source_root` into `dest` -- never move/mutate the user's own working tree.
+
+    ``symlinks=True`` copies links *as links* rather than dereferencing them
+    (a repo with ``escape -> /etc/passwd`` must not pull that file's contents
+    into the workspace). Any symlink whose target then resolves outside ``dest``
+    is removed afterwards -- the sandbox is read-only + offline so a dangling
+    link is inert, and analysis never follows one out of the tree (Phase 26,
+    docs/SECURITY_MODEL.md Section 2 "filesystem escape / path traversal").
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
     if dest.exists():
         cleanup(dest)
     shutil.copytree(
         source_root,
         dest,
+        symlinks=True,
         ignore=shutil.ignore_patterns(
             ".git", "__pycache__", ".pytest_cache", ".venv", "venv"
         ),
     )
+    _strip_escaping_symlinks(dest)
+
+
+def _strip_escaping_symlinks(root: Path) -> None:
+    root_resolved = root.resolve()
+    for p in root.rglob("*"):
+        if not p.is_symlink():
+            continue
+        try:
+            target = (p.parent / os.readlink(p)).resolve()
+            inside = target == root_resolved or root_resolved in target.parents
+        except OSError:
+            inside = False
+        if not inside:
+            try:
+                p.unlink()
+            except OSError:
+                pass
 
 
 def make_read_only(path: Path) -> None:

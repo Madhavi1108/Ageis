@@ -27,4 +27,6 @@ def build_runner(
     return DockerSandboxRunner(
         image=image or settings.sandbox_image,
         limits=limits or ResourceLimits(),
+        image_digest=settings.sandbox_image_digest,
+        tmpfs_bytes=settings.sandbox_tmpfs_bytes,
     )

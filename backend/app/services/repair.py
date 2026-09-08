@@ -28,7 +28,10 @@ from app.debugging.errors import (
     RepairTaskNotFoundError,
 )
 from app.debugging.repair_loop import RunEval
+from app.core.security.pathjail import PathJailError
 from app.implementation.editor import EditorError, apply_edit_ops
+from app.testing.errors import UnsafeGeneratedCodeError
+from app.testing.safety import scan_generated_cases
 from app.implementation.patcher import unified_diff
 from app.implementation.scope_tracker import unplanned_files
 from app.implementation.workspace_rw import clone_rw
@@ -117,6 +120,15 @@ def _build_docker_runner(db: Session, *, settings: Settings, task_id: str):
         for c in TestCaseRepository(db).list_latest_by_task(task_id)
         if c.status == "GENERATED"
     ]
+    if cases and settings.security_block_unsafe_generated_code:
+        _findings = scan_generated_cases(cases)
+        if _findings:
+            raise UnsafeGeneratedCodeError(
+                f"{len(_findings)} generated test file(s) failed the safety scan: "
+                + "; ".join(f"{f.path}:{f.line} {f.rule}" for f in _findings[:5]),
+                findings=[f.__dict__ for f in _findings],
+            )
+
     impl = ImplementationRepository(db).get_latest_by_task(task_id)
     if impl is None or not cases:
         # nothing runnable -> a runner that reports the sandbox can't help
@@ -160,7 +172,18 @@ def _build_docker_runner(db: Session, *, settings: Settings, task_id: str):
             diff_size = len(unified_diff(source_workspace, ws))
             test_files: list[str] = []
             for case in cases:
-                target = ws.path_for(case.path)
+                try:
+                    target = ws.path_for(case.path)
+                except PathJailError:
+                    return RunEval(
+                        run=TestExecutionRun(
+                            command="",
+                            exit_code=1,
+                            outcome="ERROR",
+                            reason=f"generated test path {case.path!r} escapes the workspace",
+                        ),
+                        applied=False,
+                    )
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(case.code, encoding="utf-8")
                 test_files.append(case.path)
@@ -356,7 +379,9 @@ def get_or_repair(
             implementation_service.apply_repaired_ops(
                 db, settings=settings, task_id=task_id, repair_ops=loop_result.final_ops
             )
-        except Exception:  # noqa: BLE001 -- a promotion failure must not lose the ledger
+        except (
+            Exception
+        ):  # noqa: BLE001 -- a promotion failure must not lose the ledger
             _logger.warning(
                 "could not promote repaired ops into the implementation for task %s",
                 task_id,

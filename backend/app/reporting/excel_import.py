@@ -21,7 +21,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.errors import AppError
-from app.reporting.errors import WorkbookParseError, WorkbookSchemaError
+from app.reporting.errors import (
+    WorkbookParseError,
+    WorkbookSchemaError,
+    WorkbookTooLargeError,
+)
 from app.reporting.workbook_schema import (
     REPOSITORIES_COLUMNS,
     REPOSITORIES_SHEET,
@@ -96,13 +100,28 @@ def _read_sheet(wb: Any, name: str, columns: list[tuple[str, bool]]) -> SheetRow
     return out
 
 
-def parse_import_workbook(data: bytes) -> ParsedImport:
+def parse_import_workbook(
+    data: bytes, *, max_bytes: int | None = None, max_cells: int | None = None
+) -> ParsedImport:
+    if max_bytes is not None and len(data) > max_bytes:
+        raise WorkbookTooLargeError(
+            f"workbook is {len(data)} bytes, over the {max_bytes}-byte import limit"
+        )
     try:
         wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
     except Exception as exc:  # noqa: BLE001 -- openpyxl raises a grab-bag of types
         raise WorkbookParseError(f"could not read the workbook: {exc}") from exc
 
     try:
+        if max_cells is not None:
+            cells = 0
+            for sheet in wb.worksheets:
+                cells += (sheet.max_row or 0) * (sheet.max_column or 0)
+                if cells > max_cells:
+                    raise WorkbookTooLargeError(
+                        f"workbook declares > {max_cells} cells "
+                        "(possible decompression bomb)"
+                    )
         repositories = _read_sheet(wb, REPOSITORIES_SHEET, REPOSITORIES_COLUMNS)
         tasks = _read_sheet(wb, TASKS_SHEET, TASKS_IMPORT_COLUMNS)
     finally:
@@ -150,7 +169,11 @@ def _row_error(sheet: str, row: int, exc: Exception) -> ImportRowError:
 
 
 def run_import(db: Session, *, settings: Settings, data: bytes) -> ImportResult:
-    parsed = parse_import_workbook(data)
+    parsed = parse_import_workbook(
+        data,
+        max_bytes=settings.report_import_max_bytes,
+        max_cells=settings.report_import_max_cells,
+    )
     result = ImportResult(repositories_created=0, tasks_created=0)
 
     # url_or_path -> repository_id, seeded with anything already in the DB so a

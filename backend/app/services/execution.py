@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.core.ids import new_id
+from app.core.security.pathjail import PathJailError
 from app.implementation.editor import EditorError, apply_edit_op
 from app.implementation.workspace_rw import clone_rw
 from app.ingestion.workspace import workspace_dir
@@ -45,6 +46,22 @@ from app.sandbox.errors import (
 from app.sandbox.resource_limits import ResourceLimits
 from app.sandbox.select import build_runner
 from app.schemas.execution import TestExecution
+from app.testing.errors import UnsafeGeneratedCodeError
+from app.testing.safety import scan_generated_cases
+
+
+def _guard_generated_cases(cases, settings: Settings) -> None:
+    """Pre-execution static safety scan (Phase 26). Raises
+    ``UnsafeGeneratedCodeError`` if any generated file is unsafe to run."""
+    if not settings.security_block_unsafe_generated_code:
+        return
+    findings = scan_generated_cases(cases)
+    if findings:
+        raise UnsafeGeneratedCodeError(
+            f"{len(findings)} generated test file(s) failed the safety scan: "
+            + "; ".join(f"{f.path}:{f.line} {f.rule}" for f in findings[:5]),
+            findings=[f.__dict__ for f in findings],
+        )
 
 
 def _row_to_schema(row) -> TestExecution:
@@ -145,6 +162,8 @@ def execute_tests(
     )
     jobs.mark_running(job.id)
 
+    _guard_generated_cases(runnable, settings)
+
     source_workspace = workspace_dir(snapshot_id, settings)
     ws = clone_rw(snapshot_id, source_workspace)
     try:
@@ -152,7 +171,12 @@ def execute_tests(
 
         touched_paths: list[str] = []
         for case in runnable:
-            target = ws.path_for(case.path)
+            try:
+                target = ws.path_for(case.path)
+            except PathJailError as exc:
+                raise UnsafeGeneratedCodeError(
+                    f"generated test path {case.path!r} escapes the workspace"
+                ) from exc
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(case.code, encoding="utf-8")
             touched_paths.append(case.path)

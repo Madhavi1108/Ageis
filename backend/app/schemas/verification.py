@@ -15,6 +15,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas._base import StrictModel
+
 from aegis.schemas.common import Confidence, Evidence
 
 CriterionVerdict = Literal["PASS", "FAIL", "UNKNOWN"]
@@ -52,7 +54,7 @@ class VerificationDecision(BaseModel):
     decided_at: datetime
 
 
-class VerificationDecisionRequest(BaseModel):
+class VerificationDecisionRequest(StrictModel):
     decision: DecisionKind
     reason: str = Field(..., min_length=1, max_length=2000)
     actor: str = Field(..., min_length=1, max_length=255)

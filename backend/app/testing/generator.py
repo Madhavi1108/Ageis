@@ -84,8 +84,17 @@ def write_into_workspace(ws: RWWorkspace, cases: list[TestCaseAI]) -> None:
     """Create each case's file in the RW workspace. Never overwrites an
     existing path -- callers must have already deduplicated
     (app.testing.catalog.deduplicate) against files already in the
-    workspace."""
+    workspace. A generated ``case.path`` that escapes the workspace (the path
+    jail in ``ws.path_for``) is a hard failure, surfaced as ``EditorError``."""
+    from app.core.security.pathjail import PathJailError
+    from app.implementation.editor import EditorError
+
     for case in cases:
-        target = ws.path_for(case.path)
+        try:
+            target = ws.path_for(case.path)
+        except PathJailError as exc:
+            raise EditorError(
+                f"generated test path {case.path!r} escapes the workspace: {exc}"
+            ) from exc
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(case.code, encoding="utf-8")

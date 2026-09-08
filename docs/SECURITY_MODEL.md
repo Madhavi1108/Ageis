@@ -3,7 +3,10 @@
 Traceability: Specification §18, §21, §29, §34. Phase 0 deliverable (Spec §46 items 5, 6).
 Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §4.7–§4.8, §4.11, §4.14; `ADR-0010`, `ADR-0011`.
 
-Status: Accepted — 2026-09-04. Hardened and re-audited in Phase 26.
+Status: Accepted — 2026-09-04. **Hardened and re-audited in Phase 26 (2026-09-08)** — see the
+threat → control → test self-audit in §11. The `core/security/` package
+(`pathjail`, `subprocess_guard`, `env_allowlist`, `ssrf`, `redaction`, `validate`) now exists as
+the single enforcement point named in `ADR-0011`; `backend/tests/security/` is the threat suite.
 
 ---
 
@@ -27,18 +30,18 @@ generated patches, or test code.
 
 | Threat | Control | Enforcement point |
 |---|---|---|
-| Malicious repo scripts / build hooks | Docker container; non-root UID; `--cap-drop ALL`; `--security-opt no-new-privileges`; clone with `core.hooksPath=/dev/null`, `--no-recurse-submodules` | `sandbox/policy.py`, `repository/git_client.py` |
-| Shell execution / command injection | no `shell=True` anywhere; subprocess allowlist (`docker`, `git` only); all args as lists | `core/security/subprocess_guard.py` (import-time lint + runtime wrapper) |
-| Filesystem escape / path traversal | `--read-only` rootfs + `tmpfs` scratch; only the task workspace bind-mounted `:rw`; host-side path-jail resolves + asserts containment before any fs op | `sandbox/policy.py`, `core/security/pathjail.py` |
+| Malicious repo scripts / build hooks | Docker container; non-root UID; `--cap-drop ALL`; `--security-opt no-new-privileges`; clone with `core.hooksPath=/dev/null`, `--no-recurse-submodules` | `sandbox/policy.py`, `ingestion/git_client.py` |
+| Shell execution / command injection | no `shell=True` anywhere; subprocess allowlist (`docker`, `git` only); all args as lists | `core/security/subprocess_guard.py` (`guarded_run` allowlist wrapper; `tests/security/test_subprocess_guard.py` scans for bypasses) |
+| Filesystem escape / path traversal | `--read-only` rootfs + `tmpfs` scratch; only the task workspace bind-mounted `:rw`; host-side path jail (`safe_join`) resolves + asserts containment on every workspace fs op (`RWWorkspace.path_for`) | `sandbox/policy.py`, `core/security/pathjail.py` |
 | Network exfiltration | `--network none` by default | `sandbox/policy.py` (asserted in tests) |
-| SSRF (ingestion, GitHub) | URL scheme allowlist (`https`); host allowlist; block private / loopback / link-local IPs and DNS names resolving to them; block redirects to disallowed hosts | `repository/url_validator.py`, `github/client.py` |
+| SSRF (ingestion, GitHub) | URL scheme allowlist (`https`); host allowlist; block private / loopback / link-local IPs and DNS names resolving to them; block redirects to disallowed hosts | `core/security/ssrf.py` (re-exported by `ingestion/url_validator.py`), `github/client.py` |
 | Dependency-install attacks | install is opt-in; host-allowlisted index; hash-pinned; runs in a network-restricted pre-step, not the test step | `sandbox/runner.py` |
 | Credential / env-var theft | env scrubbed to an explicit allowlist before entering the container; no secret mounts; no Docker socket in the sandbox | `sandbox/policy.py`, `core/security/env_allowlist.py` |
 | CPU / memory exhaustion | `--cpus`, `--memory`, `--memory-swap`; wall-clock timeout with SIGKILL | `sandbox/resource_limits.py` |
 | Process spawning / fork bombs | `--pids-limit`; `--ulimit nproc`; `--ulimit nofile` | `sandbox/resource_limits.py` |
-| Malicious tests / generated code | static safety rules (`eval`, `exec`, `compile`, `os.system`, `subprocess`, `socket`, secret-like literals, `__import__`) flagged before execution; still only ever run in the sandbox | `review/rules.py`, `sandbox/runner.py` |
-| Container escape | base image pinned by **digest**; minimal image (no compilers unless needed); seccomp default profile (custom profile optional); no `--privileged`; no host Docker socket; rootless daemon where available | `docker/sandbox.Dockerfile`, `sandbox/policy.py` |
-| Supply chain | pinned + hashed deps; `pip-audit` CI gate; SBOM per build; sandbox image scanned before promotion | CI |
+| Malicious tests / generated code | static safety scan (`eval`, `exec`, `compile`, `os.system`, `subprocess`, `socket`, `ctypes`, secret literals, `__import__`, escaping paths) **before** the file is written or run; still only ever executed in the sandbox | `testing/safety.py` (gate in `services/execution.py`, `services/repair.py`); `review/rules.py` for the post-hoc review |
+| Container escape | minimal image; Docker default seccomp; no `--privileged`; no host Docker socket; `/tmp` tmpfs is `noexec,nosuid,nodev` + size-capped; image pinned by digest **when `sandbox_image_digest` is set** (tag-only otherwise -- open item §10) | `docker/sandbox.Dockerfile`, `sandbox/policy.py` |
+| Supply chain | deps exact-pinned (`requirements.lock`); `bandit` + `pip-audit` CI gates; CycloneDX SBOM per build; lockfile-drift check. `--generate-hashes` is an open item (§10) | CI (`.github/workflows/ci.yml` `security` job) |
 | Leftover state | container + volume always removed (`finally`); workspace GC; full execution logging | `sandbox/docker_backend.py` |
 
 If Docker is unavailable, execution phases return `PARTIALLY_SUPPORTED{reason}` — **no host
@@ -49,17 +52,20 @@ fallback**. Stronger isolation (gVisor, Firecracker, nsjail) is a documented pos
 
 ## 3. Input validation layer
 
-A single `core/security/validate.py` module is the entry gate for every external input:
+`core/security/validate.py` is the entry-point facade for external-input validation, plus
+`StrictModel` (`schemas/_base.py`) which every request body inherits so an unknown field is a
+`422`, not a silent drop:
 
-| Input | Checks |
-|---|---|
-| Repository URL / path | scheme + host allowlist; SSRF; path canonicalisation; local path must be inside a configured roots list |
-| Task / issue text | strip control chars; max length; reject template/markup that could reach a prompt; store only sanitized fields |
-| API request bodies | Pydantic schema; size limits; enum validation; no unknown fields |
-| Uploaded xlsx | size cap; sheet/column contract; per-row validation identical to the API path |
-| GitHub webhook / API payloads | schema validation; treat every string as data |
-| AI JSON outputs | JSON-schema validation (`ai/schema_guard.py`); one repair round; then `FAILED` |
-| File paths from AI edit ops | path-jail containment check; must be within the plan's allowed set |
+| Input | Checks | Where |
+|---|---|---|
+| Repository URL / path | scheme + host allowlist; SSRF; path canonicalisation; local path inside a configured root (re-checked in `git/repo_access.py`) | `core/security/ssrf.py` |
+| Task / issue text | strip control + format chars; CRLF->LF; byte cap (truncate, provenance-recorded); markup/`SYSTEM:` prefixes kept **only as inert DB data**, never reaching a prompt | `services/tasks.py::normalize_text` |
+| API request bodies | Pydantic `StrictModel` (`extra="forbid"`); `Content-Length` cap; a body-bearing request with no declared length -> `411` | `schemas/_base.py`, `main.py` |
+| Uploaded xlsx | byte cap + declared-cell-count cap (decompression-bomb guard); sheet/column contract; per-row validation identical to the API path | `reporting/excel_import.py` |
+| GitHub API payloads | consumed as data only (never a prompt); issue text goes through `normalize_text` on import | `github/provider.py` |
+| AI JSON outputs | JSON-schema validation; **one repair round** (currently always single-shot -- `repair_fn` is unwired, see §10); then `FAILED` | `ai/schema_guard.py` |
+| File paths from AI edit ops / generated tests | path-jail containment (`safe_join`) on write; escape -> recorded failed attempt | `core/security/pathjail.py`, `implementation/editor.py`, `testing/generator.py` |
+| AI-generated test code | pre-execution static scan: no `eval`/`exec`/`compile`/`__import__`/`os.system`/`subprocess`/`socket`/`ctypes`, no secret literal, no escaping path | `testing/safety.py` (gate in `services/execution.py` + `services/repair.py`) |
 
 ---
 
@@ -73,8 +79,9 @@ A single `core/security/validate.py` module is the entry gate for every external
 - AI request logging stores only: provider, model id, params, token counts, latency, and a
   **redacted digest** of any prompt segment containing untrusted content — never the full prompt
   body with repo/issue text.
-- A CI test scans logs and artifacts produced by the test suite for secret patterns and fails on
-  a hit. Re-run as a hard gate in Phase 26.
+- `backend/tests/security/test_secret_scan.py` runs an ingest+analyze slice and asserts no
+  secret-shaped content lands in any log record or `artifacts_root` file; it runs in normal CI
+  (not deselected) as a hard gate.
 
 ---
 
@@ -105,10 +112,13 @@ Per-action policy value `AUTO` / `REVIEW_REQUIRED` / `BLOCKED`, from configurabl
 
 ## 7. Tamper-evident audit chain
 
-`AuditLog` rows form a hash chain: `entry_hash = sha256(seq || prev_hash || actor || action ||
-target_type || target_id || payload_digest || created_at)`. A `GET /audit/verify` endpoint walks
-the chain and reports the first break, if any. Rows are append-only (no update, no delete at the
-ORM or the DB-permission level). Full spec in `GOVERNANCE.md` §2.
+_Design:_ `AuditLog` rows form a hash chain: `entry_hash = sha256(seq || prev_hash || actor ||
+action || target_type || target_id || payload_digest || created_at)`; a `GET /audit/verify`
+endpoint walks the chain and reports the first break; rows are append-only. Full spec in
+`GOVERNANCE.md` §2/§3.
+
+_Status:_ **the `audit_log` table shape exists; the hash chain, the write path, and
+`/audit/verify` are deferred to a dedicated follow-up** (see §10). No row is written yet.
 
 ---
 
@@ -141,3 +151,26 @@ ORM or the DB-permission level). Full spec in `GOVERNANCE.md` §2.
 | A frontier model could emit a subtly malicious but schema-valid patch | schema validity != safety | static safety scan + code review + sandbox execution + scope guard + human approval on risky patches |
 | Supply-chain compromise of a pinned dependency | pinning + hashing + audit reduce, do not eliminate | SBOM, scheduled re-audit, minimal dependency surface |
 | Side channels from the sandbox (timing, resource) | low value target for the MVP | out of scope; noted |
+| **Tamper-evident audit chain not yet built** | table shape only; `AuditLog` has no writers, no `/audit/verify` | Phase 26 deferred it to a dedicated follow-up (chain hash + seq allocation + payload redaction + wiring + append-only migration + tests) |
+| **Sandbox image tag-pinned, not digest-pinned by default** | no image registry / CI publish pipeline yet | `sandbox_image_digest` setting is honoured today; digest-by-default lands with the image-publish pipeline |
+| **Dependencies exact-pinned but not `--hash`-pinned** | `pip-compile --generate-hashes` interacts badly with the hand-patched `pywin32` win32 marker (`CONTRIBUTING.md`) | `pip-audit` CI gate covers known CVEs; `--generate-hashes` is a follow-up |
+| **`schema_guard` repair round is unwired** | every caller passes `repair_fn=None`; effective behaviour is single-shot validate-or-`FAILED` | acceptable (fail-closed); wiring a real `repair_fn` is a follow-up |
+
+---
+
+## 11. Phase 26 threat -> control -> test self-audit
+
+Every row has a control in code and a test in `backend/tests/security/` (runs in normal CI).
+
+| Threat (Spec §18/§34) | Control (module) | Test |
+|---|---|---|
+| Path traversal / workspace escape via AI `EditOp.path` / `TestCaseAI.path` | `core/security/pathjail.safe_join`, enforced in `RWWorkspace.path_for` | `test_pathjail.py` |
+| Command injection / `shell=True` / arbitrary exec | `core/security/subprocess_guard.guarded_run` (allowlist, no shell); 3 sanctioned call sites | `test_subprocess_guard.py` (incl. AST scan for bypasses) |
+| Malicious generated test code (`eval`/`exec`/`socket`/`subprocess`/secret literal) | `testing/safety.scan_generated_cases`, gate in `services/execution.py` + `services/repair.py` | `test_generated_code_scan.py` |
+| SSRF / private-IP / DNS-rebind / IDN / look-alike host | `core/security/ssrf` (re-export shim `ingestion/url_validator.py`) | `test_ssrf.py`, `test_url_validator.py` |
+| Malicious repository (git hooks, exfil test, fork bomb, symlink escape) | `ingestion/git_client` hardening + local materialise ignores `.git`; Docker sandbox for execution | `test_malicious_repo.py` |
+| Unbounded / unknown-field request bodies; xlsx decompression bomb | `StrictModel`, `main.py` body-size + `411`, `reporting/excel_import` byte/cell caps | `test_request_validation.py` |
+| API abuse / request flooding | `core/ratelimit.RateLimiter` + `main.py` middleware (opt-in) | `test_rate_limit.py` |
+| Secret leakage into logs / artifacts | `core/security/redaction` + `core/logging` filter; `core/security/env_allowlist.scrub_secret_env` for the local runner | `test_secret_scan.py`, `test_logging_redaction.py`, `test_github_redaction.py` |
+| Credential theft via env into sandbox | Docker env `= {}`; local fake runner env scrubbed by name pattern | `test_secret_scan.py::test_scrub_secret_env_drops_credential_shaped_names` |
+| Supply chain | `bandit` + `pip-audit` + SBOM + lockfile-drift CI gates | `.github/workflows/ci.yml` `security` job |

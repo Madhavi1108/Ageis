@@ -45,6 +45,49 @@ jobs:
           name: backend-coverage
           path: backend/coverage.xml
 
+  security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend package (dev + sec)
+        run: pip install -e ".[dev,sec]"
+
+      - name: Lockfile is in sync with pyproject
+        run: |
+          pip-compile --extra dev --quiet --output-file requirements.lock.check pyproject.toml
+          diff -u requirements.lock requirements.lock.check || (echo "requirements.lock is stale -- run pip-compile" && exit 1)
+
+      - name: bandit (SAST, app/)
+        # Fail on MEDIUM+ severity. LOW findings (try/except/pass, stdlib xml
+        # import, weight-constant false positives) are advisory; targeted
+        # MEDIUM/HIGH exceptions carry an inline `# nosec <id>` with a reason.
+        run: bandit -c pyproject.toml -q -r app --severity-level medium
+
+      - name: pip-audit (known CVEs)
+        # Add "--ignore-vuln <GHSA/PYSEC id>  # reason, expiry" here to triage a
+        # finding with a documented exception (docs/TECH_STACK.md Section 3).
+        run: pip-audit -r requirements.lock --strict
+
+      - name: Generate CycloneDX SBOM
+        run: cyclonedx-py requirements requirements.lock -o sbom.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-sbom
+          path: backend/sbom.json
+
+      - name: Threat suite
+        run: pytest tests/security -q
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

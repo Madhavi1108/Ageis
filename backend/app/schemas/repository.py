@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas._base import StrictModel
+
 
 class RepositoryRef(BaseModel):
     id: str
@@ -19,7 +21,7 @@ class RepositoryRef(BaseModel):
     updated_at: datetime
 
 
-class RepositoryCreateRequest(BaseModel):
+class RepositoryCreateRequest(StrictModel):
     source_type: Literal["LOCAL", "GITHUB"]
     url_or_path: str
     name: str | None = Field(
@@ -29,7 +31,7 @@ class RepositoryCreateRequest(BaseModel):
     default_branch: str | None = None
 
 
-class IngestRequest(BaseModel):
+class IngestRequest(StrictModel):
     branch: str | None = None
     depth: int | None = None
     force: bool = Field(

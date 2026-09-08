@@ -3017,6 +3017,40 @@ Calibration overfit -> held-out split + simple models.
 
 ## 34. Phase 26 — Security Hardening
 
+**Status: COMPLETE — 2026-09-08.** New `backend/app/core/security/` package is now the single
+enforcement point named in ADR-0011: `pathjail.py` (`safe_join` -- resolve + assert containment,
+now enforced inside `RWWorkspace.path_for`, closing the one exploitable gap: untrusted
+`EditOp.path` / `TestCaseAI.path` was written wherever it resolved at 8 call sites);
+`subprocess_guard.py` (`guarded_run` -- args-as-list, no `shell`, executable allowlist; the 3
+direct `subprocess.run` sites -- `sandbox/runner.py`, `review/static_checks.py`, `version.py` --
+routed through it); `env_allowlist.py` (`scrub_secret_env` drops credential-shaped names from the
+local fake-sandbox subprocess env; the Docker path already gets `{}`); `ssrf.py` (the SSRF/URL
+guard moved here, `ingestion/url_validator.py` is a re-export shim); `redaction.py` (was
+`core/security.py`); `validate.py` + `schemas/_base.py::StrictModel` (`extra="forbid"` on every
+request body -> unknown field is `422`). Also: new `testing/safety.py` pre-execution static scan
+of AI-generated test code (`eval`/`exec`/`compile`/`__import__`/`os.system`/`subprocess`/`socket`/
+`ctypes`/secret-literal/escaping-path -> blocked before write, gated in `services/execution.py` +
+`services/repair.py`, flag `security_block_unsafe_generated_code`); `main.py` rejects a
+body-bearing request with no declared length (`411`) and adds an opt-in in-process
+`core/ratelimit.py` limiter (`rate_limit_enabled`); `reporting/excel_import.py` byte + declared-
+cell-count caps (decompression-bomb guard); `git/repo_access.py` re-runs the local-path jail;
+`ingestion/workspace.py` copies symlinks as links and strips any that escape the tree;
+`sandbox/policy.py` `/tmp` tmpfs is `noexec,nosuid,nodev` + size-capped and honours an optional
+`sandbox_image_digest`. New `backend/tests/security/` threat suite (64 tests, auto-marked
+`security`, runs in normal CI): path jail, subprocess guard (+ AST bypass scan), generated-code
+scan, SSRF, malicious-repo containment, request validation, rate limiting, secret scan. New CI
+`security` job: `bandit` + `pip-audit` + CycloneDX SBOM + lockfile-drift check (`sec` extra,
+`[tool.bandit]` config). `docs/SECURITY_MODEL.md` finalized with corrected module paths, a
+per-row enforcement-point/test column, and a §11 self-audit table. **Full suite green
+(826 + 64 security).**
+
+**Deferred (documented open items, `SECURITY_MODEL.md` §10):** the tamper-evident `AuditLog` hash
+chain + `GET /audit/verify` (table shape only today -- its own follow-up); sandbox image
+digest-pinning *by default* (no image registry / CI publish pipeline yet); dependency
+`--generate-hashes` (`pip-audit` gate covers CVEs; `pywin32` marker makes hashes brittle);
+wiring a real `schema_guard` `repair_fn` (fail-closed single-shot today); gVisor/Firecracker
+(ADR-0010 post-MVP).
+
 **Goal.** Systematically close every threat in Specification Sections 18 and 34: command injection,
 path traversal, arbitrary host execution, malicious repositories and generated code, secret
 leakage, unsafe environment variables, insecure file handling, SSRF, unauthorized repository

@@ -7,6 +7,7 @@ Ported from backend/aegis/implementation/editor.py.
 
 from __future__ import annotations
 
+from app.core.security.pathjail import PathJailError
 from app.implementation.workspace_rw import RWWorkspace
 from app.schemas.implementation import EditOp
 
@@ -28,8 +29,14 @@ class AnchorAmbiguousError(EditorError):
 
 def apply_edit_op(ws: RWWorkspace, op: EditOp) -> None:
     """Apply one EditOp to the workspace. Raises EditorError subclasses on
-    an anchor problem; the caller decides what to do next."""
-    target = ws.path_for(op.path)
+    an anchor problem or a path-jail violation; the caller decides what to do
+    next (record a failed attempt -- never crash the pipeline)."""
+    try:
+        target = ws.path_for(op.path)
+    except PathJailError as exc:
+        raise EditorError(
+            f"edit-op path {op.path!r} escapes the workspace: {exc}"
+        ) from exc
 
     if op.op == "create":
         if op.new is None:

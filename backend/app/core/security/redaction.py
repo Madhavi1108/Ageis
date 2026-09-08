@@ -3,8 +3,9 @@
 See docs/AEGIS_IMPLEMENTATION_PLAN.md Section 10 ("redaction filter for known
 secret patterns"). This module knows nothing about logging -- it just finds
 and masks secret-shaped substrings in arbitrary text, so it can also be
-reused later by any component that needs to scrub output before it leaves
-the process (e.g. AuditLog's payload_digest inputs).
+reused by any component that needs to scrub output before it leaves
+the process (e.g. AuditLog's payload_digest inputs, the Phase 26 secret-scan
+test that walks logs + artifacts).
 """
 
 from __future__ import annotations

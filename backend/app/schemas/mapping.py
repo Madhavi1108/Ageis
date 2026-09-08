@@ -18,6 +18,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from app.schemas._base import StrictModel
+
 from aegis.schemas.common import Evidence
 
 ConclusionLabel = Literal["FACT", "INFERENCE"]
@@ -46,7 +48,7 @@ class IssueCodeMapping(BaseModel):
     created_at: datetime
 
 
-class MapRequest(BaseModel):
+class MapRequest(StrictModel):
     """Either ``task_id`` (compute + persist for that task) or
     ``snapshot_id`` + ``issue_text`` (stateless, nothing persisted)."""
 

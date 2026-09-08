@@ -33,9 +33,24 @@ dev = [
 live-ai = [
     "anthropic>=0.4,<1",
 ]
+# Phase 26 security gate: SAST + dependency audit + SBOM. Kept separate from
+# `dev` so a normal dev install stays lean; CI installs ".[dev,sec]".
+sec = [
+    "bandit>=1.7,<2",
+    "pip-audit>=2.7,<3",
+    "cyclonedx-bom>=4,<6",
+]
 
 [tool.setuptools.packages.find]
 include = ["aegis*", "app*"]
+
+[tool.bandit]
+# Scan app/ only (aegis/ is Phase 1 skeleton code, like the mypy gate).
+# B101 (assert): pytest + Pydantic-style asserts are idiomatic here.
+# B404/B603: subprocess use is funnelled through core/security/subprocess_guard
+#   (allowlisted, never shell) and covered by tests/security/test_subprocess_guard.py.
+skips = ["B101", "B404", "B603"]
+exclude_dirs = ["tests", "aegis"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -44,6 +59,7 @@ markers = [
     "live_ai: exercises a real AI provider (opt-in; runs only with RUN_LIVE_AI=1)",
     "e2e: full-pipeline end-to-end acceptance tests (mock provider + fake sandbox)",
     "benchmark: drives the benchmarks/ harness over a curated dataset (slow; mock provider + fake sandbox)",
+    "security: Phase 26 threat / abuse tests (auto-applied to tests/security/)",
 ]
 # All tests here are plain functions; disable class-based collection so
 # pytest doesn't warn about domain schemas named Test* (TestOutcome,

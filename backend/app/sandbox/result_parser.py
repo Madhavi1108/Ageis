@@ -17,7 +17,10 @@ def parse_junit_xml(xml_path: Path) -> list[TestOutcome]:
     if not xml_path.exists():
         return []
     try:
-        tree = ET.parse(xml_path)
+        # The junit XML is produced by our own `pytest --junitxml` run inside a
+        # network-isolated, memory/pids-capped container; an entity-expansion
+        # bomb there exhausts the container's cap, not the host. (nosec B314)
+        tree = ET.parse(xml_path)  # nosec B314
     except ET.ParseError:
         return []
 

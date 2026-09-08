@@ -14,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.ratelimit import RateLimiter
+
 from app.api import (
     analysis,
     executions,
@@ -34,6 +36,13 @@ from app.core.errors import (
     validation_error_handler,
 )
 from app.core.logging import configure_logging, correlation_id_var
+
+
+def _err(status_code: int, code: str, message: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={"code": code, "message": message, "details": None, "evidence": None},
+    )
 
 
 async def _correlation_id_middleware(
@@ -67,22 +76,52 @@ def create_app() -> FastAPI:
     app.middleware("http")(_correlation_id_middleware)
 
     _max_body = settings.request_max_body_bytes
+    _BODY_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
     @app.middleware("http")
     async def _limit_body_size(  # noqa: ANN001, ANN202
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         cl = request.headers.get("content-length")
+        te = request.headers.get("transfer-encoding", "").lower()
         if cl is not None and cl.isdigit() and int(cl) > _max_body:
-            return JSONResponse(
-                status_code=413,
-                content={
-                    "code": "REQUEST_TOO_LARGE",
-                    "message": f"request body exceeds {_max_body} bytes",
-                    "details": None,
-                    "evidence": None,
-                },
+            return _err(
+                413, "REQUEST_TOO_LARGE", f"request body exceeds {_max_body} bytes"
             )
+        # A body-bearing request with no usable Content-Length (chunked / streamed)
+        # can't be size-checked up front -- AEGIS has no streaming upload route,
+        # so require a declared length rather than accept an unbounded body.
+        if request.method in _BODY_METHODS and (cl is None or not cl.isdigit()):
+            if "chunked" in te or te:
+                return _err(
+                    411, "LENGTH_REQUIRED", "a Content-Length header is required"
+                )
+        return await call_next(request)
+
+    _rl = RateLimiter(
+        per_minute=settings.rate_limit_per_minute, burst=settings.rate_limit_burst
+    )
+
+    @app.middleware("http")
+    async def _rate_limit(  # noqa: ANN001, ANN202
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if not settings.rate_limit_enabled or request.url.path in (
+            "/",
+            "/healthz",
+            "/version",
+        ):
+            return await call_next(request)
+        key = request.headers.get("x-api-key")
+        if not key:
+            auth = request.headers.get("authorization", "")
+            key = auth[7:].strip() if auth.lower().startswith("bearer ") else None
+        key = key or (request.client.host if request.client else "unknown")
+        allowed, retry_after = _rl.check(key)
+        if not allowed:
+            resp = _err(429, "RATE_LIMITED", "too many requests")
+            resp.headers["Retry-After"] = str(retry_after)
+            return resp
         return await call_next(request)
 
     # FastAPI's add_exception_handler is typed against the base Exception

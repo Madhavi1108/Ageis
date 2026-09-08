@@ -9,6 +9,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas._base import StrictModel
+
 PRMode = Literal["LOCAL_ARTIFACT", "GITHUB"]
 PRState = Literal["DRAFTED", "CREATED", "FAILED"]
 
@@ -40,7 +42,7 @@ class IssueRef(BaseModel):
     imported_at: datetime
 
 
-class PullRequestCreateRequest(BaseModel):
+class PullRequestCreateRequest(StrictModel):
     approved: bool = Field(
         default=False,
         description="human approval for a protected-branch / external PR write",

@@ -13,11 +13,13 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.schemas._base import StrictModel
+
 TaskTypeLiteral = Literal["BUG", "FEATURE", "REFACTOR", "REQUIREMENT", "QUESTION"]
 PriorityLiteral = Literal["LOW", "NORMAL", "HIGH"]
 
 
-class IssueAnalysisInput(BaseModel):
+class IssueAnalysisInput(StrictModel):
     """A pre-structured issue supplied by the caller or a future import adapter.
 
     Phase 6 accepts this shape directly; a live GitHub fetch that produces it is
@@ -32,7 +34,7 @@ class IssueAnalysisInput(BaseModel):
     body: str
 
 
-class TaskCreate(BaseModel):
+class TaskCreate(StrictModel):
     repository_id: str
     text: str | None = Field(
         default=None, description="Free-text issue / bug / feature / requirement body"
@@ -44,7 +46,8 @@ class TaskCreate(BaseModel):
         default=None, description="Derived from the first line of the body if omitted"
     )
     task_type: TaskTypeLiteral | None = Field(
-        default=None, description="Inferred from the text by deterministic rules if omitted"
+        default=None,
+        description="Inferred from the text by deterministic rules if omitted",
     )
     priority: PriorityLiteral = "NORMAL"
     constraints: dict | None = None
@@ -124,5 +127,5 @@ class TaskTimeline(BaseModel):
     entries: list[TimelineEntry]
 
 
-class TaskCancelRequest(BaseModel):
+class TaskCancelRequest(StrictModel):
     reason: str | None = None

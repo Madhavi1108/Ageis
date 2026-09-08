@@ -114,12 +114,22 @@ class Settings(BaseSettings):
     # docs/EXECUTION_MODEL.md Section 5, ADR-0010). Defaults match the plan's
     # documented table; docker unavailable -> PARTIALLY_SUPPORTED, no host fallback.
     sandbox_image: str = Field(default="aegis-sandbox:py311")
+    # Optional digest to pin the sandbox image by content (Phase 26 / ADR-0010).
+    # When set (e.g. "sha256:abc123..."), sandbox/policy.py uses
+    # "<image>@<digest>" and a unit test asserts it. Empty by default -- there
+    # is no image registry / CI publish pipeline yet (documented open item).
+    sandbox_image_digest: str = Field(default="")
+    sandbox_tmpfs_bytes: int = Field(default=64 * 1024 * 1024, gt=0)
     sandbox_cpus: float = Field(default=2.0, gt=0)
     sandbox_memory_mb: int = Field(default=2048, gt=0)
     sandbox_pids_limit: int = Field(default=512, gt=0)
     sandbox_nofile_limit: int = Field(default=4096, gt=0)
     sandbox_nproc_limit: int = Field(default=512, gt=0)
     sandbox_wall_clock_s: int = Field(default=600, gt=0)
+    # Phase 26: statically scan every AI-generated test file for forbidden
+    # calls/imports (eval/exec/subprocess/socket/...), secret literals, and
+    # workspace-escaping paths *before* it is written or run. Blocks on any hit.
+    security_block_unsafe_generated_code: bool = Field(default=True)
 
     # Failure investigation (Phase 13, docs/AEGIS_IMPLEMENTATION_PLAN.md Section 21).
     # code_slice_lines: lines of source context gathered around each traceback
@@ -198,6 +208,18 @@ class Settings(BaseSettings):
     sandbox_mode: str = Field(default="docker")
     auth_enabled: bool = Field(default=False)
     api_keys: dict[str, str] = Field(default_factory=dict)
+
+    # API rate limiting (Phase 26). Opt-in, like auth. Fixed-window per client
+    # (X-API-Key if present, else client IP): rate_limit_per_minute steady-state
+    # plus a rate_limit_burst allowance. Health + GET "/" are exempt.
+    rate_limit_enabled: bool = Field(default=False)
+    rate_limit_per_minute: int = Field(default=120, gt=0)
+    rate_limit_burst: int = Field(default=20, ge=0)
+
+    # Excel import hard limits (Phase 26): reject an oversized upload / a
+    # decompression-bomb workbook before iterating rows.
+    report_import_max_bytes: int = Field(default=5 * 1024 * 1024, gt=0)
+    report_import_max_cells: int = Field(default=200_000, gt=0)
     orchestrator_max_plan_revisions: int = Field(default=1, ge=0)
     orchestrator_max_regression_retries: int = Field(default=0, ge=0)
     orchestrator_open_pr: bool = Field(default=False)

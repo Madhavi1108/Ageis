@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Callable
 
 from app.ingestion.git_client import clone_shallow, open_local
-from app.ingestion.url_validator import validate_remote_url
+from app.ingestion.url_validator import validate_local_path, validate_remote_url
 
 
 @dataclass
@@ -41,7 +41,11 @@ def open_repo(repository, snapshot, settings) -> GitRepoHandle | None:
         return None
 
     if repository.source_type == "LOCAL":
-        repo = open_local(Path(repository.url_or_path))
+        # Re-assert the ingestion path jail (Phase 26): the stored path is
+        # operator input and must still be inside a configured root before we
+        # open it as a Git work tree.
+        safe_path = validate_local_path(repository.url_or_path, settings)
+        repo = open_local(safe_path)
         if repo is None:
             return None
         return GitRepoHandle(repo=repo, cleanup=lambda: None, source="local")

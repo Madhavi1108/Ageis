@@ -17,6 +17,10 @@ from pathlib import Path
 
 from aegis.schemas.common import Confidence, Evidence
 
+from app.core.security.subprocess_guard import (
+    SubprocessNotAllowedError,
+    guarded_run,
+)
 from app.review._finding import RawFinding
 
 _RUFF_SELECT = "S,C90,E,F,B,PERF"
@@ -55,10 +59,10 @@ def _run_ruff(ws_root: Path, files: list[str]) -> tuple[list[RawFinding], str | 
         *files,
     ]
     try:
-        proc = subprocess.run(
+        proc = guarded_run(
             cmd, cwd=ws_root, capture_output=True, text=True, timeout=120
         )
-    except (OSError, subprocess.SubprocessError) as exc:
+    except (OSError, subprocess.SubprocessError, SubprocessNotAllowedError) as exc:
         return [], f"ruff could not be run: {exc}"
 
     raw = proc.stdout.strip()

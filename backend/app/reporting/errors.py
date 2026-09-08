@@ -42,3 +42,15 @@ class WorkbookParseError(AppError):
             message,
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
+
+
+class WorkbookTooLargeError(AppError):
+    """The uploaded workbook exceeds a hard byte or cell-count limit (Phase 26 --
+    guards against an oversized upload / a decompression-bomb .xlsx)."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(
+            "REPORT_WORKBOOK_TOO_LARGE",
+            message,
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+        )

@@ -53,6 +53,22 @@ class TestGenerationFailedError(AppError):
         )
 
 
+class UnsafeGeneratedCodeError(AppError):
+    """A generated test file was blocked by the pre-execution static safety
+    scan (docs/SECURITY_MODEL.md Section 2/3): a forbidden call/import
+    (``eval``/``exec``/``subprocess``/``socket``/...), a hard-coded secret
+    literal, a workspace-escaping path, or a syntax error. AEGIS never writes
+    or runs such a file -- the job fails with the finding list."""
+
+    def __init__(self, message: str, *, findings: list[dict] | None = None) -> None:
+        super().__init__(
+            "GENERATED_CODE_UNSAFE",
+            message,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            details={"findings": findings or []},
+        )
+
+
 class RegressionTaskNotFoundError(AppError):
     def __init__(self, message: str) -> None:
         super().__init__(

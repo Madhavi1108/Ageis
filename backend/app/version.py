@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import os
-import subprocess
 from functools import lru_cache
+
+from app.core.security.subprocess_guard import guarded_run
 
 APP_VERSION = "0.2.0"
 
@@ -16,7 +17,7 @@ def get_git_sha() -> str | None:
     if env_sha:
         return env_sha
     try:
-        result = subprocess.run(
+        result = guarded_run(
             ["git", "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,

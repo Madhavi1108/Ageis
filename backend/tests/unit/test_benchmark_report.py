@@ -13,8 +13,6 @@ import json
 import re
 from pathlib import Path
 
-import pytest
-
 from benchmarks.metrics import compute_all
 from benchmarks.publish import GENERATED_MARKER as PUBLISH_MARKER
 from benchmarks.report import GENERATED_MARKER, render_benchmark_markdown, write_reports
@@ -31,13 +29,25 @@ def _sample_result() -> BenchmarkResult:
         aegis_git_head="abc1234",
         runs=[
             TaskRun(
-                task_id="fix-it", dataset="unit", task_type="BUG",
-                terminal_state="COMPLETED", verification_verdict="VERIFIED",
-                pipeline_verdict="PARTIAL", verification_label="CORRECT",
-                gold_files=["m.py"], predicted_files=["m.py"], patch_generated=True,
-                plan_steps_total=1, plan_steps_implemented=1, changed_files=["m.py"],
-                tests_generated=1, tests_valid=1, replay_fidelity=1.0,
-                test_eval=TestEval(fail_to_pass={"t::a": True}, pass_to_pass={"t::b": True}),
+                task_id="fix-it",
+                dataset="unit",
+                task_type="BUG",
+                terminal_state="COMPLETED",
+                verification_verdict="VERIFIED",
+                pipeline_verdict="PARTIAL",
+                verification_label="CORRECT",
+                gold_files=["m.py"],
+                predicted_files=["m.py"],
+                patch_generated=True,
+                plan_steps_total=1,
+                plan_steps_implemented=1,
+                changed_files=["m.py"],
+                tests_generated=1,
+                tests_valid=1,
+                replay_fidelity=1.0,
+                test_eval=TestEval(
+                    fail_to_pass={"t::a": True}, pass_to_pass={"t::b": True}
+                ),
             ),
         ],
     )
@@ -76,7 +86,9 @@ def test_markdown_reports_unavailable_metrics_as_na_not_zero():
 
 
 def test_results_doc_exists_and_is_machine_generated():
-    assert RESULTS_DOC.exists(), "run `python -m benchmarks publish` and commit the result"
+    assert (
+        RESULTS_DOC.exists()
+    ), "run `python -m benchmarks publish` and commit the result"
     text = RESULTS_DOC.read_text(encoding="utf-8")
     assert PUBLISH_MARKER in text
     assert "do not edit by hand" in text
@@ -87,12 +99,16 @@ def test_results_doc_has_one_row_per_objective_metric():
     text = RESULTS_DOC.read_text(encoding="utf-8")
     combined = text.split("## 2", 1)[0]  # the combined table section
     for n in range(1, 17):
-        assert re.search(rf"^\| {n} \| ", combined, re.MULTILINE), f"metric {n} missing from combined table"
+        assert re.search(
+            rf"^\| {n} \| ", combined, re.MULTILINE
+        ), f"metric {n} missing from combined table"
 
 
 def test_results_doc_states_the_false_complete_gate():
     text = RESULTS_DOC.read_text(encoding="utf-8")
-    assert re.search(r"false-complete rate.*ceiling 2%", text, re.IGNORECASE | re.DOTALL)
+    assert re.search(
+        r"false-complete rate.*ceiling 2%", text, re.IGNORECASE | re.DOTALL
+    )
 
 
 def test_results_doc_carries_the_mandatory_limitations():

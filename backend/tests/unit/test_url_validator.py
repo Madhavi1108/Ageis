@@ -56,9 +56,7 @@ def test_rejects_localhost_via_ssrf_guard(settings, monkeypatch):
     def fake_getaddrinfo(host, port, **kwargs):
         return [(socket.AF_INET, None, None, None, ("127.0.0.1", port))]
 
-    monkeypatch.setattr(
-        "app.ingestion.url_validator.socket.getaddrinfo", fake_getaddrinfo
-    )
+    monkeypatch.setattr("app.core.security.ssrf.socket.getaddrinfo", fake_getaddrinfo)
     with pytest.raises(SsrfBlockedError):
         validate_remote_url("https://localhost/octocat/hello-world", settings)
 
@@ -69,9 +67,7 @@ def test_rejects_link_local_metadata_ip_via_dns_rebinding(settings, monkeypatch)
     def fake_getaddrinfo(host, port, **kwargs):
         return [(socket.AF_INET, None, None, None, ("169.254.169.254", port))]
 
-    monkeypatch.setattr(
-        "app.ingestion.url_validator.socket.getaddrinfo", fake_getaddrinfo
-    )
+    monkeypatch.setattr("app.core.security.ssrf.socket.getaddrinfo", fake_getaddrinfo)
     with pytest.raises(SsrfBlockedError):
         validate_remote_url("https://evil.example/octocat/hello-world", settings)
 
@@ -80,9 +76,7 @@ def test_unresolvable_host_raises_not_found(settings, monkeypatch):
     def fake_getaddrinfo(host, port, **kwargs):
         raise socket.gaierror("unknown host")
 
-    monkeypatch.setattr(
-        "app.ingestion.url_validator.socket.getaddrinfo", fake_getaddrinfo
-    )
+    monkeypatch.setattr("app.core.security.ssrf.socket.getaddrinfo", fake_getaddrinfo)
     with pytest.raises(RepositoryNotFoundError):
         validate_remote_url("https://github.com/octocat/hello-world", settings)
 

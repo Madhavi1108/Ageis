@@ -10,12 +10,15 @@ code directly on the host").
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
 import time
 from pathlib import Path
 
+from app.core.security.env_allowlist import scrub_secret_env
+from app.core.security.subprocess_guard import guarded_run
 from app.sandbox import docker_backend
 from app.sandbox.policy import DEFAULT_IMAGE, build_run_kwargs
 from app.sandbox.resource_limits import ResourceLimits
@@ -27,10 +30,17 @@ _REPORT_NAME = ".aegis_report.xml"
 
 class DockerSandboxRunner:
     def __init__(
-        self, image: str = DEFAULT_IMAGE, limits: ResourceLimits | None = None
+        self,
+        image: str = DEFAULT_IMAGE,
+        limits: ResourceLimits | None = None,
+        *,
+        image_digest: str = "",
+        tmpfs_bytes: int = 64 * 1024 * 1024,
     ) -> None:
         self.image = image
         self.limits = limits or ResourceLimits()
+        self.image_digest = image_digest
+        self.tmpfs_bytes = tmpfs_bytes
 
     def run_tests(self, ws_root: Path, test_command: list[str]) -> TestExecutionRun:
         """`test_command` is the pytest *arguments* (e.g. ["test_x.py"]), not
@@ -60,6 +70,8 @@ class DockerSandboxRunner:
             command=full_command,
             workspace_host_path=str(ws_root),
             limits=self.limits,
+            image_digest=self.image_digest,
+            tmpfs_bytes=self.tmpfs_bytes,
         )
 
         try:
@@ -134,12 +146,16 @@ class LocalSubprocessRunner:
                 f"--junitxml={report_path}",
             ]
             try:
-                proc = subprocess.run(
+                proc = guarded_run(
                     full_command,
                     cwd=ws_root,
                     capture_output=True,
                     text=True,
                     timeout=self.timeout_s,
+                    # Phase 26: drop credential-shaped vars -- a dev-shell secret
+                    # (ANTHROPIC_API_KEY, AWS_*, DB URL, ...) must not reach the
+                    # pytest subprocess even in the trusted-fixtures fake sandbox.
+                    env=scrub_secret_env(os.environ),
                 )
             except subprocess.TimeoutExpired:
                 return TestExecutionRun(
