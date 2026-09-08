@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Protocol
 
 from app.analysis.imports import DependencyFact
-from app.analysis.python_ast import RawCall, RawWalk
+from app.analysis.python_ast import RawWalk
 from app.analysis.symbols import SymbolFact
 
 

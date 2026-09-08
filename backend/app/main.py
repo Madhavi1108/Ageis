@@ -22,6 +22,7 @@ from app.api import (
     jobs,
     mapping,
     memory,
+    reports,
     repositories,
     tasks,
 )
@@ -101,6 +102,7 @@ def create_app() -> FastAPI:
     app.include_router(github.router)
     app.include_router(memory.router)
     app.include_router(jobs.router)
+    app.include_router(reports.router)
 
     return app
 

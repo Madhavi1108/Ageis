@@ -2705,6 +2705,45 @@ Graph performance -> node cap + lazy expansion.
 
 ## 31. Phase 23 — Excel / Reporting
 
+**Status: COMPLETE — 2026-09-08.** New `backend/app/reporting/` package: `workbook_schema.py` (the
+import + export sheet/column contracts), `styles.py` (openpyxl header/freeze/autofit helpers,
+standard mode), `excel_import.py` (`parse_import_workbook` validates structure before any DB work;
+`run_import` creates repos via `services/repositories.py::create_repository` and tasks via
+`tasks_service.create_task` **verbatim** — `IssueAnalysisInput(source="EXCEL", ...)` for structured
+rows — collecting per-row `AppError`/`ValidationError` into `ImportResult.errors` with no silent
+skips and no partial-abort), `collect.py` (guarded side-effect-free projections — every `get_or_*`
+call is preceded by a repository `get_by_task` check so a half-run task yields absent sections, not
+a compute), `report_builder.py` (`build_task_report` → the 18-section `TaskReport`, Spec §33, each
+section `present`/`note`/`data`; `render_task_report_workbook` → Overview + one sheet per section;
+extends `github/pr_builder.py`'s pure-read pattern), `metrics_workbook.py` (nine sheets across all
+tasks + an Engineering Metrics sheet — derivable metrics #2/#3/#4/#5/#7/#8/#11/#12/#14/#16 are real
+formula cells over a `Metric Inputs` sheet computed from persisted rows; #1/#6/#9/#10/#13/#15 render
+`N/A — <reason>` because they need the Phase 25 benchmark harness; never a bare `0`/blank).
+`services/reporting.py` (thin) + `api/reports.py`: `POST /reports/import` (raw `.xlsx` body,
+`operator_required`), `GET /reports/tasks/{id}` (JSON `TaskReport`), `GET /reports/tasks/{id}.xlsx`,
+`GET /reports/metrics.xlsx` — the `.xlsx` route is declared before `/tasks/{id}` so the literal
+suffix wins. `schemas/report.py` (`TaskReport`, `ReportSection`, `ImportResult`, `ImportRowError`,
+`SECTION_NAMES`). `services/repositories.py` (new) extracts the repo-create flow (`validate_*` +
+`derive_name` + `get_or_create`) so the API handler and the importer share it; `api/repositories.py`
+now delegates. `openpyxl>=3.1,<4` added to `pyproject.toml`; `requirements.lock` regenerated (also
+restores a missing `networkx` pin and the hand-added `pywin32` win32 marker). No migration. New
+tests: `test_reporting_workbook_schema.py` (unit — parser: valid / missing sheet / missing column /
+blank rows / unknown columns / non-xlsx); `test_reports_api.py` (the 4 routes + import parity: a
+duplicate row surfaces the API's own `TASK_DUPLICATE`); `test_reporting_acceptance_fixture.py` (§31
+gate — all 18 sections on the acceptance task with real data, the xlsx is a valid workbook, the
+metrics sheet is honest, export→re-import round-trips). OpenAPI surface re-pinned (+4 routes).
+
+**Open items (documented limitations, not gaps):** no auto-emitted / persisted `TrustReport`
+artifact on terminal tasks (GOVERNANCE §6) — `/reports/*` are on-demand only, generated fresh per
+request, nothing stored, and there is still no artifact-download endpoint. openpyxl write-only
+streaming is deferred (standard mode; fine at MVP corpus size). Metrics #1/#6/#9/#10/#13/#15 are
+`N/A` pending the Phase 25 harness (gold sets, seeded faults/regressions, reference agents,
+priced-model token accounting — `benchmarks/runner.py` does not exist yet); the derivable metrics
+use DB aggregates and are `<1.0`-honest in a Docker-less run (`Test Pass Rate` etc. read `n/a` when
+no real execution ran). `POST /reports/import` is bounded by `request_max_body_bytes` (1 MB
+default) and takes the workbook as the raw request body (no multipart dependency). Scope "override
+with reason" has no data model yet, so metric #8 treats any scope violation as unjustified.
+
 **Goal.** openpyxl import/export that shares the same domain services as the API and dashboard:
 bulk task/repository import, multi-sheet reports, and the structured 18-section task report.
 

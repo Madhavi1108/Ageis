@@ -73,15 +73,17 @@ EXPECTED_OPERATIONS = {
     ("/github/repos/{owner}/{repo}", "get"),
     ("/github/repos/{owner}/{repo}/issues/{number}", "get"),
     ("/github/repos/{owner}/{repo}/issues/{number}/import", "post"),
+    ("/reports/import", "post"),
+    ("/reports/tasks/{task_id}", "get"),
+    ("/reports/tasks/{task_id}.xlsx", "get"),
+    ("/reports/metrics.xlsx", "get"),
 }
 
 
 def _operations() -> set[tuple[str, str]]:
     spec = TestClient(app).get("/openapi.json").json()
     return {
-        (path, method)
-        for path, methods in spec["paths"].items()
-        for method in methods
+        (path, method) for path, methods in spec["paths"].items() for method in methods
     }
 
 

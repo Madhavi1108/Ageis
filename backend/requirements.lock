@@ -38,6 +38,8 @@ coverage[toml]==7.16.0
     # via pytest-cov
 docker==7.2.0
     # via aegis-backend (pyproject.toml)
+et-xmlfile==2.0.0
+    # via openpyxl
 fastapi==0.115.14
     # via aegis-backend (pyproject.toml)
 gitdb==4.0.12
@@ -75,6 +77,10 @@ mypy-extensions==1.1.0
     # via
     #   black
     #   mypy
+networkx==3.6.1
+    # via aegis-backend (pyproject.toml)
+openpyxl==3.1.5
+    # via aegis-backend (pyproject.toml)
 packaging==26.3
     # via
     #   black

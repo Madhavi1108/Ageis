@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import PurePath
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -12,8 +10,8 @@ from app.db.session import get_db
 from app.core.auth import operator_required
 from app.ingestion.errors import RepositoryNotFoundError
 from app.ingestion.ingest import ingest_repository
-from app.ingestion.url_validator import validate_local_path, validate_remote_url
 from app.repository.repositories import RepositoryRepository
+from app.services import repositories as repositories_service
 from app.git.errors import GitBlamePathRequiredError
 from app.schemas.git import BlameHunk, GitContext
 from app.schemas.repository import (
@@ -29,35 +27,15 @@ from app.services import scoring as scoring_service
 router = APIRouter(prefix="/repositories", tags=["repositories"])
 
 
-def _derive_name(url_or_path: str) -> str:
-    # PurePath (not Path) so this works for both a local OS path and a URL string
-    # (which always uses forward slashes, regardless of platform) without touching
-    # the filesystem.
-    cleaned = url_or_path.rstrip("/\\")
-    if cleaned.endswith(".git"):
-        cleaned = cleaned[: -len(".git")]
-    return PurePath(cleaned).name or cleaned
-
-
-@router.post("", status_code=201, response_model=RepositoryRef, dependencies=[operator_required])
+@router.post(
+    "", status_code=201, response_model=RepositoryRef, dependencies=[operator_required]
+)
 def create_repository(
     body: RepositoryCreateRequest,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> RepositoryRef:
-    if body.source_type == "GITHUB":
-        validate_remote_url(body.url_or_path, settings)
-    else:
-        validate_local_path(body.url_or_path, settings)
-
-    repo = RepositoryRepository(db).get_or_create(
-        source_type=body.source_type,
-        url_or_path=body.url_or_path,
-        name=body.name or _derive_name(body.url_or_path),
-        owner=body.owner,
-        default_branch=body.default_branch,
-    )
-    return RepositoryRef.model_validate(repo, from_attributes=True)
+    return repositories_service.create_repository_ref(db, settings=settings, body=body)
 
 
 @router.get("/{repository_id}", response_model=RepositoryRef)
@@ -150,7 +128,12 @@ def get_git_context(
     )
 
 
-@router.post("/{repository_id}/snapshots", status_code=201, response_model=IngestResult, dependencies=[operator_required])
+@router.post(
+    "/{repository_id}/snapshots",
+    status_code=201,
+    response_model=IngestResult,
+    dependencies=[operator_required],
+)
 def create_snapshot(
     repository_id: str,
     body: IngestRequest,

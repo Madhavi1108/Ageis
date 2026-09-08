@@ -37,7 +37,6 @@ from app.models.task import TaskState
 from app.repository.artifacts import ArtifactRepository
 from app.repository.code_mappings import CodeMappingRepository
 from app.repository.engineering_plans import EngineeringPlanRepository
-from app.repository.files import FileRepository
 from app.repository.impact_analyses import ImpactAnalysisRepository
 from app.repository.implementations import ImplementationRepository
 from app.repository.jobs import JobRepository
