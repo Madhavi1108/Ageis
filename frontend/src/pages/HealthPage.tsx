@@ -1,35 +1,41 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { apiGet } from "../services/apiClient";
-import type { HealthResponse, VersionResponse } from "../types/api";
+import { useHealth, useVersion } from "../hooks/api/useSystem";
+import { getBaseUrl } from "../services/apiClient";
+import { Card, CardBody, CardHeader } from "../components/primitives/Card";
+import { Badge } from "../components/primitives/Badge";
+import { InlineSpinner } from "../components/feedback/LoadingBlock";
 
 export function HealthPage() {
-  const health = useQuery({
-    queryKey: ["healthz"],
-    queryFn: () => apiGet<HealthResponse>("/healthz"),
-  });
-  const version = useQuery({
-    queryKey: ["version"],
-    queryFn: () => apiGet<VersionResponse>("/version"),
-  });
+  const health = useHealth();
+  const version = useVersion();
 
   return (
-    <main>
-      <h1>AEGIS</h1>
-      <section>
-        <h2>API health</h2>
-        {health.isLoading && <p>Checking...</p>}
-        {health.isError && <p>Unreachable: {(health.error as Error).message}</p>}
-        {health.data && <p>Status: {health.data.status}</p>}
-      </section>
-      <section>
-        <h2>Build</h2>
-        {version.data && (
-          <p>
-            v{version.data.version} ({version.data.git_sha ?? "unknown"})
-          </p>
-        )}
-      </section>
-    </main>
+    <div className="mx-auto max-w-2xl space-y-4">
+      <h1 className="text-lg font-semibold">System health</h1>
+      <Card>
+        <CardHeader title="API" subtitle={getBaseUrl()} />
+        <CardBody>
+          {health.isLoading ? (
+            <InlineSpinner label="Checking…" />
+          ) : health.isError ? (
+            <Badge tone="danger">unreachable</Badge>
+          ) : (
+            <Badge tone="success">status: {String(health.data?.status ?? "ok")}</Badge>
+          )}
+        </CardBody>
+      </Card>
+      <Card>
+        <CardHeader title="Build" />
+        <CardBody className="text-sm">
+          {version.data ? (
+            <p>
+              v{version.data.version}{" "}
+              <span className="text-muted">({version.data.git_sha ?? "unknown"})</span>
+            </p>
+          ) : (
+            <InlineSpinner />
+          )}
+        </CardBody>
+      </Card>
+    </div>
   );
 }

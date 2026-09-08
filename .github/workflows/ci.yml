@@ -50,6 +50,9 @@ jobs:
     defaults:
       run:
         working-directory: frontend
+    env:
+      # Playwright is manual/non-blocking and not run in CI; skip its browser download.
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -65,8 +68,13 @@ jobs:
       - name: eslint
         run: npm run lint
 
-      - name: tsc --noEmit
-        run: npx tsc -b --noEmit
+      - name: tsc (app + tests)
+        run: |
+          npm run typecheck
+          npm run typecheck:test
+
+      - name: vitest
+        run: npm run test
 
       - name: build
         run: npm run build

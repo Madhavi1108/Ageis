@@ -1,0 +1,7399 @@
+{
+  "components": {
+    "schemas": {
+      "AgentError": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "recoverable": {
+            "title": "Recoverable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "recoverable"
+        ],
+        "title": "AgentError",
+        "type": "object"
+      },
+      "AnalyzeRequest": {
+        "properties": {
+          "force": {
+            "default": false,
+            "description": "Re-run analysis even if a result already exists",
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "AnalyzeRequest",
+        "type": "object"
+      },
+      "BlameHunk": {
+        "properties": {
+          "author_email_hash": {
+            "title": "Author Email Hash",
+            "type": "string"
+          },
+          "authored_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authored At"
+          },
+          "commit_sha": {
+            "title": "Commit Sha",
+            "type": "string"
+          },
+          "line_count": {
+            "title": "Line Count",
+            "type": "integer"
+          },
+          "lineno_start": {
+            "title": "Lineno Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "commit_sha",
+          "author_email_hash",
+          "lineno_start",
+          "line_count"
+        ],
+        "title": "BlameHunk",
+        "type": "object"
+      },
+      "CallerRef": {
+        "properties": {
+          "edge_confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edge Confidence"
+          },
+          "hop": {
+            "title": "Hop",
+            "type": "integer"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "hop"
+        ],
+        "title": "CallerRef",
+        "type": "object"
+      },
+      "ChangedSet": {
+        "properties": {
+          "files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Symbols",
+            "type": "array"
+          }
+        },
+        "title": "ChangedSet",
+        "type": "object"
+      },
+      "ChurnEntry": {
+        "properties": {
+          "commit_count": {
+            "title": "Commit Count",
+            "type": "integer"
+          },
+          "deletions": {
+            "title": "Deletions",
+            "type": "integer"
+          },
+          "distinct_authors": {
+            "title": "Distinct Authors",
+            "type": "integer"
+          },
+          "insertions": {
+            "title": "Insertions",
+            "type": "integer"
+          },
+          "last_authored_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Authored At"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "commit_count",
+          "insertions",
+          "deletions",
+          "distinct_authors"
+        ],
+        "title": "ChurnEntry",
+        "type": "object"
+      },
+      "ClassifiedTest": {
+        "properties": {
+          "classification": {
+            "enum": [
+              "TARGETED",
+              "RELATED",
+              "REGRESSION",
+              "FULL"
+            ],
+            "title": "Classification",
+            "type": "string"
+          },
+          "covers_symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Covers Symbol"
+          },
+          "hops": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hops"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "test_id": {
+            "title": "Test Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "test_id",
+          "path",
+          "classification",
+          "rationale"
+        ],
+        "title": "ClassifiedTest",
+        "type": "object"
+      },
+      "CodeGraphSummary": {
+        "properties": {
+          "edge_count": {
+            "title": "Edge Count",
+            "type": "integer"
+          },
+          "edges_by_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Edges By Type",
+            "type": "object"
+          },
+          "graph_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Graph Artifact Id"
+          },
+          "node_count": {
+            "title": "Node Count",
+            "type": "integer"
+          },
+          "nodes_by_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Nodes By Type",
+            "type": "object"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "unresolved_call_count": {
+            "title": "Unresolved Call Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "node_count",
+          "edge_count",
+          "nodes_by_type",
+          "edges_by_type",
+          "unresolved_call_count",
+          "graph_artifact_id"
+        ],
+        "title": "CodeGraphSummary",
+        "type": "object"
+      },
+      "CommitInfo": {
+        "properties": {
+          "author_email_hash": {
+            "title": "Author Email Hash",
+            "type": "string"
+          },
+          "authored_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authored At"
+          },
+          "deletions": {
+            "default": 0,
+            "title": "Deletions",
+            "type": "integer"
+          },
+          "files_changed": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files Changed",
+            "type": "array"
+          },
+          "insertions": {
+            "default": 0,
+            "title": "Insertions",
+            "type": "integer"
+          },
+          "is_related_fix": {
+            "default": false,
+            "title": "Is Related Fix",
+            "type": "boolean"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "sha": {
+            "title": "Sha",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sha",
+          "author_email_hash",
+          "message"
+        ],
+        "title": "CommitInfo",
+        "type": "object"
+      },
+      "Confidence": {
+        "description": "A confidence value plus the epistemic basis for it.\n\nA FACT must be backed by at least one Evidence item (enforced at the call\nsites that construct plans/conclusions, not here -- this model is the\nshared value type).",
+        "properties": {
+          "basis": {
+            "enum": [
+              "FACT",
+              "INFERENCE",
+              "HYPOTHESIS",
+              "RECOMMENDATION",
+              "UNKNOWN"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "value": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "value",
+          "basis"
+        ],
+        "title": "Confidence",
+        "type": "object"
+      },
+      "CriterionResult": {
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "mandatory": {
+            "title": "Mandatory",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "UNKNOWN"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "verdict",
+          "mandatory"
+        ],
+        "title": "CriterionResult",
+        "type": "object"
+      },
+      "EdgeRef": {
+        "properties": {
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "edge_type": {
+            "title": "Edge Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/NodeRef"
+          },
+          "target": {
+            "$ref": "#/components/schemas/NodeRef"
+          }
+        },
+        "required": [
+          "id",
+          "edge_type",
+          "source",
+          "target"
+        ],
+        "title": "EdgeRef",
+        "type": "object"
+      },
+      "EditOp": {
+        "description": "A structured edit operation -- never a raw file overwrite (ADR-0008).",
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "exact text the edit targets; required for replace/insert/delete",
+            "title": "Anchor"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "new": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New"
+          },
+          "old": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Old"
+          },
+          "op": {
+            "enum": [
+              "create",
+              "replace",
+              "insert",
+              "delete"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "plan_step_id": {
+            "title": "Plan Step Id",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "op",
+          "plan_step_id",
+          "rationale"
+        ],
+        "title": "EditOp",
+        "type": "object"
+      },
+      "EngineeringMemoryOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "embedding_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embedding Ref"
+          },
+          "failure_signatures": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failure Signatures",
+            "type": "array"
+          },
+          "fix_summary": {
+            "title": "Fix Summary",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "issue_text_sanitized": {
+            "title": "Issue Text Sanitized",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "patch_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patch Ref"
+          },
+          "plan_ref": {
+            "title": "Plan Ref",
+            "type": "object"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "review_summary": {
+            "title": "Review Summary",
+            "type": "object"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "touched_files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Touched Files",
+            "type": "array"
+          },
+          "touched_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Touched Symbols",
+            "type": "array"
+          },
+          "verification_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Verdict"
+          }
+        },
+        "required": [
+          "id",
+          "repository_id",
+          "task_id",
+          "issue_text_sanitized",
+          "fix_summary",
+          "outcome",
+          "created_at"
+        ],
+        "title": "EngineeringMemoryOut",
+        "type": "object"
+      },
+      "EngineeringPlan": {
+        "description": "Persisted plan + its lifecycle metadata (the API response shape).",
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "expected_behavior": {
+            "title": "Expected Behavior",
+            "type": "string"
+          },
+          "files_to_inspect": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files To Inspect",
+            "type": "array"
+          },
+          "files_to_modify": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files To Modify",
+            "type": "array"
+          },
+          "problem_interpretation": {
+            "title": "Problem Interpretation",
+            "type": "string"
+          },
+          "regression_risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Regression Risks",
+            "type": "array"
+          },
+          "rollback_strategy": {
+            "title": "Rollback Strategy",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "AI",
+              "RULE_BASED_FALLBACK"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/PlanStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "symbols_to_modify": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Symbols To Modify",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "test_strategy": {
+            "title": "Test Strategy",
+            "type": "object"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlanValidation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "version",
+          "problem_interpretation",
+          "assumptions",
+          "files_to_inspect",
+          "files_to_modify",
+          "symbols_to_modify",
+          "dependencies",
+          "steps",
+          "test_strategy",
+          "expected_behavior",
+          "regression_risks",
+          "rollback_strategy",
+          "source",
+          "confidence",
+          "evidence",
+          "validation",
+          "created_at"
+        ],
+        "title": "EngineeringPlan",
+        "type": "object"
+      },
+      "EntryPointRef": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol"
+          },
+          "type": {
+            "enum": [
+              "main_guard",
+              "console_script",
+              "asgi_app",
+              "cli"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "file"
+        ],
+        "title": "EntryPointRef",
+        "type": "object"
+      },
+      "Evidence": {
+        "description": "One concrete, re-checkable fact backing a conclusion.",
+        "properties": {
+          "detail": {
+            "description": "one line: what this evidence shows",
+            "title": "Detail",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "file",
+              "symbol",
+              "line_range",
+              "test",
+              "commit",
+              "dependency",
+              "execution"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "ref": {
+            "description": "path, symbol_id, 'path:start-end', test id, etc.",
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "ref",
+          "detail"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "ExplainabilityTrace": {
+        "properties": {
+          "why_change": {
+            "default": "",
+            "title": "Why Change",
+            "type": "string"
+          },
+          "why_file": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Why File",
+            "type": "array"
+          },
+          "why_safe": {
+            "default": "",
+            "title": "Why Safe",
+            "type": "string"
+          },
+          "why_test": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Why Test",
+            "type": "array"
+          }
+        },
+        "title": "ExplainabilityTrace",
+        "type": "object"
+      },
+      "FailureAnalysis": {
+        "properties": {
+          "classification": {
+            "title": "Classification",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "object"
+          },
+          "execution_id": {
+            "title": "Execution Id",
+            "type": "string"
+          },
+          "facts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "failures": {
+            "items": {
+              "$ref": "#/components/schemas/FailureRecord"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "inferences": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Inferences",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "execution_id",
+          "failures",
+          "facts",
+          "inferences",
+          "classification",
+          "evidence",
+          "created_at"
+        ],
+        "title": "FailureAnalysis",
+        "type": "object"
+      },
+      "FailureRecord": {
+        "properties": {
+          "chained": {
+            "default": false,
+            "title": "Chained",
+            "type": "boolean"
+          },
+          "exception_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exception Type"
+          },
+          "failure_type": {
+            "enum": [
+              "ASSERTION",
+              "EXCEPTION",
+              "COLLECTION_ERROR",
+              "TIMEOUT",
+              "IMPORT_ERROR",
+              "ENV"
+            ],
+            "title": "Failure Type",
+            "type": "string"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/Frame"
+            },
+            "title": "Frames",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "test_name": {
+            "title": "Test Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "test_name",
+          "failure_type"
+        ],
+        "title": "FailureRecord",
+        "type": "object"
+      },
+      "Frame": {
+        "properties": {
+          "code_slice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Slice"
+          },
+          "file": {
+            "title": "File",
+            "type": "string"
+          },
+          "in_diff": {
+            "default": false,
+            "title": "In Diff",
+            "type": "boolean"
+          },
+          "lineno": {
+            "title": "Lineno",
+            "type": "integer"
+          },
+          "symbol_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol Id"
+          }
+        },
+        "required": [
+          "file",
+          "lineno"
+        ],
+        "title": "Frame",
+        "type": "object"
+      },
+      "GitContext": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "churn": {
+            "items": {
+              "$ref": "#/components/schemas/ChurnEntry"
+            },
+            "title": "Churn",
+            "type": "array"
+          },
+          "commit_count": {
+            "default": 0,
+            "title": "Commit Count",
+            "type": "integer"
+          },
+          "commits": {
+            "items": {
+              "$ref": "#/components/schemas/CommitInfo"
+            },
+            "title": "Commits",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "related_fixes": {
+            "items": {
+              "$ref": "#/components/schemas/CommitInfo"
+            },
+            "title": "Related Fixes",
+            "type": "array"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repository_id",
+          "available"
+        ],
+        "title": "GitContext",
+        "type": "object"
+      },
+      "GitHubIssueInfo": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "html_url": {
+            "title": "Html Url",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "title",
+          "body",
+          "state",
+          "html_url"
+        ],
+        "title": "GitHubIssueInfo",
+        "type": "object"
+      },
+      "GitHubRepoInfo": {
+        "properties": {
+          "default_branch": {
+            "title": "Default Branch",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "html_url": {
+            "title": "Html Url",
+            "type": "string"
+          },
+          "private": {
+            "title": "Private",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "full_name",
+          "default_branch",
+          "private",
+          "html_url"
+        ],
+        "title": "GitHubRepoInfo",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HeuristicRef": {
+        "properties": {
+          "basis": {
+            "default": "INFERENCE",
+            "enum": [
+              "FACT",
+              "INFERENCE"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "detail"
+        ],
+        "title": "HeuristicRef",
+        "type": "object"
+      },
+      "ImpactAnalysis": {
+        "properties": {
+          "blast_radius": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Blast Radius",
+            "type": "object"
+          },
+          "callers": {
+            "items": {
+              "$ref": "#/components/schemas/SymbolCallers"
+            },
+            "title": "Callers",
+            "type": "array"
+          },
+          "changed_set": {
+            "$ref": "#/components/schemas/ChangedSet"
+          },
+          "config_refs": {
+            "items": {
+              "$ref": "#/components/schemas/HeuristicRef"
+            },
+            "title": "Config Refs",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "db_refs": {
+            "items": {
+              "$ref": "#/components/schemas/HeuristicRef"
+            },
+            "title": "Db Refs",
+            "type": "array"
+          },
+          "public_api_touched": {
+            "items": {
+              "$ref": "#/components/schemas/PublicApiRef"
+            },
+            "title": "Public Api Touched",
+            "type": "array"
+          },
+          "regression_areas": {
+            "items": {
+              "$ref": "#/components/schemas/RegressionArea"
+            },
+            "title": "Regression Areas",
+            "type": "array"
+          },
+          "related_tests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Tests",
+            "type": "array"
+          },
+          "report": {
+            "title": "Report",
+            "type": "string"
+          },
+          "risk_signal_bundle": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/RiskSignal"
+            },
+            "title": "Risk Signal Bundle",
+            "type": "object"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "changed_set",
+          "blast_radius",
+          "callers",
+          "related_tests",
+          "public_api_touched",
+          "config_refs",
+          "db_refs",
+          "regression_areas",
+          "risk_signal_bundle",
+          "report",
+          "created_at"
+        ],
+        "title": "ImpactAnalysis",
+        "type": "object"
+      },
+      "ImplementationResult": {
+        "description": "Persisted implementation + its lifecycle metadata (the API response shape).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "edit_ops": {
+            "items": {
+              "$ref": "#/components/schemas/EditOp"
+            },
+            "title": "Edit Ops",
+            "type": "array"
+          },
+          "patch": {
+            "$ref": "#/components/schemas/PatchSummary"
+          },
+          "scope_violations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scope Violations",
+            "type": "array"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "source": {
+            "const": "AI",
+            "title": "Source",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "traceability": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "description": "plan_step_id -> [touched paths from ops carrying that step id]",
+            "title": "Traceability",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "version",
+          "edit_ops",
+          "scope_violations",
+          "source",
+          "patch",
+          "created_at"
+        ],
+        "title": "ImplementationResult",
+        "type": "object"
+      },
+      "IngestRequest": {
+        "properties": {
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "depth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth"
+          },
+          "force": {
+            "default": false,
+            "description": "Refresh/rebuild an already-ingested commit's snapshot",
+            "title": "Force",
+            "type": "boolean"
+          }
+        },
+        "title": "IngestRequest",
+        "type": "object"
+      },
+      "IngestResult": {
+        "properties": {
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "commit_sha": {
+            "title": "Commit Sha",
+            "type": "string"
+          },
+          "file_count": {
+            "title": "File Count",
+            "type": "integer"
+          },
+          "ingested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingested At"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "languages": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Languages",
+            "type": "object"
+          },
+          "limit_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Reason"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "INGESTING",
+              "READY",
+              "PARTIALLY_SUPPORTED",
+              "FAILED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total_bytes": {
+            "title": "Total Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "repository_id",
+          "commit_sha",
+          "branch",
+          "status",
+          "file_count",
+          "total_bytes",
+          "languages",
+          "ingested_at",
+          "job_id"
+        ],
+        "title": "IngestResult",
+        "type": "object"
+      },
+      "IssueAnalysisInput": {
+        "description": "A pre-structured issue supplied by the caller or a future import adapter.\n\nPhase 6 accepts this shape directly; a live GitHub fetch that produces it is\nPhase 19. Fields are treated as untrusted and normalized like free text.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "external_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "e.g. a GitHub issue number",
+            "title": "External Ref"
+          },
+          "source": {
+            "default": "API",
+            "enum": [
+              "API",
+              "GITHUB",
+              "EXCEL"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "title": "IssueAnalysisInput",
+        "type": "object"
+      },
+      "IssueCodeMapping": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/MappingCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dependencies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependencies",
+            "type": "array"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "overall_confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Overall Confidence",
+            "type": "number"
+          },
+          "related_tests": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Tests",
+            "type": "array"
+          },
+          "semantic_available": {
+            "title": "Semantic Available",
+            "type": "boolean"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "candidates",
+          "overall_confidence",
+          "semantic_available",
+          "model_version",
+          "created_at"
+        ],
+        "title": "IssueCodeMapping",
+        "type": "object"
+      },
+      "IssueRef": {
+        "description": "The persisted Issue row after a GitHub import.",
+        "properties": {
+          "external_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Ref"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "imported_at": {
+            "format": "date-time",
+            "title": "Imported At",
+            "type": "string"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "repository_id",
+          "source",
+          "title",
+          "imported_at"
+        ],
+        "title": "IssueRef",
+        "type": "object"
+      },
+      "JobList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobView"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "JobList",
+        "type": "object"
+      },
+      "JobView": {
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dedupe_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dedupe Key"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "last_checkpoint": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Checkpoint"
+          },
+          "max_attempts": {
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "number"
+          },
+          "queued_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queued At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "worker_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Id"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "state",
+          "progress",
+          "attempts",
+          "max_attempts",
+          "idempotency_key",
+          "created_at"
+        ],
+        "title": "JobView",
+        "type": "object"
+      },
+      "MapRequest": {
+        "description": "Either ``task_id`` (compute + persist for that task) or\n``snapshot_id`` + ``issue_text`` (stateless, nothing persisted).",
+        "properties": {
+          "issue_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Text"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top K"
+          }
+        },
+        "title": "MapRequest",
+        "type": "object"
+      },
+      "MappingCandidate": {
+        "properties": {
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "minItems": 1,
+            "title": "Evidence",
+            "type": "array"
+          },
+          "labels": {
+            "items": {
+              "enum": [
+                "FACT",
+                "INFERENCE"
+              ],
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "score": {
+            "description": "fused reciprocal-rank score, higher = better",
+            "title": "Score",
+            "type": "number"
+          },
+          "symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Symbols",
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "score",
+          "confidence",
+          "evidence"
+        ],
+        "title": "MappingCandidate",
+        "type": "object"
+      },
+      "MemoryHit": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "fix_summary": {
+            "title": "Fix Summary",
+            "type": "string"
+          },
+          "issue_summary": {
+            "title": "Issue Summary",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "same_repository": {
+            "title": "Same Repository",
+            "type": "boolean"
+          },
+          "similarity": {
+            "title": "Similarity",
+            "type": "number"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "touched_files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Touched Files",
+            "type": "array"
+          },
+          "touched_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Touched Symbols",
+            "type": "array"
+          },
+          "verification_verdict": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verification Verdict"
+          }
+        },
+        "required": [
+          "task_id",
+          "repository_id",
+          "outcome",
+          "issue_summary",
+          "fix_summary",
+          "similarity",
+          "same_repository",
+          "provenance",
+          "label",
+          "created_at"
+        ],
+        "title": "MemoryHit",
+        "type": "object"
+      },
+      "MemorySearchRequest": {
+        "properties": {
+          "query": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Query",
+            "type": "string"
+          },
+          "repository_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Repository Id"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 50.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top K"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "MemorySearchRequest",
+        "type": "object"
+      },
+      "NodeDetail": {
+        "properties": {
+          "centrality": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Centrality",
+            "type": "object"
+          },
+          "incoming": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeRef"
+            },
+            "title": "Incoming",
+            "type": "array"
+          },
+          "node": {
+            "$ref": "#/components/schemas/NodeRef"
+          },
+          "outgoing": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeRef"
+            },
+            "title": "Outgoing",
+            "type": "array"
+          }
+        },
+        "required": [
+          "node",
+          "centrality",
+          "incoming",
+          "outgoing"
+        ],
+        "title": "NodeDetail",
+        "type": "object"
+      },
+      "NodeRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "node_type": {
+            "title": "Node Type",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "node_type",
+          "ref",
+          "label"
+        ],
+        "title": "NodeRef",
+        "type": "object"
+      },
+      "NormalizationInfo": {
+        "properties": {
+          "original_bytes": {
+            "title": "Original Bytes",
+            "type": "integer"
+          },
+          "stored_bytes": {
+            "title": "Stored Bytes",
+            "type": "integer"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "truncated",
+          "original_bytes",
+          "stored_bytes"
+        ],
+        "title": "NormalizationInfo",
+        "type": "object"
+      },
+      "PatchConfidence": {
+        "properties": {
+          "classification": {
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "VERY_LOW",
+              "BLOCKED"
+            ],
+            "title": "Classification",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "hard_gate": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hard Gate",
+            "type": "array"
+          },
+          "implementation_version": {
+            "title": "Implementation Version",
+            "type": "integer"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "overall_confidence": {
+            "title": "Overall Confidence",
+            "type": "number"
+          },
+          "pcs_raw": {
+            "title": "Pcs Raw",
+            "type": "number"
+          },
+          "per_signal_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/SignalContribution"
+            },
+            "title": "Per Signal Contributions",
+            "type": "array"
+          },
+          "security_gate": {
+            "title": "Security Gate",
+            "type": "number"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "implementation_version",
+          "value",
+          "classification",
+          "pcs_raw",
+          "security_gate",
+          "per_signal_contributions",
+          "overall_confidence",
+          "model_version",
+          "created_at"
+        ],
+        "title": "PatchConfidence",
+        "type": "object"
+      },
+      "PatchRiskAssessment": {
+        "properties": {
+          "classification": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ],
+            "title": "Classification",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "crs_raw": {
+            "title": "Crs Raw",
+            "type": "number"
+          },
+          "evidence_refs": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "implementation_version": {
+            "title": "Implementation Version",
+            "type": "integer"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "overall_confidence": {
+            "title": "Overall Confidence",
+            "type": "number"
+          },
+          "per_signal_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/SignalContribution"
+            },
+            "title": "Per Signal Contributions",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "task_risk_profile": {
+            "$ref": "#/components/schemas/RepositoryHealthProfile"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "implementation_version",
+          "value",
+          "classification",
+          "crs_raw",
+          "per_signal_contributions",
+          "overall_confidence",
+          "task_risk_profile",
+          "model_version",
+          "created_at"
+        ],
+        "title": "PatchRiskAssessment",
+        "type": "object"
+      },
+      "PatchSummary": {
+        "properties": {
+          "diff_size": {
+            "title": "Diff Size",
+            "type": "integer"
+          },
+          "diff_text": {
+            "title": "Diff Text",
+            "type": "string"
+          },
+          "touched_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Touched Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "diff_text",
+          "touched_paths",
+          "diff_size"
+        ],
+        "title": "PatchSummary",
+        "type": "object"
+      },
+      "PlanAlignment": {
+        "properties": {
+          "files_touched": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Files Touched",
+            "type": "array"
+          },
+          "steps_implemented": {
+            "title": "Steps Implemented",
+            "type": "integer"
+          },
+          "steps_total": {
+            "title": "Steps Total",
+            "type": "integer"
+          },
+          "unimplemented_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unimplemented Steps",
+            "type": "array"
+          },
+          "unplanned_files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unplanned Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps_total",
+          "steps_implemented"
+        ],
+        "title": "PlanAlignment",
+        "type": "object"
+      },
+      "PlanStep": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "evidence_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence Refs",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "test_intent": {
+            "description": "what behaviour this step's test should cover",
+            "title": "Test Intent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "test_intent"
+        ],
+        "title": "PlanStep",
+        "type": "object"
+      },
+      "PlanValidation": {
+        "properties": {
+          "checked": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "title": "Checked",
+            "type": "object"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "verdict": {
+            "enum": [
+              "APPROVED",
+              "REVISE",
+              "REJECTED"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict"
+        ],
+        "title": "PlanValidation",
+        "type": "object"
+      },
+      "PublicApiRef": {
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "symbol_id": {
+            "title": "Symbol Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol_id",
+          "reason"
+        ],
+        "title": "PublicApiRef",
+        "type": "object"
+      },
+      "PullRequestCreateRequest": {
+        "properties": {
+          "approved": {
+            "default": false,
+            "description": "human approval for a protected-branch / external PR write",
+            "title": "Approved",
+            "type": "boolean"
+          }
+        },
+        "title": "PullRequestCreateRequest",
+        "type": "object"
+      },
+      "PullRequestOut": {
+        "properties": {
+          "body_artifact_id": {
+            "title": "Body Artifact Id",
+            "type": "string"
+          },
+          "branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Branch"
+          },
+          "commit_sha": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commit Sha"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "failure_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failure Reason"
+          },
+          "github_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Number"
+          },
+          "github_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Github Url"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "LOCAL_ARTIFACT",
+              "GITHUB"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "DRAFTED",
+              "CREATED",
+              "FAILED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "mode",
+          "title",
+          "body_artifact_id",
+          "state",
+          "created_at"
+        ],
+        "title": "PullRequestOut",
+        "type": "object"
+      },
+      "RegressionArea": {
+        "properties": {
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path",
+          "score",
+          "reason"
+        ],
+        "title": "RegressionArea",
+        "type": "object"
+      },
+      "RegressionPlan": {
+        "properties": {
+          "changed_files": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Changed Files",
+            "type": "array"
+          },
+          "changed_symbols": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Changed Symbols",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "full_suite_count": {
+            "title": "Full Suite Count",
+            "type": "integer"
+          },
+          "mode": {
+            "enum": [
+              "smart",
+              "full"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "selection": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Selection",
+            "type": "object"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "subset_justification": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subset Justification"
+          },
+          "subset_risk_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subset Risk Note"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/ClassifiedTest"
+            },
+            "title": "Tests",
+            "type": "array"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "mode",
+          "changed_files",
+          "changed_symbols",
+          "tests",
+          "selection",
+          "full_suite_count",
+          "created_at"
+        ],
+        "title": "RegressionPlan",
+        "type": "object"
+      },
+      "RegressionResult": {
+        "properties": {
+          "baseline_execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Execution Id"
+          },
+          "executed": {
+            "title": "Executed",
+            "type": "boolean"
+          },
+          "execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Id"
+          },
+          "new_failures": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Failures",
+            "type": "array"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/RegressionPlan"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "plan",
+          "executed"
+        ],
+        "title": "RegressionResult",
+        "type": "object"
+      },
+      "RepairAttemptView": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "diff_size": {
+            "title": "Diff Size",
+            "type": "integer"
+          },
+          "edit_ops": {
+            "items": {
+              "$ref": "#/components/schemas/EditOp"
+            },
+            "title": "Edit Ops",
+            "type": "array"
+          },
+          "failing_after": {
+            "title": "Failing After",
+            "type": "integer"
+          },
+          "failing_before": {
+            "title": "Failing Before",
+            "type": "integer"
+          },
+          "hypothesis": {
+            "title": "Hypothesis",
+            "type": "string"
+          },
+          "iteration": {
+            "title": "Iteration",
+            "type": "integer"
+          },
+          "outcome": {
+            "enum": [
+              "IMPROVED",
+              "NO_CHANGE",
+              "WORSENED",
+              "GREEN",
+              "REVERTED"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "regression_failures": {
+            "title": "Regression Failures",
+            "type": "integer"
+          },
+          "score": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Score",
+            "type": "array"
+          },
+          "targeted_execution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targeted Execution Id"
+          }
+        },
+        "required": [
+          "iteration",
+          "outcome",
+          "hypothesis",
+          "edit_ops",
+          "failing_before",
+          "failing_after",
+          "regression_failures",
+          "diff_size",
+          "score",
+          "created_at"
+        ],
+        "title": "RepairAttemptView",
+        "type": "object"
+      },
+      "RepairResult": {
+        "properties": {
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/RepairAttemptView"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "best_iteration": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Iteration"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "final_edit_ops": {
+            "items": {
+              "$ref": "#/components/schemas/EditOp"
+            },
+            "title": "Final Edit Ops",
+            "type": "array"
+          },
+          "investigation_execution_id": {
+            "title": "Investigation Execution Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "REPAIRED",
+              "SAFE_STOP"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "safe_stop": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SafeStop"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "investigation_execution_id",
+          "outcome",
+          "best_iteration",
+          "attempts",
+          "final_edit_ops",
+          "safe_stop",
+          "created_at"
+        ],
+        "title": "RepairResult",
+        "type": "object"
+      },
+      "RepositoryAnalysisResult": {
+        "properties": {
+          "analysed_at": {
+            "format": "date-time",
+            "title": "Analysed At",
+            "type": "string"
+          },
+          "build_backend": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Build Backend"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "dependency_count": {
+            "title": "Dependency Count",
+            "type": "integer"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "entry_points": {
+            "items": {
+              "$ref": "#/components/schemas/EntryPointRef"
+            },
+            "title": "Entry Points",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "package_manager": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Manager"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "symbol_count": {
+            "title": "Symbol Count",
+            "type": "integer"
+          },
+          "test_command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Command"
+          },
+          "test_framework": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Test Framework"
+          },
+          "unknowns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unknowns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "entry_points",
+          "test_framework",
+          "test_command",
+          "package_manager",
+          "build_backend",
+          "symbol_count",
+          "dependency_count",
+          "unknowns",
+          "analysed_at",
+          "duration_ms",
+          "confidence",
+          "evidence",
+          "job_id"
+        ],
+        "title": "RepositoryAnalysisResult",
+        "type": "object"
+      },
+      "RepositoryCreateRequest": {
+        "properties": {
+          "default_branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Branch"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Derived from the URL/path if omitted",
+            "title": "Name"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "source_type": {
+            "enum": [
+              "LOCAL",
+              "GITHUB"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "url_or_path": {
+            "title": "Url Or Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_type",
+          "url_or_path"
+        ],
+        "title": "RepositoryCreateRequest",
+        "type": "object"
+      },
+      "RepositoryHealthProfile": {
+        "properties": {
+          "classification": {
+            "enum": [
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "VERY_LOW"
+            ],
+            "title": "Classification",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "risky_modules": {
+            "items": {
+              "$ref": "#/components/schemas/RiskyModule"
+            },
+            "title": "Risky Modules",
+            "type": "array"
+          },
+          "scope": {
+            "default": "repository",
+            "enum": [
+              "repository",
+              "task"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "subscores": {
+            "items": {
+              "$ref": "#/components/schemas/SignalContribution"
+            },
+            "title": "Subscores",
+            "type": "array"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "repository_id",
+          "snapshot_id",
+          "value",
+          "classification",
+          "subscores",
+          "model_version",
+          "created_at"
+        ],
+        "title": "RepositoryHealthProfile",
+        "type": "object"
+      },
+      "RepositoryRef": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "default_branch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Branch"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "source_type": {
+            "enum": [
+              "LOCAL",
+              "GITHUB"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url_or_path": {
+            "title": "Url Or Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_type",
+          "url_or_path",
+          "name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RepositoryRef",
+        "type": "object"
+      },
+      "ReviewFinding": {
+        "properties": {
+          "category": {
+            "enum": [
+              "CORRECTNESS",
+              "SCOPE",
+              "SECURITY",
+              "MAINTAINABILITY",
+              "ARCHITECTURE",
+              "PERFORMANCE",
+              "ERROR_HANDLING",
+              "TEST_QUALITY",
+              "REGRESSION_RISK",
+              "DEPENDENCY_IMPACT"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "line_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line End"
+          },
+          "line_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line Start"
+          },
+          "recommendation": {
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "CRITICAL",
+              "HIGH",
+              "MEDIUM",
+              "LOW",
+              "INFO"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "STATIC",
+              "RULE",
+              "AI"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "default": "OPEN",
+            "enum": [
+              "OPEN",
+              "RESOLVED",
+              "OVERRIDDEN"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "category",
+          "severity",
+          "description",
+          "recommendation",
+          "confidence"
+        ],
+        "title": "ReviewFinding",
+        "type": "object"
+      },
+      "ReviewReport": {
+        "properties": {
+          "blocking": {
+            "title": "Blocking",
+            "type": "boolean"
+          },
+          "counts_by_category": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts By Category",
+            "type": "object"
+          },
+          "counts_by_severity": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts By Severity",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewFinding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "implementation_version": {
+            "title": "Implementation Version",
+            "type": "integer"
+          },
+          "policy_gaps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Policy Gaps",
+            "type": "array"
+          },
+          "static_tools_run": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Static Tools Run",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "implementation_version",
+          "findings",
+          "counts_by_severity",
+          "counts_by_category",
+          "blocking",
+          "static_tools_run",
+          "policy_gaps",
+          "created_at"
+        ],
+        "title": "ReviewReport",
+        "type": "object"
+      },
+      "RiskSignal": {
+        "properties": {
+          "basis": {
+            "enum": [
+              "FACT",
+              "INFERENCE"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "normalized": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalized"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "normalized",
+          "basis"
+        ],
+        "title": "RiskSignal",
+        "type": "object"
+      },
+      "RiskyModule": {
+        "properties": {
+          "centrality": {
+            "title": "Centrality",
+            "type": "number"
+          },
+          "churn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Churn"
+          },
+          "complexity": {
+            "title": "Complexity",
+            "type": "number"
+          },
+          "inverse_coverage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inverse Coverage"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path",
+          "score",
+          "centrality",
+          "complexity"
+        ],
+        "title": "RiskyModule",
+        "type": "object"
+      },
+      "SafeStop": {
+        "properties": {
+          "attempted_fixes": {
+            "items": {
+              "type": "object"
+            },
+            "title": "Attempted Fixes",
+            "type": "array"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "object"
+          },
+          "failure_summary": {
+            "title": "Failure Summary",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "recommended_human_action": {
+            "title": "Recommended Human Action",
+            "type": "string"
+          },
+          "remaining_uncertainty": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Remaining Uncertainty",
+            "type": "array"
+          }
+        },
+        "required": [
+          "reason",
+          "failure_summary",
+          "evidence",
+          "attempted_fixes",
+          "remaining_uncertainty",
+          "recommended_human_action"
+        ],
+        "title": "SafeStop",
+        "type": "object"
+      },
+      "SignalContribution": {
+        "description": "One signal's line in a score's explanation.",
+        "properties": {
+          "basis": {
+            "enum": [
+              "FACT",
+              "INFERENCE"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "contribution": {
+            "title": "Contribution",
+            "type": "number"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "normalized": {
+            "title": "Normalized",
+            "type": "number"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Raw"
+          },
+          "unavailable_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unavailable Reason"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "normalized",
+          "weight",
+          "contribution",
+          "basis"
+        ],
+        "title": "SignalContribution",
+        "type": "object"
+      },
+      "SubgraphResult": {
+        "properties": {
+          "center": {
+            "$ref": "#/components/schemas/NodeRef"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/EdgeRef"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "hops": {
+            "title": "Hops",
+            "type": "integer"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/NodeRef"
+            },
+            "title": "Nodes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "center",
+          "hops",
+          "nodes",
+          "edges"
+        ],
+        "title": "SubgraphResult",
+        "type": "object"
+      },
+      "SymbolCallers": {
+        "properties": {
+          "callers": {
+            "items": {
+              "$ref": "#/components/schemas/CallerRef"
+            },
+            "title": "Callers",
+            "type": "array"
+          },
+          "symbol": {
+            "title": "Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol"
+        ],
+        "title": "SymbolCallers",
+        "type": "object"
+      },
+      "Task": {
+        "properties": {
+          "allowed_paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Paths"
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraints"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "issue_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Id"
+          },
+          "priority": {
+            "enum": [
+              "LOW",
+              "NORMAL",
+              "HIGH"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "task_type": {
+            "enum": [
+              "BUG",
+              "FEATURE",
+              "REFACTOR",
+              "REQUIREMENT",
+              "QUESTION"
+            ],
+            "title": "Task Type",
+            "type": "string"
+          },
+          "terminal_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terminal Reason"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "repository_id",
+          "task_type",
+          "title",
+          "description",
+          "priority",
+          "idempotency_key",
+          "state",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "Task",
+        "type": "object"
+      },
+      "TaskCancelRequest": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "TaskCancelRequest",
+        "type": "object"
+      },
+      "TaskCreate": {
+        "properties": {
+          "allowed_paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Scope allowlist (glob paths)",
+            "title": "Allowed Paths"
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Constraints"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "issue": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IssueAnalysisInput"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A pre-structured issue instead of free text"
+          },
+          "priority": {
+            "default": "NORMAL",
+            "enum": [
+              "LOW",
+              "NORMAL",
+              "HIGH"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "repository_id": {
+            "title": "Repository Id",
+            "type": "string"
+          },
+          "task_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "BUG",
+                  "FEATURE",
+                  "REFACTOR",
+                  "REQUIREMENT",
+                  "QUESTION"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Inferred from the text by deterministic rules if omitted",
+            "title": "Task Type"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Free-text issue / bug / feature / requirement body",
+            "title": "Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Derived from the first line of the body if omitted",
+            "title": "Title"
+          }
+        },
+        "required": [
+          "repository_id"
+        ],
+        "title": "TaskCreate",
+        "type": "object"
+      },
+      "TaskCreateResponse": {
+        "properties": {
+          "normalization": {
+            "$ref": "#/components/schemas/NormalizationInfo"
+          },
+          "task": {
+            "$ref": "#/components/schemas/Task"
+          }
+        },
+        "required": [
+          "task",
+          "normalization"
+        ],
+        "title": "TaskCreateResponse",
+        "type": "object"
+      },
+      "TaskList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Task"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "offset",
+          "total"
+        ],
+        "title": "TaskList",
+        "type": "object"
+      },
+      "TaskTimeline": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "state",
+          "entries"
+        ],
+        "title": "TaskTimeline",
+        "type": "object"
+      },
+      "TestCase": {
+        "description": "Persisted test case + its lifecycle metadata (the API response shape\nfor one row).",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "invalid_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalid Reason"
+          },
+          "kind": {
+            "enum": [
+              "EDGE",
+              "NEGATIVE",
+              "BOUNDARY",
+              "REGRESSION",
+              "ISSUE_SPECIFIC"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "GENERATED",
+              "EXECUTED",
+              "PASSED",
+              "FAILED",
+              "SKIPPED",
+              "INVALID"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_symbol": {
+            "title": "Target Symbol",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "target_symbol",
+          "kind",
+          "rationale",
+          "code",
+          "evidence",
+          "status",
+          "invalid_reason",
+          "created_at"
+        ],
+        "title": "TestCase",
+        "type": "object"
+      },
+      "TestExecution": {
+        "description": "Persisted execution + its lifecycle metadata (the API response\nshape).",
+        "properties": {
+          "command": {
+            "title": "Command",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "exit_code": {
+            "title": "Exit Code",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "implementation_id": {
+            "title": "Implementation Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "ERROR",
+              "TIMEOUT",
+              "OOM",
+              "INFRA_ERROR",
+              "PARTIALLY_SUPPORTED"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/TestOutcome"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "stderr_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stderr Artifact Id"
+          },
+          "stdout_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stdout Artifact Id"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "task_id",
+          "snapshot_id",
+          "implementation_id",
+          "version",
+          "command",
+          "exit_code",
+          "outcome",
+          "results",
+          "reason",
+          "duration_ms",
+          "stdout_artifact_id",
+          "stderr_artifact_id",
+          "created_at"
+        ],
+        "title": "TestExecution",
+        "type": "object"
+      },
+      "TestGeneration": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "implementation_id": {
+            "title": "Implementation Id",
+            "type": "string"
+          },
+          "policy_gaps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Policy Gaps",
+            "type": "array"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "targeted_set": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Targeted Set",
+            "type": "array"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "test_cases": {
+            "items": {
+              "$ref": "#/components/schemas/TestCase"
+            },
+            "title": "Test Cases",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task_id",
+          "snapshot_id",
+          "implementation_id",
+          "version",
+          "test_cases",
+          "targeted_set",
+          "policy_gaps",
+          "created_at"
+        ],
+        "title": "TestGeneration",
+        "type": "object"
+      },
+      "TestOutcome": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "ERROR",
+              "SKIPPED"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "test_id": {
+            "title": "Test Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "test_id",
+          "outcome"
+        ],
+        "title": "TestOutcome",
+        "type": "object"
+      },
+      "TimelineEntry": {
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "exited_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exited At"
+          },
+          "input_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Ref"
+          },
+          "kind": {
+            "enum": [
+              "STEP",
+              "JOB"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "output_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Ref"
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "state",
+          "at"
+        ],
+        "title": "TimelineEntry",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerificationDecision": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "reason",
+          "actor",
+          "decided_at"
+        ],
+        "title": "VerificationDecision",
+        "type": "object"
+      },
+      "VerificationDecisionRequest": {
+        "properties": {
+          "actor": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Actor",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "APPROVE",
+              "REJECT"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision",
+          "reason",
+          "actor"
+        ],
+        "title": "VerificationDecisionRequest",
+        "type": "object"
+      },
+      "VerificationResult": {
+        "properties": {
+          "confidence": {
+            "$ref": "#/components/schemas/Confidence"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/CriterionResult"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerificationDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "implementation_version": {
+            "title": "Implementation Version",
+            "type": "integer"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "plan_alignment": {
+            "$ref": "#/components/schemas/PlanAlignment"
+          },
+          "replay_fidelity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replay Fidelity"
+          },
+          "resulting_state": {
+            "title": "Resulting State",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/ExplainabilityTrace"
+          },
+          "trace_artifact_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trace Artifact Id"
+          },
+          "verdict": {
+            "enum": [
+              "VERIFIED",
+              "NOT_VERIFIED",
+              "PARTIAL"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id",
+          "implementation_version",
+          "verdict",
+          "criteria",
+          "plan_alignment",
+          "trace",
+          "confidence",
+          "resulting_state",
+          "model_version",
+          "created_at"
+        ],
+        "title": "VerificationResult",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "AEGIS API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/analysis/map": {
+      "post": {
+        "operationId": "create_mapping_analysis_map_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueCodeMapping"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Mapping",
+        "tags": [
+          "mapping"
+        ]
+      }
+    },
+    "/executions/{execution_id}": {
+      "get": {
+        "operationId": "get_execution_executions__execution_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "execution_id",
+            "required": true,
+            "schema": {
+              "title": "Execution Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestExecution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Execution",
+        "tags": [
+          "executions"
+        ]
+      }
+    },
+    "/github/repos/{owner}/{repo}": {
+      "get": {
+        "description": "Repository metadata from the GitHub REST API. GitHub failures surface as\nstructured errors (401/403 -> 502 with a code, 404 -> 404, 429 -> 429),\nnever a raw 500.",
+        "operationId": "get_github_repo_github_repos__owner___repo__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "owner",
+            "required": true,
+            "schema": {
+              "title": "Owner",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "required": true,
+            "schema": {
+              "title": "Repo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubRepoInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Github Repo",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/github/repos/{owner}/{repo}/issues/{number}": {
+      "get": {
+        "description": "A single issue from the GitHub REST API (untrusted text -- normalize\nbefore it backs a task).",
+        "operationId": "get_github_issue_github_repos__owner___repo__issues__number__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "owner",
+            "required": true,
+            "schema": {
+              "title": "Owner",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "required": true,
+            "schema": {
+              "title": "Repo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubIssueInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Github Issue",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/github/repos/{owner}/{repo}/issues/{number}/import": {
+      "post": {
+        "description": "Fetch issue ``number`` and persist it as an ``Issue`` for\n``?repository_id=`` (idempotent on ``(repo, GITHUB, number)``). The body is\nnormalized like every other untrusted issue text.",
+        "operationId": "import_github_issue_github_repos__owner___repo__issues__number__import_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "owner",
+            "required": true,
+            "schema": {
+              "title": "Owner",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "required": true,
+            "schema": {
+              "title": "Repo",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueRef"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Import Github Issue",
+        "tags": [
+          "github"
+        ]
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Healthz Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Healthz",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/jobs": {
+      "get": {
+        "description": "Jobs, newest first, filtered by ``state`` / ``type`` / ``task_id``, with\n``limit`` / ``offset`` / ``total`` pagination.",
+        "operationId": "list_jobs_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/jobs/{job_id}/cancel": {
+      "post": {
+        "description": "Cancel a ``PENDING`` / ``QUEUED`` / ``RUNNING`` job. Cancelling a\n``RUN_TASK`` job cooperatively cancels its task. 409 if already finished.",
+        "operationId": "cancel_job_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/memory": {
+      "get": {
+        "description": "Persisted completed-task records, newest first. Optionally filtered to\none repository.",
+        "operationId": "list_memory_memory_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "repository_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Repository Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EngineeringMemoryOut"
+                  },
+                  "title": "Response List Memory Memory Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/memory/search": {
+      "post": {
+        "description": "Rank prior tasks against a free-text query -- lexical + symbol overlap +\nsame-repo boost + recency. Every hit carries a similarity score, provenance,\nand a \"historical -- verify\" label; results are deterministic and never\nauthoritative.",
+        "operationId": "search_memory_memory_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemorySearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemoryHit"
+                  },
+                  "title": "Response Search Memory Memory Search Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Memory",
+        "tags": [
+          "memory"
+        ]
+      }
+    },
+    "/repositories": {
+      "post": {
+        "operationId": "create_repository_repositories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RepositoryCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryRef"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Repository",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}": {
+      "get": {
+        "operationId": "get_repository_repositories__repository_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryRef"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Repository",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/git/blame": {
+      "get": {
+        "description": "``git blame`` hunks for ``?path=`` at HEAD (author emails hashed).\nReturns ``[]`` when no Git history is reachable or the path is untracked.",
+        "operationId": "get_git_blame_repositories__repository_id__git_blame_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BlameHunk"
+                  },
+                  "title": "Response Get Git Blame Repositories  Repository Id  Git Blame Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Git Blame",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/git/churn": {
+      "get": {
+        "description": "Per-file churn (commit count, insertions, deletions, distinct authors)\nover the extracted history.",
+        "operationId": "get_git_churn_repositories__repository_id__git_churn_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Git Churn",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/git/context": {
+      "get": {
+        "description": "The full assembled Git context: commits, churn, and related fixes.",
+        "operationId": "get_git_context_repositories__repository_id__git_context_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Git Context",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/git/history": {
+      "get": {
+        "description": "Recent commits + related-fix commits for this repository's newest\nsnapshot (Phase 19). Extracted from a real Git repo on first access (the\nLOCAL origin, or a shallow re-clone for GITHUB) and cached in the ``commit``\ntable; ``?refresh=true`` re-extracts. A files-only ingest or a synthesized\nsnapshot id yields ``available: false`` (HTTP 200).",
+        "operationId": "get_git_history_repositories__repository_id__git_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Git History",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/health": {
+      "get": {
+        "description": "The Repository Health Profile for this repository's newest analysed\nsnapshot (Phase 17): a deterministic, versioned 0-100 score from weighted\nsub-scores (maintainability, coverage, dependency coupling, churn\nstability, documentation ratio, CI presence) plus ``risky_modules`` (the\ntop decile by centrality x churn x inverse-coverage x complexity).\nSub-scores with no data source in this environment carry the documented\nneutral prior. Computed and persisted on first access (or ``?refresh=true``);\nrequires at least one analysed snapshot (409).",
+        "operationId": "get_repository_health_repositories__repository_id__health_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryHealthProfile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Repository Health",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/snapshots": {
+      "post": {
+        "operationId": "create_snapshot_repositories__repository_id__snapshots_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IngestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Snapshot",
+        "tags": [
+          "repositories"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/snapshots/{snapshot_id}/analysis": {
+      "get": {
+        "operationId": "get_analysis_repositories__repository_id__snapshots__snapshot_id__analysis_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryAnalysisResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Analysis",
+        "tags": [
+          "analysis"
+        ]
+      },
+      "post": {
+        "operationId": "create_analysis_repositories__repository_id__snapshots__snapshot_id__analysis_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepositoryAnalysisResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Analysis",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/snapshots/{snapshot_id}/analysis/graph": {
+      "get": {
+        "description": "See docs/AEGIS_IMPLEMENTATION_PLAN.md Section 13 API list.",
+        "operationId": "get_graph_summary_repositories__repository_id__snapshots__snapshot_id__analysis_graph_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeGraphSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Graph Summary",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/snapshots/{snapshot_id}/analysis/graph/node/{node_id}": {
+      "get": {
+        "operationId": "get_graph_node_repositories__repository_id__snapshots__snapshot_id__analysis_graph_node__node_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "title": "Node Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Graph Node",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/repositories/{repository_id}/snapshots/{snapshot_id}/analysis/graph/subgraph": {
+      "get": {
+        "operationId": "get_subgraph_repositories__repository_id__snapshots__snapshot_id__analysis_graph_subgraph_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "repository_id",
+            "required": true,
+            "schema": {
+              "title": "Repository Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "required": true,
+            "schema": {
+              "title": "Snapshot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "node",
+            "required": true,
+            "schema": {
+              "title": "Node",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "hops",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Hops",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubgraphResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Subgraph",
+        "tags": [
+          "analysis"
+        ]
+      }
+    },
+    "/tasks": {
+      "get": {
+        "operationId": "list_tasks_tasks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "repository_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Repository Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "task_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Tasks",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "operationId": "create_task_tasks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskCreateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}": {
+      "get": {
+        "operationId": "get_task_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/cancel": {
+      "post": {
+        "operationId": "cancel_task_tasks__task_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/TaskCancelRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/changes": {
+      "get": {
+        "description": "The latest persisted implementation + diff for this task (or a\nspecific ``?version=``).",
+        "operationId": "get_task_changes_tasks__task_id__changes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImplementationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Changes",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "description": "Apply the latest APPROVED EngineeringPlan to a throwaway workspace and\npersist a new Implementation + real unified diff (Phase 10). Requires\n``POST /tasks/{id}/plan/validate`` to have returned ``APPROVED``.",
+        "operationId": "create_task_changes_tasks__task_id__changes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImplementationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task Changes",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/confidence": {
+      "get": {
+        "description": "The Patch Confidence Score for this task's latest patch (Phase 17):\na deterministic, versioned 0-100 score (``HIGH`` / ``MEDIUM`` / ``LOW`` /\n``VERY_LOW`` / ``BLOCKED``) with a per-signal contribution breakdown that\nsums to the value, an ``overall_confidence`` that drops for every\nsignal with no data source, and a ``hard_gate`` list naming any override\n(unresolved CRITICAL finding, scope violation, failing regression).\nComputed and persisted on first access (or ``?refresh=true``); requires a\nPhase 10 implementation (409) and a Phase 8 impact analysis (409).",
+        "operationId": "get_task_confidence_tasks__task_id__confidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchConfidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Confidence",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/executions": {
+      "get": {
+        "description": "Every persisted execution for this task, newest first.",
+        "operationId": "get_task_executions_tasks__task_id__executions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TestExecution"
+                  },
+                  "title": "Response Get Task Executions Tasks  Task Id  Executions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Executions",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "description": "Run this task's latest GENERATED tests in the Docker sandbox and\npersist a new TestExecution version (Phase 12). Requires\n``POST /tasks/{id}/tests`` to have produced at least one GENERATED case.\nReturns ``outcome=PARTIALLY_SUPPORTED`` (not an error) when Docker is\nunavailable.",
+        "operationId": "create_task_execution_tasks__task_id__executions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestExecution"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task Execution",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/failures": {
+      "get": {
+        "description": "The failure investigation for this task's latest failing TestExecution\n(Phase 13): parsed tracebacks, frames resolved to symbols, a deterministic\nfailure-type classification, and an evidence bundle -- facts + hedged\ncandidate signals, no root cause. Computed and persisted on first access\n(or with ``?refresh=true``); 409 if the latest execution passed or did not\nrun.",
+        "operationId": "get_task_failures_tasks__task_id__failures_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FailureAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Failures",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/impact": {
+      "get": {
+        "description": "The impact analysis for this task (Phase 8): changed set, blast radius,\ncallers, related tests, public API, config/DB refs, regression areas, and\nthe CRS risk-signal bundle. Computed and persisted on first access (or with\n``?refresh=true``); requires the Phase 7 mapping to exist.",
+        "operationId": "get_task_impact_tasks__task_id__impact_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImpactAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Impact",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/mapping": {
+      "get": {
+        "description": "The persisted issue -> code mapping for this task (Phase 7). Compute it\nfirst with ``POST /analysis/map`` (``{\"task_id\": ...}``).",
+        "operationId": "get_task_mapping_tasks__task_id__mapping_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueCodeMapping"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Mapping",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/memory": {
+      "get": {
+        "description": "The engineering-memory record written when this task reached a terminal\nstate (Phase 20): issue text, touched symbols, failure signatures, fix\nsummary, plan/patch refs, review + verification summary, outcome. 404 if the\ntask never reached a terminal state (or ``memory_enabled`` was off).",
+        "operationId": "get_task_memory_tasks__task_id__memory_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineeringMemoryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Memory",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/plan": {
+      "get": {
+        "description": "The latest persisted plan for this task (or a specific ``?version=``).",
+        "operationId": "get_task_plan_tasks__task_id__plan_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineeringPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Plan",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "description": "Generate + persist a new EngineeringPlan version for this task (Phase 9).\nRequires the Phase 7 mapping and the Phase 8 impact analysis to exist.",
+        "operationId": "create_task_plan_tasks__task_id__plan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineeringPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task Plan",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/plan/validate": {
+      "post": {
+        "description": "Run the plan-validation rules engine and record the verdict\n(``APPROVED`` / ``REVISE`` / ``REJECTED``) on the plan row.",
+        "operationId": "validate_task_plan_tasks__task_id__plan_validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EngineeringPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Task Plan",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/pr": {
+      "get": {
+        "description": "The latest pull request recorded for this task (404 if none).",
+        "operationId": "get_task_pr_tasks__task_id__pr_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PullRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Pr",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "description": "Generate the PR body + a ``PullRequest`` row for a VERIFIED task\n(Phase 19). Always writes a ``PR_BODY`` artifact. Opens a real GitHub PR\nonly when the repo is GITHUB, a token is configured, and -- for a protected\nbase branch -- ``{\"approved\": true}`` is sent. A GitHub failure lands as\n``state=FAILED`` with a structured ``failure_reason``, never a 5xx. 409 if\nthe task is not VERIFIED.",
+        "operationId": "create_task_pr_tasks__task_id__pr_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PullRequestCreateRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PullRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task Pr",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/regression": {
+      "get": {
+        "description": "The regression-selection plan for this task (Phase 15): every test\nclassified TARGETED / RELATED / REGRESSION / FULL with a rationale, plus the\nper-stage selection (``repair`` = TARGETED+RELATED; ``pre_verification`` =\nsmart subset or, with ``?mode=full``, everything). ``?execute=true`` runs the\npre-verification subset in the sandbox and flags new failures (unavailable\nwithout Docker). Requires the Phase 8 impact analysis.",
+        "operationId": "get_task_regression_tasks__task_id__regression_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "smart",
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "execute",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Execute",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegressionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Regression",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/repairs": {
+      "get": {
+        "description": "The bounded repair loop for this task (Phase 14): ranked root-cause\nhypotheses, per-iteration candidate fixes, auto-revert on worse, and either\na repaired verdict or a SAFE_STOP with evidence. Computed and persisted on\nfirst access (or with ``?refresh=true``); requires the Phase 13\ninvestigation. Without Docker the loop SAFE_STOPs (sandbox unavailable).",
+        "operationId": "get_task_repairs_tasks__task_id__repairs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepairResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Repairs",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/review": {
+      "get": {
+        "description": "The automated code review of this task's latest patch (Phase 16):\n``ReviewFinding``s from ruff + custom AST safety rules + an AI reviewer,\neach with source / category / severity / file:line / recommendation.\n``blocking`` is true when an OPEN CRITICAL/HIGH finding exists. Computed and\npersisted on first access (or ``?refresh=true``); requires a Phase 10\nimplementation.",
+        "operationId": "get_task_review_tasks__task_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Review",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/risk": {
+      "get": {
+        "description": "The Change Risk Score for this task's latest patch (Phase 17):\na deterministic, versioned 0-100 score (``LOW`` / ``MEDIUM`` / ``HIGH`` /\n``CRITICAL``) with a per-signal contribution breakdown, plus the\nTask-Specific Risk Profile (the Repository Health Profile restricted to\nthis task's impact set). Computed and persisted alongside the confidence\nscore on first access (or ``?refresh=true``); requires a Phase 10\nimplementation (409) and a Phase 8 impact analysis (409).",
+        "operationId": "get_task_risk_tasks__task_id__risk_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchRiskAssessment"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Risk",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/run": {
+      "post": {
+        "operationId": "run_task_tasks__task_id__run_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/tests": {
+      "get": {
+        "description": "The latest persisted test-generation batch for this task (or a\nspecific ``?version=``).",
+        "operationId": "get_task_tests_tasks__task_id__tests_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestGeneration"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Tests",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "description": "Generate + persist a new batch of tests for this task's latest\nImplementation (Phase 11). Requires ``POST /tasks/{id}/changes`` to have\nproduced an Implementation.",
+        "operationId": "create_task_tests_tasks__task_id__tests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestGeneration"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Task Tests",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/timeline": {
+      "get": {
+        "operationId": "get_task_timeline_tasks__task_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskTimeline"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Timeline",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/verification": {
+      "get": {
+        "description": "The completion verdict for this task (Phase 18): a deterministic\nchecklist -- acceptance tests, the regression/full suite, patch\nre-application, scope, code review, plan alignment, and the PCS/CRS gate --\neach ``PASS`` / ``FAIL`` / ``UNKNOWN`` with evidence, an overall\n``VERIFIED`` / ``NOT_VERIFIED`` / ``PARTIAL``, the plan-alignment breakdown,\nand the explainability trace (why file / why change / why test / why safe).\nMoves the task to ``COMPLETED`` (VERIFIED), ``AWAITING_APPROVAL`` (PARTIAL),\nor ``FAILED`` (NOT_VERIFIED). Computed and persisted on first access (or\n``?refresh=true``); requires a Phase 10 implementation (409) and a Phase 9\nplan (409).",
+        "operationId": "get_task_verification_tasks__task_id__verification_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "refresh",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Refresh",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Task Verification",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/tasks/{task_id}/verification/decision": {
+      "post": {
+        "description": "Resolve a task that verification left in ``AWAITING_APPROVAL`` (a\n``PARTIAL`` verdict). ``APPROVE`` supersedes it with a ``VERIFIED`` row and\nmoves the task to ``COMPLETED``; ``REJECT`` yields ``NOT_VERIFIED`` and\n``FAILED``. 409 if the task is not awaiting a decision.",
+        "operationId": "decide_task_verification_tasks__task_id__verification_decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerificationDecisionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerificationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Task Verification",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "version_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "title": "Response Version Version Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Version",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

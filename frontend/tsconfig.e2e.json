@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    "noEmit": true,
+    "types": ["@playwright/test", "node"]
+  },
+  "include": ["e2e", "playwright.config.ts"]
+}

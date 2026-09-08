@@ -1,8 +1,107 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Two-theme token scale. Values are space-separated RGB channels so Tailwind's
+ * `rgb(var(--x) / <alpha-value>)` opacity syntax works. `.dark` is toggled on
+ * <html> by useTheme.
+ */
 :root {
-  color-scheme: light dark;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: 249 250 251;
+  --surface: 255 255 255;
+  --surface-2: 243 244 246;
+  --border: 226 232 240;
+  --fg: 17 24 39;
+  --muted: 100 116 139;
+  --accent: 37 99 235;
+  --accent-fg: 255 255 255;
+
+  --pending: 148 163 184;
+  --active: 37 99 235;
+  --done: 22 163 74;
+  --failed: 220 38 38;
+  --skipped: 100 116 139;
+  --awaiting: 217 119 6;
+
+  --sev-critical: 190 18 60;
+  --sev-high: 220 38 38;
+  --sev-medium: 217 119 6;
+  --sev-low: 202 138 4;
+  --sev-info: 100 116 139;
+}
+
+.dark {
+  --bg: 15 18 25;
+  --surface: 24 28 38;
+  --surface-2: 32 38 50;
+  --border: 45 52 66;
+  --fg: 226 232 240;
+  --muted: 148 163 184;
+  --accent: 96 165 250;
+  --accent-fg: 15 18 25;
+
+  --pending: 100 116 139;
+  --active: 96 165 250;
+  --done: 74 222 128;
+  --failed: 248 113 113;
+  --skipped: 100 116 139;
+  --awaiting: 251 191 36;
+
+  --sev-critical: 251 113 133;
+  --sev-high: 248 113 113;
+  --sev-medium: 251 191 36;
+  --sev-low: 250 204 21;
+  --sev-info: 148 163 184;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
+  background-color: rgb(var(--bg));
+  color: rgb(var(--fg));
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* react-diff-view base styles (the package ships a stylesheet we inline the essentials of) */
+.diff {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+.diff-gutter-col {
+  width: 3.5em;
+}
+.diff-gutter {
+  padding: 0 0.5em;
+  text-align: right;
+  color: rgb(var(--muted));
+  user-select: none;
+}
+.diff-code {
+  padding: 0 0.5em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.diff-code-insert {
+  background-color: rgb(var(--done) / 0.14);
+}
+.diff-code-delete {
+  background-color: rgb(var(--failed) / 0.14);
+}
+.diff-gutter-insert {
+  background-color: rgb(var(--done) / 0.22);
+}
+.diff-gutter-delete {
+  background-color: rgb(var(--failed) / 0.22);
+}
+.diff-hunk-header {
+  background-color: rgb(var(--surface-2));
+  color: rgb(var(--muted));
 }
