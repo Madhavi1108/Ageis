@@ -18,9 +18,14 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    command: ["python", "-m", "app.worker_placeholder"]
+    # The real job worker: a single sequential process (ADR-0003). Run exactly
+    # one per database. Needs Docker-in-Docker or a mounted daemon socket for the
+    # real sandbox; otherwise executions degrade to PARTIALLY_SUPPORTED.
+    command: ["python", "-m", "app.orchestration.worker"]
     env_file:
       - .env
+    depends_on:
+      - api
     volumes:
       - ./backend:/app/backend
 

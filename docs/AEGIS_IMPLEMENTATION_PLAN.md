@@ -3260,6 +3260,26 @@ scope -> the support-matrix test.
 
 **Effort.** M.
 
+**Status: COMPLETE — 2026-09-09.** `LICENSE` (Apache-2.0) + `NOTICE` + `CHANGELOG.md` added;
+`backend/pyproject.toml` carries the SPDX license + classifiers. The Phase 0 / strategic docs got
+a targeted reconciliation pass — a `Status: … reconciled 2026-09-09` line and corrected
+forward-looking claims (no restructuring): `MVP_DEFINITION.md` §2 is now the *as-built* matrix
+with an **Evidence** column per SUPPORTED / PARTIALLY_SUPPORTED row (Dashboard / Excel / benchmark
+moved to SUPPORTED; sandbox / PR / semantic retrieval / replay / competitive-baseline honestly
+PARTIALLY_SUPPORTED), `DATA_MODEL.md` notes the 34-table as-built schema, `EXECUTION_MODEL.md` /
+`SECURITY_MODEL.md` / `METRICS.md` bumped. New guides: `docs/{USER,OPERATOR,DEVELOPER}_GUIDE.md`,
+`docs/RUNBOOKS.md` (8 incident playbooks), `docs/DEMO.md`, and `docs/API_REFERENCE.md` —
+**generated** by `scripts/gen_api_reference.py` from the live OpenAPI (59 operations).
+`docs/ACCEPTANCE_CONTRACT.md` maps all 30 §54 criteria + the 20 §55 rules to satisfying code and
+a demonstrating test. `scripts/quickstart_check.py` drives the acceptance task end-to-end
+in-process (no Docker) to `COMPLETED` and is wired into the `backend` CI job. New
+`backend/tests/docs/` gates (run in the normal `pytest tests` job): link resolution, API-reference
+freshness, support-matrix evidence existence, acceptance-contract completeness — **173 pass, 1
+skip**. `README.md` + `CONTRIBUTING.md` rewritten to the all-28-phases status with the new doc
+index and a License section. PDF rebuilt. **Open items:** the `docker compose up` quickstart is
+documented but not CI-gated here (no Docker); live-provider runs of the capability spike + the
+acceptance contract are still pending; per-file SPDX headers were not added (out of scope).
+
 ---
 
 ## Appendix A — Traceability Matrix (Specification Section -> Phase)

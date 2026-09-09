@@ -8,15 +8,19 @@ optionally open a PR.
 
 Working name; see `docs/POSITIONING.md` for the strategic thesis and wedge.
 
-**Status: Phase 0 (Greenfield Architecture & Planning), Phase 1 (Walking Skeleton), and Phase 2
-(Project Foundation) — COMPLETE.** The CLI runs a real task end-to-end to a **VERIFIED** diff
-(`--sandbox fake`); with the real Docker sandbox (the default), it correctly reports
-`PARTIALLY_SUPPORTED` in this Docker-less environment rather than falling back to host execution.
-A real FastAPI app (`backend/app/`) now runs alongside the walking skeleton with `/healthz` and
-`/version`, a SQLAlchemy + Alembic database layer, typed error handling, JSON logging with secret
-redaction, a Vite/React/TS frontend scaffold, a Docker Compose dev stack, and CI. See
-`CONTRIBUTING.md` for local dev setup and `docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full
-phase-by-phase plan.
+**Status: all 28 phases implemented — feature-complete MVP.** AEGIS takes a real engineering
+task and a real Git repository and drives it through the full connected pipeline to a verified,
+evidence-backed diff, with local Git output, an external GitHub PR when credentials and policy
+permit, a React dashboard, and Excel / structured reporting. The `backend/app/` FastAPI service
+covers every stage; `backend/aegis/` is the original walking skeleton kept as an executable
+reference. See [`CHANGELOG.md`](CHANGELOG.md) for what each phase delivered and
+[`docs/ACCEPTANCE_CONTRACT.md`](docs/ACCEPTANCE_CONTRACT.md) for the 30-point acceptance contract
+with linked evidence.
+
+Known caveats: the Docker sandbox happy path and the Phase 0 capability spike have not been run
+against a live daemon / live AI provider in this environment (degradation to
+`PARTIALLY_SUPPORTED` *is* verified); the job worker is single sequential. Details in
+`docs/ACCEPTANCE_CONTRACT.md` → "Open items".
 
 ---
 
@@ -24,6 +28,16 @@ phase-by-phase plan.
 
 **Plan**
 - [`docs/AEGIS_IMPLEMENTATION_PLAN.md`](docs/AEGIS_IMPLEMENTATION_PLAN.md) ([PDF](docs/AEGIS_IMPLEMENTATION_PLAN.pdf)) — the full phase-by-phase implementation plan, testing strategy, delivery strategy, and appendices.
+
+**Guides**
+- [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — submitting tasks, reading results, task states, approvals.
+- [`docs/OPERATOR_GUIDE.md`](docs/OPERATOR_GUIDE.md) — processes, the full `AEGIS_*` config reference, health/metrics, backups.
+- [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) — repo layout, the phase/migration model, the docs-CI gates.
+- [`docs/RUNBOOKS.md`](docs/RUNBOOKS.md) — incident playbooks (provider outage, sandbox down, queue full, stuck job, GC, migrations, secrets).
+- [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) — generated from the live OpenAPI schema.
+- [`docs/ACCEPTANCE_CONTRACT.md`](docs/ACCEPTANCE_CONTRACT.md) — the 30 §54 criteria + the 20 §55 rules, each with linked evidence.
+- [`docs/DEMO.md`](docs/DEMO.md) — a 5-minute walkthrough.
+- [`CHANGELOG.md`](CHANGELOG.md) — release history by phase.
 
 **Architecture (Specification §46)**
 - [`docs/AEGIS_ARCHITECTURE.md`](docs/AEGIS_ARCHITECTURE.md) — system architecture, module boundaries, agent orchestration, state machine.
@@ -52,46 +66,43 @@ phase-by-phase plan.
 ## Repository layout
 
 ```
-docs/                    architecture, strategic, and decision documents (Phase 0's output)
+docs/                    architecture, strategic, decision docs; the user/operator/developer guides
 scripts/
-  build_plan_pdf.py       renders the implementation plan to PDF
-  capability_spike/       throwaway harness for the Stage A capability gate (see its README)
+  gen_api_reference.py   regenerates docs/API_REFERENCE.md from the app's OpenAPI schema
+  quickstart_check.py    non-Docker end-to-end smoke test (a CI gate)
+  build_plan_pdf.py      renders the implementation plan to PDF
+  capability_spike/      throwaway harness for the Stage A capability gate
 backend/
-  aegis/                  Phase 1 Walking Skeleton: ingest -> analyze -> map -> plan -> implement
-                          -> test -> repair -> verify
-  app/                    Phase 2 service foundation: FastAPI app, config, logging, DB (SQLAlchemy
-                          + Alembic), typed errors, /healthz + /version
-  tests/unit/, tests/integration/, tests/e2e/   covers both aegis/ and app/
-docker/
-  sandbox.Dockerfile      the walking skeleton's sandbox image (build before using --sandbox docker)
-  api.Dockerfile          the FastAPI app image
-  frontend.Dockerfile     the frontend dev image
-docker-compose.yml        full dev stack: api, worker (placeholder), frontend, optional postgres
-frontend/                 Vite + React + TS scaffold: router, TanStack Query, typed API client
+  aegis/                 the original walking skeleton: ingest -> analyze -> ... -> verify
+                         (kept as an executable reference; not imported by app/)
+  app/                   the service: api/, services/, agents/, ai/, analysis/, implementation/,
+                         testing/, sandbox/, debugging/, review/, scoring/, verification/, git/,
+                         github/, memory/, orchestration/, core/, models/ (34 tables), db/migrations/
+  tests/                 unit/ integration/ e2e/ security/ perf/ docs/
+docker/                  sandbox.Dockerfile, api.Dockerfile, frontend.Dockerfile
+docker-compose.yml       dev stack: api, worker, frontend, optional postgres (requires Docker)
+frontend/                Vite + React + TS dashboard (14 screens; every panel calls the backend)
 test-repositories/
-  aegis-acceptance/       the seeded acceptance task (Specification §39's worked example)
-  fixtures/unfixable/     exercises the bounded repair loop's clean-stop path
-.github/workflows/ci.yml  backend (ruff/black/mypy/pytest/coverage/migrations) + frontend (eslint/
-                          tsc/build) CI
+  aegis-acceptance/      the seeded acceptance task (Specification §39's worked example)
+  aegis-acceptance-unfixable/   exercises the bounded repair loop's clean-stop path
+.github/workflows/ci.yml backend (ruff/black/mypy/pytest/coverage/migrations/quickstart) +
+                         security (bandit/pip-audit/SBOM) + frontend (eslint/tsc/vitest/build)
 ```
 
 ## Quickstart
 
+The whole pipeline, end to end, no Docker and no services:
+
 ```
 cd backend && pip install -e .[dev]
-python -m aegis.skeleton run ../test-repositories/aegis-acceptance ../test-repositories/aegis-acceptance/task.md --sandbox fake
+python ../scripts/quickstart_check.py        # ingest -> ... -> verify -> COMPLETED, prints PASS
+pytest -q                                     # the full test suite
 ```
 
-`--sandbox fake` runs tests as a local subprocess so the full pipeline is demonstrable without
-Docker (only ever use it against trusted fixtures, never a real repository). Build
-`docker/sandbox.Dockerfile` and drop `--sandbox fake` (the default is `docker`) to use the real,
-hardened sandbox.
+See [`docs/DEMO.md`](docs/DEMO.md) for the same thing over the API + dashboard, and
+[`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) for submitting your own task.
 
-```
-pytest backend/tests -q
-```
-
-## Local development (Phase 2)
+## Local development
 
 Full setup, migrations, Docker Compose, and lint/type/test commands are in `CONTRIBUTING.md`.
 Quick start for the API + frontend:
@@ -102,15 +113,16 @@ cd backend && pip install -e .[dev] && alembic upgrade head && uvicorn app.main:
 ```
 cd frontend && npm install && cp .env.example .env && npm run dev
 ```
-or the whole stack at once:
+or the whole stack at once (**requires Docker**; not exercised in CI):
 ```
 cp .env.example .env && docker compose up
 ```
 
-## Regenerating the plan PDF
+## Regenerating docs
 
 ```
-python scripts/build_plan_pdf.py
+python scripts/gen_api_reference.py --write    # docs/API_REFERENCE.md from OpenAPI
+python scripts/build_plan_pdf.py               # docs/AEGIS_IMPLEMENTATION_PLAN.pdf
 ```
 
 ## Running the capability-spike harness (mock)
@@ -118,3 +130,7 @@ python scripts/build_plan_pdf.py
 ```
 python scripts/capability_spike/run.py --provider mock --tasks scripts/capability_spike/tasks.example.yaml
 ```
+
+## License
+
+Apache License 2.0 — see [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).

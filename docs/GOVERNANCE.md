@@ -3,7 +3,10 @@
 Traceability: `AEGIS_IMPLEMENTATION_PLAN.md` §4.14; Specification §24, §25, §29, §34; metric #16.
 Phase 0 deliverable (plan addition). `ADR-0011` (security policy), `ADR-0016` (memory).
 
-Status: Accepted — 2026-09-04.
+Status: Accepted — 2026-09-04. Reconciled 2026-09-09 (Phase 28). Deterministic replay is
+`PARTIALLY_SUPPORTED` — fidelity depends on the AI provider's seed support and is disclosed in
+the Trust Report. The audit hash-chain is a documented follow-up (deferred in Phase 26); RBAC is
+opt-in (`AEGIS_AUTH_ENABLED`).
 
 ---
 

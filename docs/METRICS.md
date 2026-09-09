@@ -3,7 +3,11 @@
 Traceability: Specification §12, §13, §14, §16, §40, §41. Phase 0 deliverable (Spec §46 items 26,
 28). Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §4.10, §6; `ADR-0017`.
 
-Status: Accepted — 2026-09-04; Phase 25 calibration run 2026-09-08. **`scoring-model v1.0.0` is
+Status: Accepted — 2026-09-04; Phase 25 calibration run 2026-09-08; reconciled 2026-09-09
+(Phase 28). The 16-metric catalogue and the `scoring-model v1.0.0` constants are kept in sync
+with `backend/app/scoring/model_registry.py` by
+`backend/tests/unit/test_scoring_model_version_sync.py` (a weight/threshold change fails CI
+without a matching doc edit + version bump). **`scoring-model v1.0.0` is
 RETAINED** — the curated deterministic benchmark set yields too few labeled verification points
 (well under the 50-point re-fit threshold) for a defensible weight/bound fit, so no constants
 changed and no version bump was made. A real calibration needs live-provider runs over the full

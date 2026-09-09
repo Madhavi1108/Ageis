@@ -3,7 +3,8 @@
 Traceability: Specification §18, §21, §29, §34. Phase 0 deliverable (Spec §46 items 5, 6).
 Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §4.7–§4.8, §4.11, §4.14; `ADR-0010`, `ADR-0011`.
 
-Status: Accepted — 2026-09-04. **Hardened and re-audited in Phase 26 (2026-09-08)** — see the
+Status: Accepted — 2026-09-04. **Hardened and re-audited in Phase 26 (2026-09-08); reconciled
+against the built system 2026-09-09 (Phase 28) — no changes.** See the
 threat → control → test self-audit in §11. The `core/security/` package
 (`pathjail`, `subprocess_guard`, `env_allowlist`, `ssrf`, `redaction`, `validate`) now exists as
 the single enforcement point named in `ADR-0011`; `backend/tests/security/` is the threat suite.

@@ -3,7 +3,9 @@
 Traceability: Specification §2, §4, §5, §19, §45, §52, §53. Phase 0 deliverable (Spec §46 item 1,
 2, 4, 8). Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §3–§4.
 
-Status: Accepted — 2026-09-04. Provisional items are labelled inline.
+Status: Accepted — 2026-09-04. **Reconciled against the built system (Phases 0–28), 2026-09-09** —
+the architecture shipped as designed (7 agents, the pipeline state machine, the module
+boundaries); no structural changes. Provisional items are labelled inline.
 
 ---
 

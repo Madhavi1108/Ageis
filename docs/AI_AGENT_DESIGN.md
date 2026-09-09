@@ -4,7 +4,11 @@ Traceability: Specification §3.8, §4, §5, §20, §21. Phase 0 deliverable (Sp
 Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §3.3, §4.5–§4.7, §4.13; `ADR-0004`, `ADR-0005`,
 `ADR-0019`.
 
-Status: Accepted — 2026-09-04.
+Status: Accepted — 2026-09-04. Reconciled against the built system (Phases 0–28), 2026-09-09 —
+the 7 agents, the `AIProvider.complete(template, variables, schema)` abstraction, and the AI
+response schemas shipped as designed; `MockProvider` is the CI default and `ClaudeProvider` is
+gated behind `RUN_LIVE_AI=1`. Deterministic context windowing (`app/ai/context.py`) and the
+AI/GitHub circuit breakers were added in Phase 27.
 
 ---
 

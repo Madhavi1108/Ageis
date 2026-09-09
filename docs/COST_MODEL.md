@@ -3,9 +3,11 @@
 Traceability: `AEGIS_IMPLEMENTATION_PLAN.md` §4.13, Appendix F; metrics #13, #14. Phase 0
 deliverable (plan addition). `ADR-0019` (model routing).
 
-Status: Accepted — 2026-09-04. **All prices are `pricing-table v1.0.0` placeholders**; replaced
-with real provider prices before the first live benchmark. Call counts are expected values, tuned
-in Phase 25 with real traces.
+Status: Accepted — 2026-09-04. Reconciled 2026-09-09 (Phase 28). **All prices are
+`pricing-table v1.0.0` placeholders** — to be replaced with real provider prices before the first
+live benchmark. Call counts remain expected values; a real re-tune needs live-provider traces
+(the CI runs on `MockProvider`, which has no spend). Budget enforcement itself is live: the
+Orchestrator parks a task in `AWAITING_APPROVAL` / `PARTIALLY_SUPPORTED` rather than overrun.
 
 ---
 

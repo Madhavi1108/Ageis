@@ -1,8 +1,12 @@
 # Contributing to AEGIS
 
-This covers local dev setup as of **Phase 2 (Project Foundation)**. See
-`docs/AEGIS_IMPLEMENTATION_PLAN.md` for the full phase-by-phase plan and
-`README.md` for the project overview and doc index.
+This covers local dev setup. All 28 phases are implemented; see
+`docs/DEVELOPER_GUIDE.md` for the codebase map and the docs-CI gates,
+`docs/AEGIS_IMPLEMENTATION_PLAN.md` for the phase-by-phase plan, and `README.md`
+for the overview and doc index.
+
+By contributing you agree that your contributions are licensed under the
+project's Apache License 2.0 (`LICENSE`).
 
 ## Prerequisites
 
@@ -105,8 +109,9 @@ npx tsc -b --noEmit   # type-check only
 cp .env.example .env
 docker compose up
 ```
-Brings up `api` (port 8000), `frontend` (port 5173), and a `worker`
-placeholder (no real job-processing logic yet). Postgres is opt-in:
+Brings up `api` (port 8000), `frontend` (port 5173), and the `worker`
+(the real job-processing loop, `python -m app.orchestration.worker`). Postgres
+is opt-in:
 ```
 docker compose --profile postgres up
 ```

@@ -3,7 +3,9 @@
 Traceability: Specification §44, §45. Phase 0 deliverable (Spec §46). Companion to
 `AEGIS_IMPLEMENTATION_PLAN.md` §4.1.
 
-Status: Accepted — 2026-09-04.
+Status: Accepted — 2026-09-04. Reconciled against the built system (Phases 0–28), 2026-09-09 —
+the stack shipped as chosen (FastAPI, SQLAlchemy + Alembic, NetworkX, GitPython, httpx, openpyxl,
+Vite/React/TS); the security tooling (bandit, pip-audit, CycloneDX) was added in Phase 26.
 
 ---
 

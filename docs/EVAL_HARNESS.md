@@ -3,8 +3,12 @@
 Traceability: `AEGIS_IMPLEMENTATION_PLAN.md` §5.6, §6, Phase 25; Specification §40, §41. Phase 0
 deliverable (plan addition). Feeds `CAPABILITY_SPIKE.md` (Stage A) and Phase 25 benchmarking.
 
-Status: Accepted — 2026-09-04. The harness is built for real in Phase 25; the throwaway spike
-harness (`scripts/capability_spike/`) is a cut-down precursor.
+Status: Accepted — 2026-09-04; harness built in Phase 25; reconciled 2026-09-09 (Phase 28). The
+real harness is `benchmarks/` (run `python -m benchmarks`, publish with `python -m benchmarks
+publish` → `docs/BENCHMARK_RESULTS.md`); the throwaway spike (`scripts/capability_spike/`) is a
+cut-down precursor. All runs to date use `MockProvider` + curated/seeded datasets — a
+live-provider run over a real benchmark subset (and metric #15's reference agents) is still
+pending.
 
 ---
 

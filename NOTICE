@@ -1,0 +1,10 @@
+AEGIS — Autonomous Engineering, Generation, Intelligence & Self-Repair System
+Copyright 2026 AEGIS contributors
+
+This product includes software developed as part of the AEGIS project.
+
+Licensed under the Apache License, Version 2.0 (see the LICENSE file).
+
+Third-party components are distributed under their own licenses; see
+docs/TECH_STACK.md and backend/requirements.lock for the dependency set and
+backend/sbom.json (generated in CI) for the full software bill of materials.

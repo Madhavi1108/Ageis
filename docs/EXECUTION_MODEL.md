@@ -4,7 +4,9 @@ Traceability: Specification §18, §19, §36, §37. Phase 0 deliverable (Spec §
 24, 25). Companion to `AEGIS_IMPLEMENTATION_PLAN.md` §4.3, §4.8–§4.9, §4.13; `ADR-0002`,
 `ADR-0003`, `ADR-0010`, `ADR-0012`, `ADR-0013`.
 
-Status: Accepted — 2026-09-04. Finalized (numbers tuned) in Phase 27.
+Status: Accepted — 2026-09-04. Finalized in Phase 27 (retry/backoff/heartbeat, backpressure,
+AI-context windowing, GC/retention, circuit breakers, `/readyz` + `/metrics`); reconciled
+2026-09-09 (Phase 28) — no changes.
 
 ---
 

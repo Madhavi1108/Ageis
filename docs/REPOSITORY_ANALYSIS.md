@@ -3,7 +3,12 @@
 Traceability: Specification §3.1, §3.3, §3.4, §22. Phase 0 deliverable (Spec §46 items 10, 11, 12).
 Companion to `AEGIS_IMPLEMENTATION_PLAN.md` Phases 3–5, 7, 8; `ADR-0006`, `ADR-0007`.
 
-Status: Accepted — 2026-09-04.
+Status: Accepted — 2026-09-04. Reconciled against the built system (Phases 0–28), 2026-09-09 —
+ingestion, Python AST analysis, the code graph, and fused issue→code retrieval shipped as
+designed (`backend/app/ingestion/`, `backend/app/analysis/`). Phase 27 added the analysis
+wall-clock budget (`AEGIS_LIMIT_ANALYSIS_SECONDS` → remaining files `SKIPPED`,
+`PARTIALLY_SUPPORTED`); `AEGIS_LIMIT_GRAPH_NODES` is configuration only (no partial-graph
+fallback yet).
 
 ---
 

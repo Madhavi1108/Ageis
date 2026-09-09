@@ -33,6 +33,13 @@ jobs:
       - name: pytest (+ coverage)
         run: pytest tests -q --cov=app --cov=aegis --cov-report=xml --cov-report=term --cov-fail-under=70
 
+      - name: Quickstart end-to-end smoke test
+        # Documentation-accuracy gate (plan §36): the README / USER_GUIDE
+        # one-command path must reach COMPLETED. No Docker required. The
+        # docs-drift gates (API reference freshness, link check, support-matrix
+        # evidence, acceptance contract) run inside `pytest tests` above.
+        run: python ../scripts/quickstart_check.py
+
       - name: Alembic upgrade/downgrade smoke test
         run: |
           rm -f /tmp/ci_migration_smoke.db

@@ -3,8 +3,12 @@
 Traceability: Specification §35, §36. Phase 0 deliverable (Spec §46 item 3). Companion to
 `AEGIS_IMPLEMENTATION_PLAN.md` §4.4 and `ADR-0001`.
 
-Status: Accepted — 2026-09-04. Field lists are the design intent; exact column types are finalized
-with the first Alembic migration in Phase 2.
+Status: Accepted — 2026-09-04. **Reconciled against the built system (Phases 0–28), 2026-09-09.**
+Field lists are the design intent; the authoritative schema is `backend/app/models/*.py`
+(**34 tables** as built — the ~28 designed entities plus child/join tables added by later phases:
+`graph_node` / `graph_edge`, `repair_attempt`, `regression_plan`, `repository_knowledge`,
+`commit`, `test_case`, `test_execution`) and the linear Alembic chain `0001`…`0021`
+(`backend/app/db/migrations/versions/`). `alembic downgrade` is supported and CI-checked.
 
 ---
 

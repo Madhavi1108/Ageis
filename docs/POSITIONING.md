@@ -4,7 +4,10 @@ Traceability: `AEGIS_IMPLEMENTATION_PLAN.md` §2.1–§2.4 (strategic thesis, we
 competitive baseline). Phase 0 deliverable (plan addition). `ADR-0020` records the capability
 gates that keep this positioning falsifiable.
 
-Status: Accepted — 2026-09-04.
+Status: Accepted — 2026-09-04. Reconciled 2026-09-09 (Phase 28) — the wedge (auditable,
+low-false-complete autonomy for regulated / large-legacy Python teams) is unchanged; the MVP that
+backs it is now built (all 28 phases). The competitive-delta claim (metric #15) is still
+unproven — it needs live reference-agent runs.
 
 ---
 
