@@ -74,6 +74,13 @@ def clone_rw(
     Implementation agent (app.implementation.editor) is allowed to write into.
     """
     root = Path(tempfile.mkdtemp(prefix=prefix))
-    shutil.copytree(source_workspace, root, dirs_exist_ok=True)
-    _make_writable(root)
+    try:
+        shutil.copytree(source_workspace, root, dirs_exist_ok=True)
+        _make_writable(root)
+    except Exception:
+        # Phase 27: callers bind ``ws = clone_rw(...)`` *before* their try/finally,
+        # so a mid-copy failure here would leak the mkdtemp'd directory. Clean it
+        # up before re-raising.
+        shutil.rmtree(root, ignore_errors=True)
+        raise
     return RWWorkspace(snapshot_id=snapshot_id, root=root)

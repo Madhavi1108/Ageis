@@ -12,6 +12,7 @@ import time
 
 import httpx
 
+from app.core.circuit_breaker import CircuitBreaker
 from app.github.errors import (
     GitHubAuthError,
     GitHubConflictError,
@@ -22,6 +23,15 @@ from app.github.errors import (
     GitHubUnavailableError,
 )
 from app.github.request_log import log_github_call
+
+# Failures that mean "this request was wrong", not "GitHub is unhealthy" -- they
+# propagate without moving the circuit breaker toward OPEN.
+_BREAKER_IGNORE = (
+    GitHubAuthError,
+    GitHubConflictError,
+    GitHubNotFoundError,
+    GitHubPermissionError,
+)
 
 _API_VERSION = "2022-11-28"
 
@@ -43,6 +53,7 @@ class GitHubClient:
         timeout_s: float = 20.0,
         max_retries: int = 2,
         transport: httpx.BaseTransport | None = None,
+        breaker: CircuitBreaker | None = None,
     ) -> None:
         self._token = token
         headers = {
@@ -59,6 +70,9 @@ class GitHubClient:
             transport=transport,
         )
         self._max_retries = max_retries
+        # Unset -> a per-instance breaker (test isolation); build_github_client
+        # passes the process-wide registry breaker so /metrics can see it.
+        self._breaker = breaker or CircuitBreaker("github")
 
     # ---------------------------------------------------------------- #
 
@@ -74,6 +88,17 @@ class GitHubClient:
     # ---------------------------------------------------------------- #
 
     def _request(self, method: str, path: str, *, json: dict | None = None) -> httpx.Response:
+        """Circuit-breaker wrapper around the retrying HTTP call. A repeatedly
+        dead upstream trips the breaker and every further call fails fast with
+        ``UpstreamUnavailableError`` for ``circuit_breaker_reset_s``; 4xx
+        "your request was wrong" errors (``_BREAKER_IGNORE``) don't count."""
+        return self._breaker.call(
+            self._request_inner, method, path, json=json, ignore=_BREAKER_IGNORE
+        )
+
+    def _request_inner(
+        self, method: str, path: str, *, json: dict | None = None
+    ) -> httpx.Response:
         attempt = 0
         while True:
             started = time.monotonic()

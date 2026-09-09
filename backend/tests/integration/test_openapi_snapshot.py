@@ -15,6 +15,8 @@ from app.main import app
 
 EXPECTED_OPERATIONS = {
     ("/healthz", "get"),
+    ("/readyz", "get"),
+    ("/metrics", "get"),
     ("/version", "get"),
     ("/repositories", "post"),
     ("/repositories/{repository_id}", "get"),

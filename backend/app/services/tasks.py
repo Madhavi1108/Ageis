@@ -383,7 +383,7 @@ def list_tasks(
     )
 
 
-def run_task(db: Session, task_id: str) -> TaskSchema:
+def run_task(db: Session, task_id: str, *, settings: Settings | None = None) -> TaskSchema:
     tasks = TaskRepository(db)
     task = tasks.get(task_id)
     if task is None:
@@ -397,7 +397,7 @@ def run_task(db: Session, task_id: str) -> TaskSchema:
 
     from app.orchestration import job_queue
 
-    job_queue.enqueue_run(db, task.id)
+    job_queue.enqueue_run(db, task.id, settings=settings)
 
     steps = TaskStepRepository(db)
     steps.close_current(task.id)

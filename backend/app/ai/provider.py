@@ -24,6 +24,11 @@ from app.ai.errors import AIProviderNotConfiguredError
 from app.ai.prompt import render
 from app.ai.request_log import log_ai_call
 from app.ai.schema_guard import AIOutputInvalid, validate_with_repair
+from app.core.circuit_breaker import (
+    CircuitBreaker,
+    UpstreamUnavailableError,
+    get_breaker,
+)
 
 
 class AIProvider(Protocol):
@@ -136,7 +141,14 @@ _TRANSIENT_MARKERS = ("rate limit", "overloaded", "timeout", "timed out", "503",
 class ClaudeProvider:
     name = "claude"
 
-    def __init__(self, *, model: str, max_retries: int, retry_backoff_s: float) -> None:
+    def __init__(
+        self,
+        *,
+        model: str,
+        max_retries: int,
+        retry_backoff_s: float,
+        breaker: CircuitBreaker | None = None,
+    ) -> None:
         if os.environ.get("RUN_LIVE_AI") != "1":
             raise AIProviderNotConfiguredError(
                 "ClaudeProvider requires RUN_LIVE_AI=1 (opt-in for live model calls)"
@@ -155,6 +167,11 @@ class ClaudeProvider:
         self._model = model
         self._max_retries = max_retries
         self._retry_backoff_s = retry_backoff_s
+        # A dead upstream trips this breaker so subsequent calls fail fast
+        # (UpstreamUnavailableError -> the job's retry/backoff) instead of each
+        # burning its own retry budget. Unset -> a per-instance breaker (test
+        # isolation); get_provider passes the process-wide registry breaker.
+        self._breaker = breaker or CircuitBreaker("ai")
 
     def complete(
         self,
@@ -173,7 +190,8 @@ class ClaudeProvider:
         text = ""
         for attempt in range(self._max_retries + 1):
             try:
-                resp = self._client.messages.create(
+                resp = self._breaker.call(
+                    self._client.messages.create,
                     model=self._model,
                     max_tokens=max_tokens,
                     temperature=temperature,
@@ -183,6 +201,9 @@ class ClaudeProvider:
                 text = "".join(getattr(b, "text", "") for b in resp.content)
                 last_exc = None
                 break
+            except UpstreamUnavailableError:
+                # breaker is OPEN -- fail fast, let the job's retry/backoff own it
+                raise
             except Exception as exc:  # noqa: BLE001 - provider SDKs raise many types
                 last_exc = exc
                 if attempt < self._max_retries and _is_transient(exc):
@@ -288,6 +309,11 @@ def get_provider(settings) -> AIProvider | None:
             model=settings.ai_model,
             max_retries=settings.ai_max_retries,
             retry_backoff_s=settings.ai_retry_backoff_s,
+            breaker=get_breaker(
+                "ai",
+                fail_threshold=settings.circuit_breaker_fail_threshold,
+                reset_after_s=settings.circuit_breaker_reset_s,
+            ),
         )
     if name == "openai":
         return OpenAIProvider()

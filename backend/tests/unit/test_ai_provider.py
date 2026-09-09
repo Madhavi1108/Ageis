@@ -15,6 +15,8 @@ class _Settings:
     ai_model = "claude-sonnet-5"
     ai_max_retries = 2
     ai_retry_backoff_s = 0.0
+    circuit_breaker_fail_threshold = 5
+    circuit_breaker_reset_s = 30.0
 
 
 def test_mock_returns_registered_response():

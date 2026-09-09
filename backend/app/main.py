@@ -109,6 +109,8 @@ def create_app() -> FastAPI:
         if not settings.rate_limit_enabled or request.url.path in (
             "/",
             "/healthz",
+            "/readyz",
+            "/metrics",
             "/version",
         ):
             return await call_next(request)

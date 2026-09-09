@@ -75,6 +75,16 @@ class Job(Base, TimestampMixin):
     queued_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Phase 27: a retried job is not eligible until now >= run_after (real
+    # exponential backoff, not just a logged delay).
+    run_after: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
+    # Phase 27: refreshed at every stage checkpoint so reclaim_orphans doesn't
+    # re-queue a legitimately long-running job.
+    heartbeat_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

@@ -18,6 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from app.ai.context import ContextSection, fit_context
 from app.ai.provider import AIProvider
 from app.ai.routing import tier_for
 from app.implementation.editor import EditorError, apply_edit_op
@@ -27,6 +28,8 @@ from app.implementation.workspace_rw import RWWorkspace
 from app.schemas.implementation import EditOp, EditOpsAI
 
 _IMPLEMENTATION_TEMPLATE = "implementation"
+#: effectively unbounded -- callers that care pass limits.ai_context_tokens(...)
+_DEFAULT_CONTEXT_BUDGET = 1_000_000
 
 
 def propose_edit_ops(
@@ -39,17 +42,37 @@ def propose_edit_ops(
     provider: AIProvider,
     timeout_s: float,
     max_tokens: int,
+    context_budget_tokens: int = _DEFAULT_CONTEXT_BUDGET,
+    context_provenance: list[str] | None = None,
 ) -> list[EditOp]:
-    variables: dict[str, Any] = {
-        "task_key": task_key,
-        "problem_interpretation": problem_interpretation,
-        "files_to_modify": "\n".join(files_to_modify) or "(none)",
-        "symbols_to_modify": "\n".join(symbols_to_modify) or "(none)",
-        "steps": "\n".join(
+    steps_text = (
+        "\n".join(
             f"- {s.get('id')}: {s.get('description')} (test_intent: {s.get('test_intent')})"
             for s in plan_steps
         )
-        or "(none)",
+        or "(none)"
+    )
+    # Phase 27: bound the context. problem_interpretation + the modify lists are
+    # priority 0 (the model needs them to produce a correct patch); step detail
+    # is trimmed first if the plan is huge.
+    fitted = fit_context(
+        [
+            ContextSection("problem_interpretation", problem_interpretation, priority=0),
+            ContextSection("files_to_modify", "\n".join(files_to_modify) or "(none)", priority=0),
+            ContextSection("symbols_to_modify", "\n".join(symbols_to_modify) or "(none)", priority=0),
+            ContextSection("steps", steps_text, priority=2),
+        ],
+        context_budget_tokens,
+    )
+    if fitted.changed and context_provenance is not None:
+        context_provenance.append(fitted.note())
+
+    variables: dict[str, Any] = {
+        "task_key": task_key,
+        "problem_interpretation": fitted.kept["problem_interpretation"],
+        "files_to_modify": fitted.kept["files_to_modify"],
+        "symbols_to_modify": fitted.kept["symbols_to_modify"],
+        "steps": fitted.kept["steps"],
     }
     result = provider.complete(
         template=_IMPLEMENTATION_TEMPLATE,

@@ -91,8 +91,12 @@ def get_task(task_id: str, db: Session = Depends(get_db)) -> Task:
 
 
 @router.post("/{task_id}/run", response_model=Task, dependencies=[operator_required])
-def run_task(task_id: str, db: Session = Depends(get_db)) -> Task:
-    return tasks_service.run_task(db, task_id)
+def run_task(
+    task_id: str,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> Task:
+    return tasks_service.run_task(db, task_id, settings=settings)
 
 
 @router.post("/{task_id}/cancel", response_model=Task, dependencies=[operator_required])

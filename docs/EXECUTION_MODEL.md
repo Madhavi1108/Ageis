@@ -35,19 +35,28 @@ An HTTP request never blocks on an agent, the sandbox, or an AI call.
 - **Duplicate detection:** `dedupe_key = hash(repository_id, normalized_issue_text)`; a second
   job with the same `dedupe_key` while one is `PENDING/QUEUED/RUNNING` is rejected with a pointer
   to the in-flight job.
-- **Retries:** transient failures (AI transport, sandbox infra, DB deadlock) retried with
-  exponential backoff up to `max_attempts` (default 2). Deterministic failures (invalid plan,
-  scope violation, capability limit) are not retried.
+- **Retries (Phase 27):** a failed job is re-queued with a *real* not-before time —
+  `Job.run_after = now + job_backoff_base_s * 2**(attempts-1)` — and `claim_next` skips a job
+  whose `run_after` is still in the future, so the backoff is enforced, not merely logged.
+  Retries stop at `max_attempts` (`job_max_attempts`, default 2). Deterministic failures are not
+  retried at all: an `error.code` in `job_queue._TERMINAL_ERROR_CODES` (`PLAN_GENERATION_FAILED`,
+  `IMPLEMENTATION_FAILED`, `TEST_GENERATION_FAILED`, `GENERATED_CODE_UNSAFE`,
+  `TASK_INVALID_STATE`, `VALIDATION_ERROR`) goes straight to `FAILED`.
 - **Cancellation:** cooperative — a `cancel` sets a flag the Orchestrator checks between phases and
   inside the repair loop; the current sandbox container is killed and removed.
-- **Crash recovery:** the Worker checkpoints `last_checkpoint` after every phase; on restart a
-  `RUNNING` job with a stale `worker_id` heartbeat is resumed from its checkpoint (phases are
-  designed idempotent: re-running a phase overwrites its single output row).
-- **Concurrency:** a global cap (`AEGIS_MAX_CONCURRENT_JOBS`, default 4) and a per-repository cap
-  (default 1) enforced by the queue; excess jobs stay `QUEUED`.
-- **Worker:** MVP is an in-process asyncio worker reading the `Job` table with `SELECT ... FOR
-  UPDATE SKIP LOCKED` semantics (emulated on SQLite via a short transaction + status claim). The
-  `orchestration/` abstraction keeps a queue library (arq/RQ) a drop-in (`ADR-0003`).
+- **Crash recovery (Phase 27):** the Worker checkpoints `last_checkpoint` and refreshes
+  `Job.heartbeat_at` after every phase. `reclaim_orphans` re-queues a `RUNNING` job only when the
+  newer of `heartbeat_at` / `started_at` is older than `worker_stale_after_s` — a job that
+  heartbeats each stage is never reclaimed however long it legitimately runs. Phases are
+  idempotent: re-running one overwrites its single output row.
+- **Backpressure (Phase 27):** `enqueue_run` counts active jobs (`QUEUED` + `PENDING`) and rejects
+  a new submission with `JOB_QUEUE_FULL` (HTTP 429, `{queue_depth, limit}`) once it reaches
+  `job_max_queue_depth` (default 100). Idempotent re-submits of an already-queued job are exempt.
+- **Concurrency / Worker:** the MVP worker is a **single sequential asyncio process** — one job at
+  a time, one SQLite writer, a plain `SELECT ... LIMIT 1` + status claim (`ADR-0003`).
+  `worker_max_concurrency` is a queue-admission denominator, **not** parallel execution; a
+  distributed / parallel worker (and a per-repository cap) is a documented follow-up. The
+  `orchestration/` abstraction keeps a queue library (arq/RQ) a drop-in.
 
 ---
 
@@ -114,20 +123,73 @@ fallback.
 ## 6. Repository & analysis limits (Spec §37)
 
 Exceeding any -> `PARTIALLY_SUPPORTED{reason}`; partial results returned; never a crash, never
-silent truncation without provenance.
+silent truncation without provenance. `core/limits.py` is the one import site that names these —
+callers read `limits.analysis_seconds(settings)`, not `settings.limit_analysis_seconds`.
 
-| Limit | Default | Config key |
+| Limit | Default | Setting | Enforced in | Over-limit behaviour |
+|---|---|---|---|---|
+| Repository size | 500 MiB | `ingestion_max_repo_bytes` | `ingestion/limits.py` | `PARTIALLY_SUPPORTED`, ingest stops |
+| File count | 25 000 | `ingestion_max_files` | `ingestion/limits.py` | `PARTIALLY_SUPPORTED`, ingest stops |
+| Individual file size | 2 MiB | `ingestion_max_file_bytes` | `ingestion/limits.py` | file skipped with provenance |
+| Git history depth | 500 commits | `ingestion_max_history_depth` | `ingestion/limits.py` | history truncated with provenance |
+| Analysis wall-clock | 300 s | `limit_analysis_seconds` | `analysis/analyze.py` | remaining files `SKIPPED`, `RepositoryAnalysis.limit_reason` set, `unknowns += analysis_incomplete` |
+| Code-graph nodes | 20 000 | `limit_graph_nodes` | — (config only this phase) | *follow-up:* partial graph + provenance note |
+| AI context tokens | 120 000 | `limit_ai_context_tokens` | `ai/context.py::fit_context` | lowest-priority sections dropped deterministically, provenance recorded |
+| Generated tests per task | 40 | `limit_generated_tests` | `testing/` selector | newest trimmed with provenance (`testing_max_cases` is the separate hard loud-fail ceiling on one provider response) |
+| Patch candidates (repair) | = repair iterations | `repair_max_iterations` | repair loop | loop exits, best-so-far kept |
+| Repair iterations | 4 | `repair_max_iterations` | repair loop | as above |
+| Repair wall-clock | 1200 s | `repair_wall_clock_s` | repair loop | loop exits with provenance |
+
+---
+
+## 6a. Deterministic AI context windowing (Spec §37)
+
+`ai/context.py` assembles a prompt from labelled `ContextSection`s each carrying an integer
+`priority` (lower = more important; **priority 0 is never dropped or truncated**). When the
+estimated token count (`ceil(len(text) / 4)`, no tokeniser dependency, deliberately
+over-counting) exceeds `limit_ai_context_tokens`, `fit_context`:
+
+1. drops whole sections, **least important first**, ties broken by name (a fixed order — the same
+   inputs always yield the same prompt); a dropped section's template variable becomes a visible
+   `(omitted: exceeded the AI context budget)` placeholder so the render never fails;
+2. as a last resort, hard-truncates the largest still-present droppable section with a
+   `…[N chars omitted: AI context budget]` marker.
+
+Every drop / truncation is returned in `FitResult.dropped` / `.truncated` and rendered to a
+one-line provenance string (`FitResult.note()`); the planning and implementation services log it
+against the task. Callers pass `context_budget_tokens=limits.ai_context_tokens(settings)`; the
+agents default to effectively unbounded so non-service callers are unaffected.
+
+---
+
+## 6b. Artifact & workspace garbage collection (ADR-0009)
+
+`retention_for(kind)` assigns each artifact a class:
+
+| Class | Kinds | Collected |
 |---|---|---|
-| Repository size | 500 MiB | `LIMIT_REPO_BYTES` |
-| File count | 25 000 | `LIMIT_FILE_COUNT` |
-| Individual file size | 2 MiB | `LIMIT_FILE_BYTES` |
-| Git history depth | 500 commits | `LIMIT_HISTORY_DEPTH` |
-| Analysis duration | 300 s | `LIMIT_ANALYSIS_S` |
-| Generated tests per task | 40 | `LIMIT_GENERATED_TESTS` |
-| AI context size | model limit minus a margin | `LIMIT_AI_CONTEXT_TOKENS` |
-| Patch candidates (repair) | = `max_repair_iterations` | `LIMIT_PATCH_CANDIDATES` |
-| Repair iterations | 4 | `REPAIR_MAX_ITERATIONS` |
-| Repair wall-clock | 1200 s | `REPAIR_WALL_CLOCK_S` |
+| `PERMANENT` | `TRACE`, `PR_BODY`, `BENCHMARK` | never |
+| `RETAINED` | everything else | `expires_at` (lazily backfilled to `created_at + gc_retained_days`, default 90 d) in the past |
+| `EPHEMERAL` | `WORKSPACE` | owning task terminal + `gc_ephemeral_grace_s` (default 1 h); or, with no owning task, `created_at + grace` |
+
+`orchestration/gc.py::run_gc` also sweeps `<artifacts_root>/workspaces/<id>/` directories that
+have **no** artifact row pointing at them (a crashed ingest) once their mtime is older than the
+grace window. It runs as a `GC` job the worker self-enqueues every `gc_interval_s` (default 1 h,
+deduped on an hour-bucket key so a restart can't pile them up) and is also the
+`python -m app.orchestration.gc` entrypoint for an external cron. `gc_enabled=false` disables it.
+
+---
+
+## 6c. Circuit breakers (`core/circuit_breaker.py`)
+
+The AI provider (`ClaudeProvider`) and the GitHub client each route their outbound call through a
+process-wide `CircuitBreaker`. After `circuit_breaker_fail_threshold` consecutive failures
+(default 5) the breaker OPENs and every call fails fast with `UPSTREAM_UNAVAILABLE` (HTTP 503,
+`retry_after_s`) for `circuit_breaker_reset_s` (default 30 s), then HALF_OPEN lets one probe
+through (success → CLOSED, failure → OPEN). This stops a dead upstream from burning each call's
+own retry budget; the fast-fail is a normal retryable job failure. 4xx "your request was wrong"
+errors (GitHub 401/403/404/409) propagate **without** tripping the breaker. Open breakers are
+listed by `GET /metrics`.
 
 ---
 
@@ -160,12 +222,22 @@ Per task: state history, per-agent input/output/duration/errors, AI request meta
 tool calls, test executions, patch iterations, verification results, budget consumption. Exposed
 via `GET /tasks/{id}/timeline` and the dashboard. No secrets, ever.
 
+Process-level endpoints (unauthenticated, cheap, rate-limit-exempt — like `/healthz`):
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /healthz` | liveness — always `{"status":"ok"}` if the process is up |
+| `GET /readyz` | readiness — `200 {"status":"ready"}` when the DB answers `SELECT 1`, else `503 {"status":"not_ready", reason}` (a JSON body, not an exception, so a load balancer can drain the instance) |
+| `GET /metrics` | a small operational snapshot: `queue_depth`, `jobs` (count per `JobState`), `circuit_breakers` (name / state / consecutive failures). Not Prometheus; not a metrics backend. |
+
 ---
 
 ## 10. Open questions
 
 | # | Question | Resolution |
 |---|---|---|
-| E1 | asyncio worker vs arq at higher concurrency | `ADR-0003`; measured in Phase 27 soak |
+| E1 | asyncio worker vs arq at higher concurrency | `ADR-0003`; single sequential worker for the MVP — distributed / parallel worker is a follow-up, measured against the Phase 27 soak-shape suite |
 | E2 | SQLite `SKIP LOCKED` emulation robustness | acceptable for dev/CI single-worker; PG for multi-worker |
 | E3 | deps-install network policy granularity | start with an index-host allowlist; tighten in Phase 26 |
+| E4 | `limit_graph_nodes` enforcement | config only in Phase 27; the partial-graph fallback in the graph builder is a follow-up |
+| E5 | multi-hour soak / leak check | Phase 27 ships a fast leak-*shape* test (`tests/perf/`, `--perf`); a real N-tasks-over-M-hours soak belongs in a nightly job |

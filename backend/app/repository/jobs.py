@@ -27,12 +27,14 @@ class JobRepository:
         idempotency_key: str,
         task_id: str | None = None,
         dedupe_key: str | None = None,
+        max_attempts: int = 1,
     ) -> Job:
         job = Job(
             type=type,
             idempotency_key=idempotency_key,
             task_id=task_id,
             dedupe_key=dedupe_key,
+            max_attempts=max_attempts,
             state=JobState.PENDING.value,
         )
         self._session.add(job)
@@ -110,14 +112,26 @@ class JobRepository:
     # Thin state + timestamp transitions -- still no business logic (no retry/backoff/
     # dedupe decisions here, that's a later orchestration-layer concern).
 
-    def mark_queued(self, job_id: str) -> Job:
+    def mark_queued(self, job_id: str, *, run_after: datetime | None = None) -> Job:
         job = self._session.get(Job, job_id)
         assert job is not None
         job.state = JobState.QUEUED.value
         job.queued_at = datetime.now(timezone.utc)
+        job.run_after = run_after
         self._session.commit()
         self._session.refresh(job)
         return job
+
+    def heartbeat(self, job_id: str | None) -> None:
+        """Refresh ``heartbeat_at`` so a legitimately long job is not reclaimed
+        as an orphan (Phase 27). No-op when there is no job (direct API calls)."""
+        if job_id is None:
+            return
+        job = self._session.get(Job, job_id)
+        if job is None:
+            return
+        job.heartbeat_at = datetime.now(timezone.utc)
+        self._session.commit()
 
     def set_checkpoint(self, job_id: str, checkpoint: dict) -> Job:
         job = self._session.get(Job, job_id)

@@ -39,6 +39,9 @@ class RepositoryAnalysis(Base, TimestampMixin):
     )
     summary: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     unknowns: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    # Phase 27: set when the analysis hit its wall-clock budget (Spec §37) --
+    # the remaining files are SKIPPED and the task goes PARTIALLY_SUPPORTED.
+    limit_reason: Mapped[str | None] = mapped_column(String(512), nullable=True)
     analysed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )

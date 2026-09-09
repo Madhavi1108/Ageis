@@ -16,11 +16,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ai.context import ContextSection, fit_context
 from app.ai.provider import AIProvider
 from app.ai.routing import tier_for
 from app.schemas.plan import EngineeringPlanAI, PlanValidation
 
 _PLANNING_TEMPLATE = "planning"
+#: effectively unbounded -- callers that care pass limits.ai_context_tokens(...)
+_DEFAULT_CONTEXT_BUDGET = 1_000_000
 
 
 def _impact_summary(impact: dict) -> str:
@@ -50,16 +53,34 @@ def propose_plan(
     timeout_s: float,
     max_tokens: int,
     memory_hits: str = "(none)",
+    context_budget_tokens: int = _DEFAULT_CONTEXT_BUDGET,
+    context_provenance: list[str] | None = None,
 ) -> EngineeringPlanAI:
+    # Phase 27: bound the context deterministically. task_text is priority 0
+    # (never dropped); memory hits drop first, then impact detail, then the
+    # candidate lists. Anything cut is recorded as provenance.
+    fitted = fit_context(
+        [
+            ContextSection("task_text", task_text, priority=0),
+            ContextSection("candidate_symbols", "\n".join(candidate_symbols) or "(none)", priority=2),
+            ContextSection("candidate_files", "\n".join(candidate_files) or "(none)", priority=2),
+            ContextSection("impact_summary", _impact_summary(impact), priority=3),
+            ContextSection("memory_hits", memory_hits or "(none)", priority=4),
+        ],
+        context_budget_tokens,
+    )
+    if fitted.changed and context_provenance is not None:
+        context_provenance.append(fitted.note())
+
     variables: dict[str, Any] = {
         "task_key": task_key,
-        "task_text": task_text,
-        "candidate_files": "\n".join(candidate_files) or "(none)",
-        "candidate_symbols": "\n".join(candidate_symbols) or "(none)",
-        "impact_summary": _impact_summary(impact),
+        "task_text": fitted.kept["task_text"],
+        "candidate_files": fitted.kept["candidate_files"],
+        "candidate_symbols": fitted.kept["candidate_symbols"],
+        "impact_summary": fitted.kept["impact_summary"],
         # Phase 20: prior similar tasks as "historical -- verify" evidence
         # (feature-flagged in app/services/planning.py).
-        "memory_hits": memory_hits or "(none)",
+        "memory_hits": fitted.kept["memory_hits"],
         # list forms for the MockProvider rule-based fallback (not templated)
         "candidate_files_list": candidate_files,
         "candidate_symbols_list": candidate_symbols,

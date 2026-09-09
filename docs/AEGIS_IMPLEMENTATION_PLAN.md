@@ -3174,6 +3174,35 @@ algorithms reduce accuracy -> label confidence + document.
 
 **Effort.** M–L.
 
+**Status: COMPLETE — 2026-09-09.** Built on top of a partial external draft; this session
+finished the gaps and the tests. `core/limits.py` is now the single typed accessor site for
+every size / count / duration budget (values stay in `config.py`; new `limit_analysis_seconds`,
+`limit_ai_context_tokens`, `limit_generated_tests`, `limit_graph_nodes`, plus `job_*`,
+`circuit_breaker_*`, `gc_*`). Job reliability (`orchestration/job_queue.py`, `worker.py`,
+migration `0021`): a failed job re-queues with a real `run_after` not-before backoff that
+`claim_next` honours; `_TERMINAL_ERROR_CODES` skip retry entirely; a per-stage `heartbeat_at` so
+`reclaim_orphans` never re-queues a legitimately long job; queue-depth admission control
+(`enqueue_run` → `JOB_QUEUE_FULL` 429 at `job_max_queue_depth`), wired through
+`tasks_service.run_task` + the `POST /tasks/{id}/run` route. Circuit breakers
+(`core/circuit_breaker.py`) now actually wrap `ClaudeProvider.complete` and
+`GitHubClient._request` (5xx / transport trip it; 4xx client errors don't; OPEN →
+`UPSTREAM_UNAVAILABLE` 503, a normal retryable job failure). Deterministic AI-context windowing
+(`ai/context.py`) is applied by the planning + implementation agents with provenance logged.
+Analysis has a wall-clock budget → remaining files `SKIPPED`, `RepositoryAnalysis.limit_reason`,
+`unknowns += analysis_incomplete`, partial results returned (no crash). Artifact / workspace GC
+(`orchestration/gc.py`, `models/artifact.py::retention_for`): PERMANENT never / RETAINED
+`gc_retained_days` / EPHEMERAL terminal-task + grace, orphan-workspace sweep, run as a self-
+enqueued `GC` job and as `python -m app.orchestration.gc`. New `GET /readyz` + `GET /metrics`
+(queue depth, job counts, breaker states). New tests: `tests/unit/test_{circuit_breaker,
+ai_context,gc,job_queue_reliability,limits}.py`, `tests/integration/test_{analysis_budget,
+queue_backpressure_api,circuit_breaker_wiring,health_metrics,worker_gc_job}.py`, and a
+`--perf`-gated `tests/perf/` suite (mid-size analysis budget headroom + a GC soak-shape leak
+check). `docs/EXECUTION_MODEL.md` finalized (§2 retry/backoff/heartbeat/backpressure, §6 limit
+table, §6a–§6c context windowing / GC / circuit breakers, §9 readiness + metrics). **Open items:**
+distributed / parallel worker (`worker_max_concurrency` is an admission denominator only);
+`limit_graph_nodes` is config-only (no partial-graph fallback yet); a real multi-hour soak
+belongs in a nightly job.
+
 ---
 
 ## 36. Phase 28 — Documentation & Release

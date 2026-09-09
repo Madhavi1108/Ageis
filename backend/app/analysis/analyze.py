@@ -28,6 +28,7 @@ from app.analysis.project_meta import load_pyproject, parse_project_metadata
 from app.analysis.python_ast import RawWalk, parse_and_walk
 from app.analysis.symbols import symbols_from_walk
 from app.analysis.testdetect import detect_test_setup
+from app.core import limits
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.core.ids import new_id
@@ -206,7 +207,27 @@ def analyze_snapshot(
         all_deps = []
         parse_updates: list[tuple[str, str, str | None]] = []
 
-        for f in py_files:
+        # Phase 27 (Spec §37): a wall-clock budget for the parse pass. Over
+        # budget -> the remaining files are SKIPPED (with provenance) and the
+        # task degrades to PARTIALLY_SUPPORTED rather than stalling.
+        budget_s = limits.analysis_seconds(settings)
+        limit_reason: str | None = None
+        for i, f in enumerate(py_files):
+            if time.monotonic() - started > budget_s:
+                remaining = py_files[i:]
+                parse_updates.extend(
+                    (
+                        rf.id,
+                        ParseStatus.SKIPPED.value,
+                        f"analysis wall-clock budget ({budget_s}s) exceeded",
+                    )
+                    for rf in remaining
+                )
+                limit_reason = (
+                    f"{len(remaining)} of {len(py_files)} file(s) not analysed: "
+                    f"analysis exceeded the {budget_s}s budget"
+                )
+                break
             walk = parse_and_walk(ws_root / f.path, f.path)
             walks.append(walk)
             if walk.parse_error is not None:
@@ -243,6 +264,8 @@ def analyze_snapshot(
         unknowns = list(project_meta.unknowns)
         if test_setup.framework is None:
             unknowns.append("test_framework")
+        if limit_reason is not None:
+            unknowns.append("analysis_incomplete")
 
         analysis = analyses_repo.upsert(
             snapshot.id,
@@ -254,11 +277,13 @@ def analyze_snapshot(
             summary={
                 "symbol_count": len(all_symbols),
                 "dependency_count": len(all_deps),
-                "file_count": len(py_files),
+                "file_count": len(walks),
+                "files_total": len(py_files),
             },
             unknowns=unknowns,
             analysed_at=datetime.now(timezone.utc),
             duration_ms=int((time.monotonic() - started) * 1000),
+            limit_reason=limit_reason,
         )
         if graph_artifact_id is not None:
             analysis = analyses_repo.set_graph_artifact_id(snapshot.id, graph_artifact_id) or analysis

@@ -14,6 +14,8 @@ latitude Phase 6's run/cancel took.
 
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.agents import planning as planning_agent
@@ -25,6 +27,7 @@ from app.agents.errors import (
 )
 from app.ai.provider import get_provider
 from app.ai.schema_guard import AIOutputInvalid
+from app.core import limits
 from app.core.config import Settings
 from app.core.errors import AppError
 from app.core.ids import new_id
@@ -40,6 +43,8 @@ from app.repository.task_steps import TaskStepRepository
 from app.repository.tasks import TaskRepository
 from app.schemas.plan import EngineeringPlan, EngineeringPlanAI, PlanValidation
 from app.services import memory as memory_service
+
+_logger = logging.getLogger("app.services.planning")
 
 #: sentinel so callers can pass provider=None explicitly (the "none" provider)
 #: while an omitted argument still means "resolve from settings".
@@ -129,6 +134,7 @@ def generate_plan(
             memory_hits = memory_service.retrieve_hits_for_task(
                 db, settings=settings, task_id=task_id
             )
+            context_provenance: list[str] = []
             plan_ai = planning_agent.propose_plan(
                 task_key=task_id,
                 task_text=task.description_sanitized,
@@ -139,7 +145,11 @@ def generate_plan(
                 timeout_s=settings.ai_planning_timeout_s,
                 max_tokens=settings.ai_planning_max_tokens,
                 memory_hits=memory_service.format_hits(memory_hits),
+                context_budget_tokens=limits.ai_context_tokens(settings),
+                context_provenance=context_provenance,
             )
+            for note in context_provenance:
+                _logger.info("planning context trimmed for task %s: %s", task_id, note)
     except AIOutputInvalid as exc:
         jobs.mark_failed(
             job.id, error={"code": "PLAN_GENERATION_FAILED", "message": str(exc)}

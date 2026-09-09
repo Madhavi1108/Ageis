@@ -60,6 +60,7 @@ markers = [
     "e2e: full-pipeline end-to-end acceptance tests (mock provider + fake sandbox)",
     "benchmark: drives the benchmarks/ harness over a curated dataset (slow; mock provider + fake sandbox)",
     "security: Phase 26 threat / abuse tests (auto-applied to tests/security/)",
+    "perf: Phase 27 performance / soak-shape tests (auto-applied to tests/perf/; run only with --perf)",
 ]
 # All tests here are plain functions; disable class-based collection so
 # pytest doesn't warn about domain schemas named Test* (TestOutcome,

@@ -41,6 +41,24 @@ class ArtifactRetention(str, enum.Enum):
     PERMANENT = "PERMANENT"
 
 
+#: Retention class per artifact kind (ADR-0009, Phase 27). PERMANENT kinds are
+#: never garbage-collected; RETAINED kinds expire ``gc_retained_days`` after
+#: creation; EPHEMERAL kinds go once their task is terminal + a grace window.
+_PERMANENT_KINDS = frozenset(
+    {ArtifactKind.TRACE.value, ArtifactKind.PR_BODY.value, ArtifactKind.BENCHMARK.value}
+)
+_EPHEMERAL_KINDS = frozenset({ArtifactKind.WORKSPACE.value})
+
+
+def retention_for(kind: str) -> str:
+    """The default retention class for an artifact of ``kind``."""
+    if kind in _PERMANENT_KINDS:
+        return ArtifactRetention.PERMANENT.value
+    if kind in _EPHEMERAL_KINDS:
+        return ArtifactRetention.EPHEMERAL.value
+    return ArtifactRetention.RETAINED.value
+
+
 class Artifact(Base):
     __tablename__ = "artifact"
 

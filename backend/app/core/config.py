@@ -141,7 +141,7 @@ class Settings(BaseSettings):
     # a repeated failure signature, or when the marginal reduction in failing
     # tests falls below min_improvement.
     repair_max_iterations: int = Field(default=4, gt=0)
-    repair_wall_clock_s: int = Field(default=900, gt=0)
+    repair_wall_clock_s: int = Field(default=1200, gt=0)  # docs/EXECUTION_MODEL.md §6
     repair_min_improvement: int = Field(default=1, ge=0)
     ai_rca_timeout_s: float = Field(default=90.0, gt=0)
     ai_repair_timeout_s: float = Field(default=90.0, gt=0)
@@ -224,9 +224,39 @@ class Settings(BaseSettings):
     orchestrator_max_regression_retries: int = Field(default=0, ge=0)
     orchestrator_open_pr: bool = Field(default=False)
     worker_poll_interval_s: float = Field(default=1.0, gt=0)
+    # The worker is a single sequential process (one job at a time; ADR-0003).
+    # worker_max_concurrency is the queue-admission denominator, NOT parallel
+    # execution -- distributed/parallel workers are a documented follow-up.
     worker_max_concurrency: int = Field(default=2, gt=0)
     worker_stale_after_s: int = Field(default=900, gt=0)
     job_backoff_base_s: float = Field(default=2.0, gt=0)
+
+    # Reliability (Phase 27, docs/EXECUTION_MODEL.md). Job retries with a real
+    # not-before backoff; queue-depth admission control (429 when full).
+    job_max_attempts: int = Field(default=2, gt=0)
+    job_max_queue_depth: int = Field(default=100, gt=0)
+    # Circuit breaker for the AI + GitHub clients: after this many consecutive
+    # failures the breaker opens and calls fail fast for reset_s.
+    circuit_breaker_fail_threshold: int = Field(default=5, gt=0)
+    circuit_breaker_reset_s: float = Field(default=30.0, gt=0)
+
+    # §37 repository / analysis limits (Phase 27, docs/EXECUTION_MODEL.md §6).
+    # Exceeding one degrades to PARTIALLY_SUPPORTED{reason} + partial artifacts,
+    # never a crash and never a silent, unprovenanced truncation.
+    limit_analysis_seconds: int = Field(default=300, gt=0)
+    limit_ai_context_tokens: int = Field(default=120_000, gt=0)
+    # Soft "trim newest with provenance" cap. testing_max_cases stays the hard
+    # loud-fail ceiling on a single provider response.
+    limit_generated_tests: int = Field(default=40, gt=0)
+    limit_graph_nodes: int = Field(default=20_000, gt=0)
+
+    # Artifact / workspace GC (Phase 27, ADR-0009). EPHEMERAL artifacts + their
+    # workspaces are collected `gc_ephemeral_grace_s` after the task terminates;
+    # RETAINED after `gc_retained_days`; PERMANENT never.
+    gc_enabled: bool = Field(default=True)
+    gc_interval_s: int = Field(default=3600, gt=0)
+    gc_ephemeral_grace_s: int = Field(default=3600, ge=0)
+    gc_retained_days: int = Field(default=90, gt=0)
 
     @field_validator("sandbox_mode")
     @classmethod

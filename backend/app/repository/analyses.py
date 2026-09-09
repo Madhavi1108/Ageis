@@ -38,6 +38,7 @@ class AnalysisRepository:
         unknowns: list,
         analysed_at: datetime,
         duration_ms: int,
+        limit_reason: str | None = None,
     ) -> RepositoryAnalysis:
         existing = self.get_by_snapshot(snapshot_id)
         if existing is None:
@@ -52,6 +53,7 @@ class AnalysisRepository:
                 unknowns=unknowns,
                 analysed_at=analysed_at,
                 duration_ms=duration_ms,
+                limit_reason=limit_reason,
             )
             self._session.add(row)
         else:
@@ -65,6 +67,7 @@ class AnalysisRepository:
             row.unknowns = unknowns
             row.analysed_at = analysed_at
             row.duration_ms = duration_ms
+            row.limit_reason = limit_reason
         self._session.commit()
         self._session.refresh(row)
         return row

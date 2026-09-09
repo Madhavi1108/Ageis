@@ -14,11 +14,13 @@ every prior phase took (the guarded workflow machine is Phase 21).
 from __future__ import annotations
 
 import hashlib
+import logging
 from pathlib import Path
 
 from sqlalchemy.orm import Session
 
 from app.ai.schema_guard import AIOutputInvalid
+from app.core import limits
 from app.core.config import Settings
 from app.core.ids import new_id
 from app.implementation import agent as implementation_agent
@@ -44,6 +46,8 @@ from app.repository.patches import PatchRepository
 from app.repository.task_steps import TaskStepRepository
 from app.repository.tasks import TaskRepository
 from app.schemas.implementation import EditOp, ImplementationResult, PatchSummary
+
+_logger = logging.getLogger("app.services.implementation")
 
 #: sentinel so callers can pass provider=None explicitly (the "none" provider)
 #: while an omitted argument still means "resolve from settings".
@@ -141,6 +145,7 @@ def generate_implementation(
     try:
         allowed_scope = _allowed_scope(db, task_id, plan_row)
         try:
+            _ctx_notes: list[str] = []
             edit_ops = implementation_agent.propose_edit_ops(
                 task_key=task_id,
                 plan_steps=plan_row.steps,
@@ -150,7 +155,11 @@ def generate_implementation(
                 provider=provider,
                 timeout_s=settings.ai_implementation_timeout_s,
                 max_tokens=settings.ai_implementation_max_tokens,
+                context_budget_tokens=limits.ai_context_tokens(settings),
+                context_provenance=_ctx_notes,
             )
+            for _note in _ctx_notes:
+                _logger.info("implementation context trimmed for task %s: %s", task_id, _note)
         except AIOutputInvalid as exc:
             jobs.mark_failed(
                 job.id, error={"code": "IMPLEMENTATION_FAILED", "message": str(exc)}

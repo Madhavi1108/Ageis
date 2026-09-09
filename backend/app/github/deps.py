@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from fastapi import Depends
 
+from app.core.circuit_breaker import get_breaker
 from app.core.config import Settings, get_settings
 from app.github.client import GitHubClient
 
@@ -23,6 +24,11 @@ def build_github_client(settings: Settings) -> GitHubClient:
         base_url=settings.github_api_base_url,
         timeout_s=settings.github_timeout_s,
         max_retries=settings.github_max_retries,
+        breaker=get_breaker(
+            "github",
+            fail_threshold=settings.circuit_breaker_fail_threshold,
+            reset_after_s=settings.circuit_breaker_reset_s,
+        ),
     )
 
 
